@@ -1,0 +1,23 @@
+# R
+.Rhistory
+.RData
+.Ruserdata
+.Rproj.user/
+
+# Large/raw datasets
+feeds/
+osmdata/
+geodata/
+
+# Optional generated outputs
+output/
+results/
+
+# GIS temporary files
+*.qgz~
+*.gpkg-wal
+*.gpkg-shm
+
+# OS junk
+.DS_Store
+Thumbs.db
