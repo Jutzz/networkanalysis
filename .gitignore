@@ -20,7 +20,8 @@
 # Large/raw datasets
 feeds/
 osmdata/
-geodata/
+geodata/zhv/
+geodata/poi.gpkg
 
 # Optional generated outputs
 output/

@@ -2,15 +2,40 @@ options(java.parameters = "-Xmx20G")
 library(r5r)
 library(tidytransit)
 library(gtfstools)
-library(dplyr)
-library(lubridate)
+library(tidyverse)
 library(timeDate)
-library(stringr)
 library(here)
 library(sf)
-library(ggplot2)
+library(httr2)
+library(jsonlite)
 
-source("all_clear.R")
+files.sources = list.files("code/helper/", full.names = TRUE)
+sapply(files.sources, source)
+
+#Change feed date and area name to used feed version (filename set in de_gtfs_cleaning).
+feed_date <- "20260518"
+zhv_date <- "20260521"
+area_name <- "regbez"
+
+get_school_holidays <- function(country, subdivision, start_date, end_date, lang = "DE") {
+  resp <- httr2::request("https://openholidaysapi.org/SchoolHolidays") |>
+    httr2::req_url_query(
+      countryIsoCode = country,
+      validFrom = start_date,
+      validTo = end_date,
+      languageIsoCode = lang,
+      subdivisionCode = subdivision
+    ) |>
+    httr2::req_perform()
+  
+  school_holidays <- fromJSON(rawToChar(resp$body))
+}
+
+get_route_rank <- function(rt) {
+  which(vapply(route_type_ranks, function(grp) rt %in% grp, logical(1)))
+}
+
+#Set route_type ranking: train, tram, bus, everything else.
 route_type_ranks <- list(
   c("101","102","106","109"),   
   c("0","1"),                  
@@ -37,21 +62,40 @@ holidays_nrw <- function(year) {
   )
 }
 
-school_holidays_nrw_2026 <- c(
-  seq.Date(as.Date("2026-03-30"), as.Date("2026-04-11"), by = "day"),
-  seq.Date(as.Date("2026-07-20"), as.Date("2026-09-01"), by = "day"),
-  seq.Date(as.Date("2026-10-17"), as.Date("2026-10-31"), by = "day"),
-  seq.Date(as.Date("2026-12-23"), as.Date("2027-01-06"), by = "day"))
+school_holidays <- get_school_holidays(country = "DE",
+                                       subdivision = "DE-NW",
+                                       start_date = "2026-01-01",
+                                       end_date = "2028-12-31")
+  
+school_holidays_long <- school_holidays %>%
+  select(2,3,5) %>%
+  mutate(
+    name = map_chr(name, ~ {
+      x <- .x
+      x$text[x$language == "DE"][1]
+    })
+  ) %>%
+  mutate(
+    startDate = as.Date(startDate),
+    endDate = as.Date(endDate),
+    date = map2(startDate, endDate, ~ seq(.x, .y, by = "day"))
+  ) %>%
+  unnest(date) %>%
+  select(name, date)
 
-get_route_rank <- function(rt) {
-  which(vapply(route_type_ranks, function(grp) rt %in% grp, logical(1)))
-}
+#If openholidays api breaks, use this to set school holidays manually.
+#school_holidays <- c(
+#  seq.Date(as.Date("2026-03-30"), as.Date("2026-04-11"), by = "day"),
+#  seq.Date(as.Date("2026-07-20"), as.Date("2026-09-01"), by = "day"),
+#  seq.Date(as.Date("2026-10-17"), as.Date("2026-10-31"), by = "day"),
+#  seq.Date(as.Date("2026-12-23"), as.Date("2027-01-06"), by = "day"))
+
 
 #gtfs handling in de_gtfs_cleaning
 
-gtfs_feed <- tidytransit::read_gtfs(here("feeds/de_gtfs_05-26_nrw.zip"))
+gtfs_feed <- tidytransit::read_gtfs(paste0("feeds/filtered/de_gtfs_", feed_date, "_", area_name,".zip"))
 
-timestamp <- format(Sys.Date(), "%m-%y")
+timestamp <- format(Sys.Date(), "%Y-%m-%d")
 
 stops <- gtfs_feed$stops
 
@@ -79,7 +123,7 @@ weekdays <- {
 weekday_services <- gtfs_feed$.$dates_services %>%
   filter(date %in% weekdays) %>%
   filter(!date %in% holidays) %>%
-  filter(!date %in% school_holidays_nrw_2026)
+  filter(!date %in% school_holidays)
 
 weekday_trips_dates <- trips %>%
   select(trip_id, service_id, route_id) %>%
@@ -99,7 +143,7 @@ weekday_stop_times_dates <- stop_times %>%
 # filter_921 <- weekday_stop_times_dates %>%
 #   filter(grepl("de:vrs:921", trip_id))
 
-zhv <- st_read(here("geodata/poi.gpkg"), "zhv_20260427")
+zhv <- st_read(here("geodata/poi.gpkg"), paste0("zhv_", zhv_date))
 
 departure_counts <- weekday_stop_times_dates %>%
   group_by(NVBW_HST_DHID) %>%
