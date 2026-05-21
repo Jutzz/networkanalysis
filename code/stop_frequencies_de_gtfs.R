@@ -119,7 +119,6 @@ weekdays <- {
   d[wday(d, week_start = 1) <= 5]  # week_start=1 makes 1=Mon … 7=Sun
 }
 
-
 weekday_services <- gtfs_feed$.$dates_services %>%
   filter(date %in% weekdays) %>%
   filter(!date %in% holidays) %>%

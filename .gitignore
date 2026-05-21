@@ -21,7 +21,9 @@
 feeds/
 osmdata/
 geodata/zhv/
+geodata/base_data/
 geodata/poi.gpkg
+geodata/grids.gpkg
 
 # Optional generated outputs
 output/
