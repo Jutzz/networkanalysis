@@ -1,0 +1,138 @@
+\documentclass[11pt,pdftex,a4paper]{scrartcl}
+\usepackage[top=2.5cm, bottom=2.5cm, left=3cm, right=3cm]{geometry}
+\usepackage[english,ngerman]{babel}
+\usepackage{sourceserifpro}
+\usepackage{sourcesanspro}
+\usepackage[utf8]{inputenc}
+\usepackage[babel,german=quotes]{csquotes}
+\usepackage[T1]{fontenc}
+\usepackage{graphicx}
+\usepackage[style=geographie_koeln,dashed=false,maxcitenames=2,maxbibnames=99,backend=biber,urldate=short,firstinits=true,uniquename=false,babel=other,uniquelist=false]{biblatex}
+\usepackage{caption}
+\captionsetup{
+	font={small, stretch=1},
+	labelfont=bf
+}
+
+\linespread{1.5}
+
+%\setkomafont{section}{\normalfont\bfseries}
+%\setkomafont{subsection}{\normalfont\bfseries}
+%\setkomafont{}{\normalfont\bfseries}
+
+\newcommand{\leadingzero}[1]{\ifnum #1<10 0\the#1\else\the#1\fi}
+\newcommand{\datumVonHeute}{\leadingzero{\day}.\leadingzero{\month}.\the\year}
+
+\bibliography{test,BA}
+
+\newcommand{\haThema}{Routingbasierte ÖPNV-Indikatoren im Rheinland}
+\newcommand{\haAutor}{Paul Jannis Weiland}
+\newcommand{\haAutorAdresse}{Plankgasse 58}
+\newcommand{\haAutorPLZ}{50668}
+\newcommand{\haAutorOrt}{Köln}
+\newcommand{\haDeckblattTextEins}{Abschlussarbeit}
+\newcommand{\haDeckblattTextZwei}{Bachelor of Arts Geographie}
+\newcommand{\haSchule}{Universität zu Köln}
+\newcommand{\haSchuleAdresse}{Albertus-Magnus-Platz}
+\newcommand{\haSchulePLZ}{50923}
+\newcommand{\haSchuleOrt}{Köln}
+\newcommand{\haGutachter}{Dr. Christian  Willmes}
+\newcommand{\haGutachterText}{}
+
+\title{\haThema}
+\author{\haAutor}
+\date{\today}
+
+\begin{document}
+	
+	% DECKBLATT
+	\begin{titlepage}
+		Universität zu Köln\\
+		Geographisches Institut
+		\begin{center}
+			\vspace{1.5cm}
+			{\scshape\large \haDeckblattTextEins \par}
+			\vspace{1cm}
+			{\scshape\large zum Thema\par}
+			\vspace{1.5cm}
+			{\LARGE\bfseries \haThema \par}
+			\vfill
+			{Erstellt von:\\ {\bfseries \haAutor}\\ \haAutorAdresse\\ \haAutorPLZ~\haAutorOrt \par}
+			\vspace{1cm}
+			{\haDeckblattTextZwei \\ \haSchule \\ \haSchuleAdresse \\ \haSchulePLZ~\haSchuleOrt \par}
+			\vspace{1cm}
+			Gutachter:\\ {\bfseries \haGutachter}\\ \haGutachterText
+			\vfill
+		\end{center}
+		{\haAutorOrt,~\datumVonHeute\par}
+	\end{titlepage}
+	\thispagestyle{empty}
+	\newpage
+	
+	% INHALTSVERZEICHNIS
+	\tableofcontents
+	\thispagestyle{empty}
+	\newpage
+	
+	% Seitenzahl auf 1 setzen
+	\setcounter{page}{1}
+%\begin{document}
+\section{Einleitung}
+Hier steht normaler Text ohne jede Besonderheit, sozusagen der Fließtext.\\
+\texttt{Wie sieht dieser Text aus, er soll eine Art Codeausschnitt darstellen?}
+\section{Literatur}
+\subsection{Netzwerke}
+\subsection{ÖPNV in Deutschland und Nordrhein-Westfalen}
+\subsection{Access}
+\subsection{Indikatoren}
+%evtl Access und Indikatoren in eins.
+\section{Methodik}
+\subsection{Vorstellung des Untersuchungsgebietes}
+Untersucht werden soll das Gebiet des Regierungsbezirks Köln (5.866 – 7.7918°O, 50.323 – 51.251°N), deckungsgleich mit dem Zuständigkeitsbereich des Zweckverbandes go.Rheinland, Aufgabenträger für den SPNV und den Verkehrsverbünden VRS („Verkehrsverbund Rhein-Sieg“) und AVV („Aachener Verkehrsverbund“).
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=1\linewidth]{figures/Popdensity}
+	\caption{Umriss des Untersuchungsgebiets mit Gemeindegrenzen und Bevölkerungsdichte auf Grundlage des Zensus 2022. \parencite{statistischeamterdesbundesundderlanderErgebnisseZensus20222022}}
+	\label{fig:popdensity}
+\end{figure}
+In diesem Gebiet liegt eine heterogene Siedlungsstruktur mit den städtischen Ballungsräumen Köln, Bonn, Aachen und Leverkusen und ländlicheren, weniger dicht besiedelten Räumen vor:  Die Nordeifel im Südwesten und das bergischen Land im Osten. Diese ländlichen Räume unterscheiden sich zusätzlich durch verschiedene Siedlungsanordnungen: Östlich des Rheins (Rheinisch-Bergischer Kreis, Rhein-Sieg-Kreis und Oberbergischer Kreis) liegen (räumlich) kleinere Siedlungen dichter beieinander, westlich (Kreis Euskirchen, Kreis Düren, Rhein-Erft-Kreis, in geringerem Maße Kreis Heinsberg) sind die Siedlungsflächen tendenziell etwas größer und liegen weiter auseinander. Daraus ergeben sich verschiedene Anforderungen an die lokalen Verkehrsnetze und vielfältige Pendlerverflechtungen (Umland-Stadt, Stadt-Umland, Stadt-Stadt). 
+
+Durch den Strukturwandel im rheinischen Braunkohlerevier und die im Investitionsgesetz Kohleregionen verankerten Mittel zur Förderung der Eisenbahn- und eisenbahnanliegenden Infrastruktur (Investitionsgesetz Kohleregionen 2023, §§ 22, 27, Anlage 4) ergibt sich zusätzlicher Handlungs- und Informationsbedarf, der eine Untersuchung des verkehrlichen Status Quo des Gebietes relevant macht. Die verwendeten Methoden sind, aufgrund der deutschlandweit verfügbaren Datenquellen, zwar auf ganz Deutschland anwendbar, werden aufgrund des angestrebten Detailgrades der Auswertung und der resultierenden Notwendigkeit, eventuelle Randbedingungen und Ungenauigkeiten manuell zu prüfen auf das beschriebene Gebiet heruntergebrochen.
+\subsection{Datengrundlagen}
+\subsubsection{OSM}
+\subsubsection{GTFS}
+\subsubsection{Zensus}
+\subsection{Berechnung der Indikatoren}
+\section{Ergebnisse}
+\subsection{Indikatoren}
+\subsection{Weiße Flecken} %Arbeitstitel
+\section{Diskussion}
+\section{Fazit}
+Monographiezitat im Fließtext: \textcite[1]{Buchautor2000}
+
+Monographiezitat: \parencite[1]{Buchautor2000}
+
+Schriftenreihe: \parencite[22]{Schriftenreihler2000}
+
+Beitrag aus Sammelwerk mit zwei Autoren: \parencite[12]{Sammler2000}
+
+Englisher Beitrag aus Sammelwerk mit zwei Autoren: \parencite[12]{Collector2000}
+
+Zeitschriftenartikel mit 4 Autoren: \parencite[11]{Zeitschriftler2000}
+
+Konferenzbeitrag: \parencite[200]{Konferenzler2000}
+
+Englischer Konferenzbeitrag: \parencite[200]{ConferenceGuy2000}
+
+Doktorarbeit: \parencite[12]{Doktor2000}
+
+Internetquelle, nicht von Person, sondern von Organisation: \parencite{Internetorganisation2000}
+
+Internetquelle mit DOI: \parencite{Onlinedoiautor2000}
+
+Zeitungsartikel: \parencite{Kolumna2000}
+
+Karte: \parencite{Kartenorganisation2000}
+
+\printbibliography
+\end{document}

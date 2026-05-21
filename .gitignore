@@ -4,6 +4,19 @@
 .Ruserdata
 .Rproj.user/
 
+#tex
+*.aux
+*.bbl
+*.bcf
+*.blg
+*.fdb_latexmk
+*.fls
+*.log
+*.out
+*.run.xml
+*.synctex.gz
+*.toc
+
 # Large/raw datasets
 feeds/
 osmdata/
