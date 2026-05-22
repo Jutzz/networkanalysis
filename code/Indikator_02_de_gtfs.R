@@ -12,7 +12,7 @@ freq_date <- "2026-05-21"
 
 #TODO: Make usable for any area: import full zensus and stops data, filter by generic area (limited stops and dests) 
 mapping_matrix <- read_csv2(here("code/erschließung_mat_long.csv"))
-stops_table <- st_read(here("geodata/poi.gpkg"), paste0(timestamp, "_stop_frequencies_de_gtfs_noholidays")) %>%
+stops_table <- st_read(here("geodata/poi.gpkg"), paste0(freq_date, "_stop_frequencies_de_gtfs_noholidays")) %>%
   mutate(stop_type = case_when(
     stop_type == 1 ~ "train",
     stop_type == 2 ~ "tram",
@@ -27,13 +27,13 @@ stops_id <- st_drop_geometry(stops_table) %>%
 
 #----stops data----
 #Einlesen von Gitter und POI
-zensus_grid <- st_read(here("geodata/zensus.gpkg"), "nrw_zensus_populated") %>%
+zensus_grid <- st_read(here("geodata/zensus.gpkg"), "regbez_zensus_populated") %>%
   st_as_sf() %>%
   select(id, ags, Einwohner)
 #mutate(id = GITTER_ID_100m)
 
 #Erstellen von r5-lesbaren Start- und Zielorten. Nur bewohnte Gitterzellen als Startorte.
-area <- st_read("geodata/dvg1nw.gpkg", "regierungsbezirk_kln")
+area <- st_read("geodata/dvg1nw.gpkg", "regbez10kmbuffer")
 area_name <- "regbez"
 
 poi_type <- "stops"

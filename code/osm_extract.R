@@ -7,7 +7,7 @@ library(here)
 library(lubridate)
 options(timeout = 1000)
 
-dldate <- format(Sys.Date(), format = "%y%m%d")
+dldate <- format(Sys.Date(), format = "%Y%m%d")
 dldate_zhv <- format(Sys.Date(), format = "%Y-%m-%d")
 #Download latest OSM-extract for NRW.
 osm_req <- request("https://download.geofabrik.de/europe/germany/nordrhein-westfalen-latest.osm.pbf")

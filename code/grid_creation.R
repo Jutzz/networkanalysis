@@ -1,3 +1,5 @@
+#This script creates an INSPIRE-based 100m-edged geogrid in EPSG:3035 with INSPIRE-compliant grid ids. It is recommended to use the provided grids from the BKG at
+#https://gdz.bkg.bund.de/index.php/default/geographische-gitter-fur-deutschland-in-lambert-projektion-geogitter-inspire.html and cut them down in QGIS. This is essentially a proof of concept or to be used for larger-edged grids.
 library(sf)
 library(tidyverse)
 library(here)
@@ -6,19 +8,34 @@ sapply(files.sources, source)
 
 area <- st_transform(st_read("geodata/dvg1nw.gpkg", "regbez10kmbuffer"), crs = st_crs(3035))
 
+gem <- st_read("geodata/dvg1nw.gpkg", "gemeinden_regbez_kln")
+
 grid <- st_make_grid(area, cellsize = 100, offset = c(4020000,3022000))
 
 grid_sf <- st_sf(
   geometry = grid
 )
 
-grid_clipped <- st_intersection(grid_sf, area)
+area_intersects <- st_intersects(grid_sf, area, sparse = FALSE)
 
-grid_with_ids <- grid %>%
+grid_clipped <- grid_sf[area_intersects,]
 
-st_write(grid, "geodata/grids.gpkg", "100mregbez10kmbuffer", append = FALSE)
+coords <- st_coordinates(st_centroid(grid_clipped))
+
+grid_clipped$id <- paste0(
+  "100mN",
+  floor(coords[,2] / 100),
+  "E",
+  floor(coords[,1] / 100)
+)
+
+centroids <- st_centroid(grid_clipped) %>%
+  st_join(st_transform(gem, crs = st_crs(3035))) %>%
+  select(1,4) %>%
+  rename("ags" = KN)
+
+grid_with_ids <- st_as_sf(grid_clipped) %>%
+  left_join(st_drop_geometry(centroids))
+
+st_write(grid_with_ids, "geodata/grids.gpkg", "100mregbez10kmbuffer", append = FALSE)
   
-
-#laea_grid <- st_read("geodata/base_data/DE_Grid_ETRS89-LAEA_100m.gpkg/DE_Grid_ETRS89-LAEA_100m/geogitter/DE_Grid_ETRS89-LAEA_100m.gpkg")
- 
-grid_area <- st_par(grid, st_filter(area), n_cores = 12)
