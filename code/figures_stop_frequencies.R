@@ -9,18 +9,7 @@ library(sf)
 library(httr2)
 library(jsonlite)
 library(xtable)
-
-options(java.parameters = "-Xmx20G")
-library(r5r)
-library(tidytransit)
-library(gtfstools)
-library(tidyverse)
-library(timeDate)
-library(here)
-library(sf)
-library(httr2)
-library(jsonlite)
-library(xtable)
+library(zoo)
 
 files.sources = list.files("code/helper/", full.names = TRUE)
 sapply(files.sources, source)
@@ -104,12 +93,6 @@ school_holidays_long <- get_school_holidays(country = "DE",
   unnest(date) %>%
   select(name, date)
 
-#Use all weekdays present in feed
-weekdays <- {
-  d <- unique(gtfs_feed$.$dates_services$date)
-  d[wday(d, week_start = 1) <= 5]  # week_start=1 makes 1=Mon … 7=Sun
-}
-
 #Read pre-filtered GTFS-Feed
 gtfs_feed <- tidytransit::read_gtfs(paste0("feeds/filtered/de_gtfs_", feed_date, "_", area_name,".zip"))
 
@@ -148,11 +131,15 @@ availability_week <- availability %>%
   mutate(avg_pct = mean(pct_active))%>%
   mutate(avg_services = mean(active_services))%>%
   mutate(sd_services = sd(active_services)) %>%
-  mutate(variance_services = var(active_services)) %>%
-  select(5, 11:14) %>%
+  select(5, 11:13) %>%
   distinct()
 
-print.xtable(availability, file = "document/tables/availability_2026-05-21.tex")
+print.xtable(xtable(availability_week,
+                    caption = "Durchschnittlich verfügbare \\texttt{services} je Wochentag.",
+                    label = "activeservicesweek", digits = 4),
+             file = "document/tables/availability_2026-05-18.tex",
+          ,include.rownames = FALSE)
+
 
 ggplot(availability, aes(x = date, y = pct_active)) +
   geom_line(aes(group = weekday,
@@ -179,6 +166,12 @@ ggsave(last_plot(), filename = "document/figures/active_services_year_rollavg_20
 
 median_date <- get_median_row(availability %>%
                                 filter(!weekday_n%in%c(0,6)), "pct_active")
+
+#Use all weekdays present in feed
+weekdays <- {
+  d <- unique(gtfs_feed$.$dates_services$date)
+  d[wday(d, week_start = 1) <= 5]  # week_start=1 makes 1=Mon … 7=Sun
+}
 
 #Manually choose a selection of days present in the feed
 weekdays <- {
