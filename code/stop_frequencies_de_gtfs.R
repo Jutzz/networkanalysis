@@ -31,18 +31,6 @@ get_school_holidays <- function(country, subdivision, start_date, end_date, lang
   school_holidays <- fromJSON(rawToChar(resp$body))
 }
 
-get_route_rank <- function(rt) {
-  which(vapply(route_type_ranks, function(grp) rt %in% grp, logical(1)))
-}
-
-#Set route_type ranking: train, tram, bus, everything else.
-route_type_ranks <- list(
-  c("101","102","106","109"),   
-  c("0","1"),                  
-  c("201","3","700"), 
-  c("4","5","715")
-)
-
 holidays_nrw <- function(year) {
   year <- as.integer(year)
   
@@ -62,12 +50,32 @@ holidays_nrw <- function(year) {
   )
 }
 
-school_holidays <- get_school_holidays(country = "DE",
-                                       subdivision = "DE-NW",
-                                       start_date = "2026-01-01",
-                                       end_date = "2028-12-31")
-  
-school_holidays_long <- school_holidays %>%
+#If openholidays api breaks, use this to set school holidays manually.
+#school_holidays <- c(
+#  seq.Date(as.Date("2026-03-30"), as.Date("2026-04-11"), by = "day"),
+#  seq.Date(as.Date("2026-07-20"), as.Date("2026-09-01"), by = "day"),
+#  seq.Date(as.Date("2026-10-17"), as.Date("2026-10-31"), by = "day"),
+#  seq.Date(as.Date("2026-12-23"), as.Date("2027-01-06"), by = "day"))
+
+#Set route_type ranking: train, tram, bus, everything else.
+route_type_ranks <- list(
+  c("101","102","106","109"),   
+  c("0","1"),                  
+  c("201","3","700"), 
+  c("4","5","715")
+)
+
+get_route_rank <- function(rt) {
+  which(vapply(route_type_ranks, function(grp) rt %in% grp, logical(1)))
+}
+
+holidays <- holidays_nrw(2026)
+
+#Set up date lists of school holidays and public holidays for filtering stop time data.
+school_holidays_long <- get_school_holidays(country = "DE",
+                                            subdivision = "DE-NW",
+                                            start_date = "2026-01-01",
+                                            end_date = "2028-12-31") %>%
   select(2,3,5) %>%
   mutate(
     name = map_chr(name, ~ {
@@ -83,20 +91,18 @@ school_holidays_long <- school_holidays %>%
   unnest(date) %>%
   select(name, date)
 
-#If openholidays api breaks, use this to set school holidays manually.
-#school_holidays <- c(
-#  seq.Date(as.Date("2026-03-30"), as.Date("2026-04-11"), by = "day"),
-#  seq.Date(as.Date("2026-07-20"), as.Date("2026-09-01"), by = "day"),
-#  seq.Date(as.Date("2026-10-17"), as.Date("2026-10-31"), by = "day"),
-#  seq.Date(as.Date("2026-12-23"), as.Date("2027-01-06"), by = "day"))
+#Use all weekdays present in feed
+weekdays <- {
+  d <- unique(gtfs_feed$.$dates_services$date)
+  d[wday(d, week_start = 1) <= 5]  # week_start=1 makes 1=Mon … 7=Sun
+}
 
-
-#gtfs handling in de_gtfs_cleaning
-
+#Read pre-filtered GTFS-Feed
 gtfs_feed <- tidytransit::read_gtfs(paste0("feeds/filtered/de_gtfs_", feed_date, "_", area_name,".zip"))
 
 timestamp <- format(Sys.Date(), "%Y-%m-%d")
 
+#set up separate tables of GTFS components for easier joining
 stops <- gtfs_feed$stops
 
 stop_times <- gtfs_feed$stop_times
@@ -105,13 +111,46 @@ trips <- gtfs_feed$trips
 
 routes <- gtfs_feed$routes
 
-holidays <- holidays_nrw(2026)
+#Analysis of transit availability to check for feed inconsistencies, representative stretches.
+##Find stats and/or function to find representative dates, to check for large jumps in availability (holidays, partial feeds ending) and for variability across hours.
+#R5 Setup
+r5_network <- build_network(here("r5core_current"), verbose = FALSE, overwrite = FALSE)
 
-#Use all weekdays present in feed
-weekdays <- {
-  d <- unique(gtfs_feed$.$dates_services$date)
-  d[wday(d, week_start = 1) <= 5]  # week_start=1 makes 1=Mon … 7=Sun
-}
+availability <- check_transit_availability(r5_network, start_date = as.Date("2026-01-01"), end_date = as.Date("2026-12-24")) %>%
+  mutate(weekday = weekdays(as.Date(date))) %>%
+  mutate(weekday_n =  format(as.Date(date),"%w")) %>%
+  filter(active_services > 0) %>%
+  arrange(date) %>%
+  mutate(week_delta = active_services-lag(active_services, 7)) %>%
+  mutate(rolling_avg = rollmean(pct_active, 7, na.pad = TRUE)) %>%
+  mutate(rollingavg_delta = rolling_avg-lag(rolling_avg, 7)) %>%
+  mutate(absolute = abs(rollingavg_delta))
+
+jumps <- availability %>%
+  mutate(absolute = abs(rollingavg_delta)) %>%
+  filter(absolute > 2*(sd(rollingavg_delta, na.rm = TRUE)))
+
+availability_week <- availability %>%
+  group_by(weekday) %>%
+  mutate(avg_pct = mean(pct_active))%>%
+  mutate(avg_services = mean(active_services))%>%
+  mutate(sd_services = sd(active_services)) %>%
+  mutate(variance_services = var(active_services)) %>%
+  select(5, 11:14) %>%
+  distinct()
+
+ggplot(availability, aes(x = date, y = pct_active)) +
+  geom_line(aes(group = weekday,
+                color = factor(weekday)))
+  geom_line(
+    aes(
+      y = rollmean(pct_active, 7, na.pad = TRUE),
+      group = weekday_n
+    ),
+    color = "#ff0000"
+  )
+median_date <- get_median_row(availability %>%
+                                filter(!weekday_n%in%c(0,6)), "pct_active")
 
 #Manually choose a selection of days present in the feed
 weekdays <- {

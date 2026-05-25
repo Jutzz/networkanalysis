@@ -13,6 +13,7 @@ freq_date <- "2026-05-21"
 
 #TODO: Make usable for any area: import full zensus and stops data, filter by generic area (limited stops and dests) 
 mapping_matrix <- read_csv2(here("code/erschließung_mat_long.csv"))
+
 stops_table <- st_read(here("geodata/poi.gpkg"), paste0(freq_date, "_stop_frequencies_de_gtfs_noholidays")) %>%
   mutate(stop_type = case_when(
     stop_type == 1 ~ "train",
@@ -34,7 +35,7 @@ zensus_grid <- st_read(here("geodata/zensus.gpkg"), "regbez_zensus_populated") %
 #mutate(id = GITTER_ID_100m)
 
 #Erstellen von r5-lesbaren Start- und Zielorten. Nur bewohnte Gitterzellen als Startorte.
-area <- st_read("geodata/dvg1nw.gpkg", "regbez10kmbuffer")
+area <- st_read("geodata/dvg1nw.gpkg", "gemeinden_regbez_kln")
 area_name <- "regbez"
 
 poi_type <- "stops"
@@ -89,7 +90,7 @@ erschließung_map <- function(grid){
 }
 
 #Join mit Stops, errechnen der Erschließungsqualität, Auswahl der Station mit der besten Erschließungsqualität je Zelle, schreiben
-##TODO: Clean up, develop strategy for filenames/metadata, take write op out of function, make faster!
+##TODO: Clean up, develop strategy for filenames/metadata, make faster!
 i2_mapping <- function(ttm, matrix, departure){
   
   mapping <- matrix  
@@ -106,20 +107,15 @@ i2_mapping <- function(ttm, matrix, departure){
     slice(1) %>%
     ungroup()
   
-  grid_with_times <- polygrid100 %>%
+  grid_with_times <<- polygrid100 %>%
     left_join(best_connections %>%
                 select(from_id, to_id, travel_time_p01, Erschließungsqualität), by = c("id" = "to_id")) %>%
     mutate(start_time = departure) %>%
     mutate(end_time = start_time + minutes(travel_time_p01)) %>%
     left_join(stops_id, by = c("from_id" = "id"))
   
-  timestamp <- format(Sys.Date(), "%m-%y")
-  
-  travel_times <- grid_with_times %>%
+  travel_times <<- grid_with_times %>%
     select(id, from_id, travel_time_p01, Einwohner, NVBW_HST_DHID, geom)
-  
-  st_write(travel_times, here("output/indikator_02.gpkg"), layer = paste0(timestamp, "_nrw_gtfs_polygrid_100m_", poi_type, "_", modes_filename, "_", max_trip_duration,"min_best"), append = FALSE)
-  st_write(grid_with_times, here("results/indikator_02.gpkg"), layer = paste0(timestamp, "_indikator2_grid_erschließungswerte_best_", area_name), append = FALSE)
 }
 
 #Find median row to determine representative day for routing
@@ -141,7 +137,7 @@ get_median_row <- function(data, column) {
 r5_network <- build_network(here("r5core_current"), verbose = FALSE, overwrite = FALSE)
 
 #Analysis of transit availability to pick representative (week-)day
-##TODO: This should take place also (or only?) in the stop frequencies calculation.
+##TODO: Is this necessary here? All days should be the same for WALK routing.
 ##Find stats and/or function to find representative dates, to check for large jumps in availability (holidays, partial feeds ending) and for variability across hours.
 availability <- check_transit_availability(r5_network, start_date = as.Date("2026-05-02"), end_date = as.Date("2026-07-19")) %>%
   mutate(weekday = weekdays(as.Date(date))) %>%
@@ -173,8 +169,14 @@ max_trip_duration <- 20
 #Travel Time Analysis
 ##TODO: This technically only has to be done once; Walk Times to stops wont change over time (except for single cases where walking infrastructure changes, so the osm data used for the core should be updated and this be rerun if needed/at a set interval).
 ttm <- Erreichbarkeit(origins = pois_df, destinations = zensus_grid_df)
+
+write.csv2(ttm, file = "output/walk_20min_zensus_stops.csv")
 #This is the part that actually changes Indikator 2 with differing strategies for stop frequency calculation. 
 i2_mapping(ttm, mapping_matrix, departure)
+
+#Write out a travel times table and an accessibility table to geopackages.
+st_write(travel_times, here("output/indikator_02.gpkg"), layer = paste0(freq_date, "_DEgtfs_zensus_", poi_type, "_walktime"), append = FALSE)
+st_write(grid_with_times, here("results/indikator_02.gpkg"), layer = paste0(freq_date, "_i2_zensus_erschließungswerte_best_", area_name), append = FALSE)
 
 
 
