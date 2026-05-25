@@ -152,7 +152,7 @@ availability_week <- availability %>%
   select(5, 11:14) %>%
   distinct()
 
-print.xtable(availability_week, file = "document/tables/availability_2026-05-21.tex", include.rownames = FALSE, append = FALSE)
+print.xtable(availability, file = "document/tables/availability_2026-05-21.tex")
 
 ggplot(availability, aes(x = date, y = pct_active)) +
   geom_line(aes(group = weekday,
