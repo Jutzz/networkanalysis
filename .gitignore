@@ -28,6 +28,7 @@ geodata/grids.gpkg
 # Optional generated outputs
 output/
 results/
+r5core_current/
 
 # GIS temporary files
 *.qgz~

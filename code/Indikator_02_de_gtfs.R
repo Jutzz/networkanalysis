@@ -4,6 +4,7 @@ library(sf)
 library(r5r)
 library(here)
 library(lubridate)
+library(zoo)
 
 files.sources = list.files("code/helper/", full.names = TRUE)
 sapply(files.sources, source)
@@ -88,6 +89,7 @@ erschließung_map <- function(grid){
 }
 
 #Join mit Stops, errechnen der Erschließungsqualität, Auswahl der Station mit der besten Erschließungsqualität je Zelle, schreiben
+##TODO: Clean up, develop strategy for filenames/metadata, take write op out of function, make faster!
 i2_mapping <- function(ttm, matrix, departure){
   
   mapping <- matrix  
@@ -139,7 +141,9 @@ get_median_row <- function(data, column) {
 r5_network <- build_network(here("r5core_current"), verbose = FALSE, overwrite = FALSE)
 
 #Analysis of transit availability to pick representative (week-)day
-availability <- check_transit_availability(r5_network, start_date = as.Date("2026-04-10"), end_date = as.Date("2026-05-30")) %>%
+##TODO: This should take place also (or only?) in the stop frequencies calculation.
+##Find stats and/or function to find representative dates, to check for large jumps in availability (holidays, partial feeds ending) and for variability across hours.
+availability <- check_transit_availability(r5_network, start_date = as.Date("2026-05-02"), end_date = as.Date("2026-07-19")) %>%
   mutate(weekday = weekdays(as.Date(date))) %>%
   mutate(weekday_n =  format(as.Date(date),"%w"))
 
@@ -148,15 +152,16 @@ availability_week <- availability %>%
   group_by(weekday) %>%
   mutate(avg_pct = mean(pct_active))%>%
   mutate(avg_services = mean(active_services))%>%
-  select(5:7) %>%
+  #select(5:7) %>%
   distinct()
 
 ggplot(availability, aes(x = date, y = pct_active)) +
-  geom_line()
+  geom_line() +
+  geom_line(aes(y=rollmean(pct_active, 5, na.pad=TRUE), color = "#ff0000"))
 
 median_date <- get_median_row(availability %>%
                                 filter(!weekday_n%in%c(0,6)), "pct_active")
-departure_date <- median_date$date
+departure_date <- median_date$date[1]
 
 #Parameter für Erreichbarkeitsanalyse
 modes <- c("WALK")
@@ -166,9 +171,10 @@ departure <- as.POSIXct(paste0(departure_date, " 09:00:00"))
 max_trip_duration <- 20
 
 #Travel Time Analysis
+##TODO: This technically only has to be done once; Walk Times to stops wont change over time (except for single cases where walking infrastructure changes, so the osm data used for the core should be updated and this be rerun if needed/at a set interval).
 ttm <- Erreichbarkeit(origins = pois_df, destinations = zensus_grid_df)
-
-i2_mapping(ttm, mapping_matrix)
+#This is the part that actually changes Indikator 2 with differing strategies for stop frequency calculation. 
+i2_mapping(ttm, mapping_matrix, departure)
 
 
 
