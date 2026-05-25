@@ -8,6 +8,19 @@ library(here)
 library(sf)
 library(httr2)
 library(jsonlite)
+library(xtable)
+
+options(java.parameters = "-Xmx20G")
+library(r5r)
+library(tidytransit)
+library(gtfstools)
+library(tidyverse)
+library(timeDate)
+library(here)
+library(sf)
+library(httr2)
+library(jsonlite)
+library(xtable)
 
 files.sources = list.files("code/helper/", full.names = TRUE)
 sapply(files.sources, source)
@@ -139,6 +152,8 @@ availability_week <- availability %>%
   select(5, 11:14) %>%
   distinct()
 
+print.xtable(availability_week, file = "document/tables/availability_2026-05-21.tex", include.rownames = FALSE, append = FALSE)
+
 ggplot(availability, aes(x = date, y = pct_active)) +
   geom_line(aes(group = weekday,
                 color = factor(weekday))) +
@@ -149,6 +164,21 @@ ggplot(availability, aes(x = date, y = pct_active)) +
     ),
     color = "#ff0000"
   )
+
+ggplot(availability, aes(x = date, y = pct_active)) +
+  geom_line() +
+  geom_line(aes(y=rolling_avg, color = "gleitender Mittelwert (7 Tage)"), linewidth = 2) +
+  labs(title = "Aktive services im Jahresverlauf", subtitle = "auf Grundlage des DELFI-GTFS vom 18.05.2026", color = element_blank()) +
+  xlab("Datum") +
+  ylab("Anteil aktiver services") +
+  scale_color_manual(values = c("gleitender Mittelwert (7 Tage)" = "red")) +
+  scale_x_date(date_labels="%b %y",date_breaks  ="1 month") +
+  theme(legend.position = "bottom")
+
+ggsave(last_plot(), filename = "document/figures/active_services_year_rollavg_2026-05-18.png", width = 160, height = 100, units  = "mm", dpi = 300)  
+
+median_date <- get_median_row(availability %>%
+                                filter(!weekday_n%in%c(0,6)), "pct_active")
 
 #Manually choose a selection of days present in the feed
 weekdays <- {
