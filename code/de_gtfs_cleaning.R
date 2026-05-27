@@ -5,7 +5,7 @@ library(sf)
 library(here)
 
 #Change feed date to used feed version (filename).
-feed_date <- "20260518"
+feed_date <- "20260525"
 area_name <- "regbez"
 
 #TODO: generalize for any spatial filter

@@ -152,15 +152,54 @@ ggplot(availability, aes(x = date, y = pct_active)) +
     color = "#ff0000"
   )
 
+x_min <- min(availability$date, na.rm = TRUE)
+x_max <- max(availability$date, na.rm = TRUE)
+
+plotholidays <- get_school_holidays(country = "DE",
+                                    subdivision = "DE-NW",
+                                    start_date = "2026-01-01",
+                                    end_date = "2028-12-31") %>%
+  select(2,3,5) %>%
+  mutate(
+    name = map_chr(name, ~ {
+      x <- .x
+      x$text[x$language == "DE"][1]
+    })
+  ) %>%
+  mutate(
+    startDate = as.Date(startDate),
+    endDate = as.Date(endDate)) %>%
+  filter(endDate >= x_min,
+         startDate <= x_max) %>%
+  mutate(
+    startDate = pmax(startDate, x_min),
+    endDate   = pmin(endDate, x_max) + 1
+  )
+
 ggplot(availability, aes(x = date, y = pct_active)) +
+  geom_rect(
+    data = plotholidays,
+    inherit.aes = FALSE,
+    aes(
+      xmin = startDate,
+      xmax = endDate,
+      ymin = -Inf,
+      ymax = Inf,
+      fill = name
+    ),
+    alpha = 0.2
+  ) +
   geom_line() +
   geom_line(aes(y=rolling_avg, color = "gleitender Mittelwert (7 Tage)"), linewidth = 2) +
-  labs(title = "Aktive services im Jahresverlauf", subtitle = "auf Grundlage des DELFI-GTFS vom 18.05.2026", color = element_blank()) +
+  labs(title = "Aktive services im Jahresverlauf", subtitle = "auf Grundlage des DELFI-GTFS vom 18.05.2026", color = element_blank(), fill = NULL) +
   xlab("Datum") +
   ylab("Anteil aktiver services") +
   scale_color_manual(values = c("gleitender Mittelwert (7 Tage)" = "red")) +
   scale_x_date(date_labels="%b %y",date_breaks  ="1 month") +
   theme(legend.position = "bottom")
+
+ggplot(availability, aes(x = active_services)) +
+  geom_dotplot(aes(fill = as.factor(month(date))), stackgroups = TRUE, binpositions = "all")
 
 ggsave(last_plot(), filename = "document/figures/active_services_year_rollavg_2026-05-18.png", width = 160, height = 100, units  = "mm", dpi = 300)  
 
