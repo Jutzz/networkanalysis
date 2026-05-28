@@ -150,13 +150,12 @@ trips_per_day <- trip_calendar %>%
     trips = n()
   ) %>%
   filter(date %in% nonholiday_normdays) %>%
-  filter(date < as.Date("2026-09-01")) %>%
+  filter(date < as.Date("2026-06-29")) %>%
   arrange(date) %>%
   mutate(week_delta = trips-lag(trips, 5)) %>%
   mutate(rolling_avg = rollmean(trips, 5, na.pad = TRUE)) %>%
   mutate(rollingavg_delta = rolling_avg-lag(rolling_avg, 5)) %>%
-  mutate(absolute = abs(rollingavg_delta)) %>%
-  mutate(jump = ifelse(date > as.Date("2026-09-01"), "post", "pre"))
+  mutate(absolute = abs(rollingavg_delta))
   
 x_min <- min(trips_per_day$date, na.rm = TRUE)
 x_max <- max(trips_per_day$date, na.rm = TRUE)
@@ -205,6 +204,9 @@ ggplot(trips_per_day, aes(x = date, y = trips)) +
   theme(legend.position = "bottom")
 
 #R5 Setup
+#TODO: Not really needed here, as checking services is pretty unreliable. Clean separation between exploratory show of work (figures) and processing steps here.
+#What happens reproducibly: Does an agency_id feed part stop at some point? If so, what proportion of daily trips does it have?
+#Can a threshold be set for that or is it necessarily a manual decision?
 r5_network <- build_network(here("r5core_2026-05-18"), verbose = FALSE, overwrite = FALSE)
 #dates = nonholiday_weekdays#
 
