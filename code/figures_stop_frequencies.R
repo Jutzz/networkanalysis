@@ -1,23 +1,24 @@
+#Change feed date and area name to used feed version (filename set in de_gtfs_cleaning).
+feed_date <- "20260518"
+zhv_date <- "20260521"
+area_name <- "regbez"
+
+#Setup----
 options(java.parameters = "-Xmx20G")
 library(r5r)
 library(tidytransit)
 library(gtfstools)
 library(tidyverse)
+library(plotly)
 library(timeDate)
 library(here)
 library(sf)
 library(httr2)
 library(jsonlite)
-library(xtable)
 library(zoo)
 
 files.sources = list.files("code/helper/", full.names = TRUE)
 sapply(files.sources, source)
-
-#Change feed date and area name to used feed version (filename set in de_gtfs_cleaning).
-feed_date <- "20260518"
-zhv_date <- "20260521"
-area_name <- "regbez"
 
 get_school_holidays <- function(country, subdivision, start_date, end_date, lang = "DE") {
   resp <- httr2::request("https://openholidaysapi.org/SchoolHolidays") |>
@@ -63,7 +64,7 @@ holidays_nrw <- function(year) {
 route_type_ranks <- list(
   c("101","102","106","109"),   
   c("0","1"),                  
-  c("201","3","700"), 
+  c("201","3","700", "704"), 
   c("4","5","715")
 )
 
@@ -74,10 +75,10 @@ get_route_rank <- function(rt) {
 holidays <- holidays_nrw(2026)
 
 #Set up date lists of school holidays and public holidays for filtering stop time data.
-school_holidays_long <- get_school_holidays(country = "DE",
-                                            subdivision = "DE-NW",
-                                            start_date = "2026-01-01",
-                                            end_date = "2028-12-31") %>%
+school_holidays<- get_school_holidays(country = "DE",
+                                      subdivision = "DE-NW",
+                                      start_date = "2026-01-01",
+                                      end_date = "2028-12-31") %>%
   select(2,3,5) %>%
   mutate(
     name = map_chr(name, ~ {
@@ -93,10 +94,57 @@ school_holidays_long <- get_school_holidays(country = "DE",
   unnest(date) %>%
   select(name, date)
 
+plotholidays <- get_school_holidays(country = "DE",
+                                    subdivision = "DE-NW",
+                                    start_date = "2026-01-01",
+                                    end_date = "2028-12-31") %>%
+  select(2,3,5) %>%
+  mutate(
+    name = map_chr(name, ~ {
+      x <- .x
+      x$text[x$language == "DE"][1]
+    })
+  ) %>%
+  mutate(
+    startDate = as.Date(startDate),
+    endDate = as.Date(endDate)) %>%
+  filter(endDate >= x_min,
+         startDate <= x_max) %>%
+  mutate(
+    startDate = pmax(startDate, x_min),
+    endDate   = pmin(endDate, x_max) + 1
+  )
+
+#Begin analysis----
 #Read pre-filtered GTFS-Feed
 gtfs_feed <- tidytransit::read_gtfs(paste0("feeds/filtered/de_gtfs_", feed_date, "_", area_name,".zip"))
 
 timestamp <- format(Sys.Date(), "%Y-%m-%d")
+
+#normalwerktage present in feed
+normdays <- {
+  d <- unique(gtfs_feed$.$dates_services$date)
+  wd <- wday(d, week_start = 1)
+  mo <- month(d)
+  
+  d[wd %in% c(2, 3, 4) & mo %in% c(4, 5, 6, 9)]
+}
+#weekdays present in feed
+weekdays <- {
+  d <- unique(gtfs_feed$.$dates_services$date)
+  d[wday(d, week_start = 1) <= 5]  # week_start=1 makes 1=Mon … 7=Sun
+}
+
+#Manually choose a selection of days present in the feed
+#weekdays <- {
+#  d <- seq.Date(as.Date("2026-05-20"), as.Date("2026-05-21"), by = "day")
+#  d[wday(d, week_start = 1) <= 5]  # week_start=1 makes 1=Mon … 7=Sun
+#}
+
+nonholiday_weekdays <- weekdays[!weekdays %in% c(holidays,school_holidays$date)]
+
+nonholiday_normdays <- normdays[!normdays %in% c(holidays,school_holidays$date)]
+
 
 #set up separate tables of GTFS components for easier joining
 stops <- gtfs_feed$stops
@@ -107,12 +155,141 @@ trips <- gtfs_feed$trips
 
 routes <- gtfs_feed$routes
 
-#Analysis of transit availability to check for feed inconsistencies, representative stretches.
-##Find stats and/or function to find representative dates, to check for large jumps in availability (holidays, partial feeds ending) and for variability across hours.
-#R5 Setup
-r5_network <- build_network(here("r5core_current"), verbose = FALSE, overwrite = FALSE)
+#Analysis of transit availability to check for feed inconsistencies, representative stretches.----
+##TODO: Find stats and/or function to find representative dates, to check for large jumps in availability (holidays, schedule updates, partial feeds ending) and for variability across hours.
+#Combine calendar, trips and routes to have a complete calendar of single trips with date and route info.
+trip_calendar <- gtfs_feed$.$dates_services %>%
+  inner_join(gtfs_feed$trips %>%
+               select(service_id, trip_id, route_id),
+             by = "service_id") %>%
+  inner_join(gtfs_feed$routes %>%
+               select(route_id, route_type, agency_id, route_short_name),
+             by = "route_id") %>%
+  filter(!route_type %in% c(102,101,201))
 
-availability <- check_transit_availability(r5_network, start_date = as.Date("2026-01-01"), end_date = as.Date("2026-12-24")) %>%
+#Calculate simple trips per day for normdays (alternatively weekdays, nonholiday weekdays, all days, etc.)
+trips_per_day <- trip_calendar %>%
+  group_by(date) %>%
+  summarise(
+    trips = n()
+  ) %>%
+  filter(date %in% nonholiday_normdays) %>%
+  filter(date < as.Date("2026-09-01")) %>%
+  arrange(date) %>%
+  mutate(week_delta = trips-lag(trips, 5)) %>%
+  mutate(rolling_avg = rollmean(trips, 5, na.pad = TRUE)) %>%
+  mutate(rollingavg_delta = rolling_avg-lag(rolling_avg, 5)) %>%
+  mutate(absolute = abs(rollingavg_delta)) %>%
+  mutate(jump = ifelse(date > as.Date("2026-09-01"), "post", "pre"))
+
+
+activity_per_day <- trip_calendar %>%
+  group_by(date, agency_id) %>%
+  summarise(
+    trips = n()
+  ) %>%
+  left_join(gtfs_feed$agency %>% dplyr::select(agency_id, agency_name)) %>%
+  filter(date %in% nonholiday_normdays) %>%
+  filter(date %in% c(as.Date("2026-06-25"), as.Date("2026-06-30")))
+
+cutoff <- as.Date("2026-09-01")
+
+agency_change <- activity_per_day %>%
+  mutate(
+    period = if_else(date < cutoff, "before", "after")
+  ) %>%
+  group_by(agency_id, agency_name) %>%
+  group_modify(~{
+    
+    # ensure both periods exist
+    if(length(unique(.x$period)) < 2) {
+      return(tibble(
+        mean_before = NA_real_,
+        mean_after = NA_real_,
+        delta = NA_real_,
+        rel_change = NA_real_,
+        p_value = NA_real_
+      ))
+    }
+    
+    before <- .x$trips[.x$period == "before"]
+    after  <- .x$trips[.x$period == "after"]
+    
+    wt <- wilcox.test(before, after)
+    
+    tibble(
+      mean_before = mean(before),
+      mean_after  = mean(after),
+      delta = mean(after) - mean(before),
+      rel_change = mean(after) / mean(before) - 1,
+      p_value = wt$p.value
+    )
+  }) %>%
+  ungroup() %>%
+  mutate(delta = round(delta, 3)) %>%
+  arrange(rel_change)
+
+suspect <- agency_change %>%
+  slice_min(rel_change, n = 6) #%>%
+  pull(agency_id)
+
+activity_per_day %>%
+  filter(agency_id %in% suspect) %>%
+  ggplot(aes(date, trips)) +
+  geom_line() +
+  facet_wrap(~agency_name, scales = "free_y") +
+  geom_vline(
+    xintercept = as.Date("2025-09-01"),
+    linetype = "dashed"
+  )
+
+
+p <- ggplot(activity_per_day, mapping = aes(x = date, y = trips, color = agency_id, text = agency_name)) +
+  geom_line()
+
+p
+
+ggplotly(p, tooltip = "text", dynamicTicks = TRUE)
+
+ggsave(last_plot(), filename = "document/figures/trips_per_agency_weekdays_2026-05-18.svg", width = 16000, height = 10000, units  = "px", dpi = 300, limitsize = FALSE)  
+#Create Plot of trips per day with holiday color bars
+x_min <- min(trips_per_day$date, na.rm = TRUE)
+x_max <- max(trips_per_day$date, na.rm = TRUE)
+
+ggplot(trips_per_day, aes(x = date, y = trips)) +
+  geom_rect(
+    data = plotholidays,
+    inherit.aes = FALSE,
+    aes(
+      xmin = startDate,
+      xmax = endDate,
+      ymin = -Inf,
+      ymax = Inf,
+      fill = name
+    ),
+    alpha = 0.2
+  ) +
+  geom_point() +
+  geom_line(aes(y=rolling_avg, color = "gleitender Mittelwert (7 Tage)"), linewidth = 2) +
+  labs(title = "Fahrten pro Tag im Jahresverlauf", subtitle = "auf Grundlage des DELFI-GTFS vom 18.05.2026 (nur Wochentage)", color = element_blank(), fill = NULL) +
+  xlab("Datum") +
+  ylab("Anzahl Fahrten") +
+  scale_color_manual(values = c("gleitender Mittelwert (7 Tage)" = "red")) +
+  scale_x_date(date_labels="%b %y",date_breaks  ="1 month") +
+  theme(legend.position = "bottom")
+
+ggsave(last_plot(), filename = "document/figures/trips_year_nonholiday_weekdays_2026-05-18.svg", width = 160, height = 100, units  = "mm", dpi = 300)  
+
+ggplot(trips_per_day, aes(x = trips)) +
+  geom_dotplot(aes(fill = jump), stackgroups = TRUE, binpositions = "all")
+
+ggsave(last_plot(), filename = "document/figures/trips_dotplot_nonholiday_normdays_2026-05-18.svg", width = 240, height = 160, units  = "mm", dpi = 300)  
+
+#R5 Setup
+r5_network <- build_network(here("r5core_2026-05-18"), verbose = FALSE, overwrite = FALSE)
+#dates = nonholiday_weekdays#
+
+availability <- check_transit_availability(r5_network, dates = unique(gtfs_feed$.$dates_services$date)) %>%
   mutate(weekday = weekdays(as.Date(date))) %>%
   mutate(weekday_n =  format(as.Date(date),"%w")) %>%
   filter(active_services > 0) %>%
@@ -131,15 +308,9 @@ availability_week <- availability %>%
   mutate(avg_pct = mean(pct_active))%>%
   mutate(avg_services = mean(active_services))%>%
   mutate(sd_services = sd(active_services)) %>%
-  select(5, 11:13) %>%
+  mutate(variance_services = var(active_services)) %>%
+  select(5, 11:14) %>%
   distinct()
-
-print.xtable(xtable(availability_week,
-                    caption = "Durchschnittlich verfügbare \\texttt{services} je Wochentag.",
-                    label = "activeservicesweek", digits = 4),
-             file = "document/tables/availability_2026-05-18.tex",
-          ,include.rownames = FALSE)
-
 
 ggplot(availability, aes(x = date, y = pct_active)) +
   geom_line(aes(group = weekday,
@@ -189,7 +360,7 @@ ggplot(availability, aes(x = date, y = pct_active)) +
     ),
     alpha = 0.2
   ) +
-  geom_line() +
+  geom_point() +
   geom_line(aes(y=rolling_avg, color = "gleitender Mittelwert (7 Tage)"), linewidth = 2) +
   labs(title = "Aktive services im Jahresverlauf", subtitle = "auf Grundlage des DELFI-GTFS vom 18.05.2026", color = element_blank(), fill = NULL) +
   xlab("Datum") +
@@ -201,27 +372,8 @@ ggplot(availability, aes(x = date, y = pct_active)) +
 ggplot(availability, aes(x = active_services)) +
   geom_dotplot(aes(fill = as.factor(month(date))), stackgroups = TRUE, binpositions = "all")
 
-ggsave(last_plot(), filename = "document/figures/active_services_year_rollavg_2026-05-18.png", width = 160, height = 100, units  = "mm", dpi = 300)  
-
-median_date <- get_median_row(availability %>%
-                                filter(!weekday_n%in%c(0,6)), "pct_active")
-
-#Use all weekdays present in feed
-weekdays <- {
-  d <- unique(gtfs_feed$.$dates_services$date)
-  d[wday(d, week_start = 1) <= 5]  # week_start=1 makes 1=Mon … 7=Sun
-}
-
-#Manually choose a selection of days present in the feed
-weekdays <- {
-  d <- seq.Date(as.Date("2026-04-20"), as.Date("2026-04-24"), by = "day")
-  d[wday(d, week_start = 1) <= 5]  # week_start=1 makes 1=Mon … 7=Sun
-}
-
 weekday_services <- gtfs_feed$.$dates_services %>%
-  filter(date %in% weekdays) %>%
-  filter(!date %in% holidays) %>%
-  filter(!date %in% school_holidays)
+  filter(date %in% nonholiday_weekdays)
 
 weekday_trips_dates <- trips %>%
   select(trip_id, service_id, route_id) %>%
@@ -231,8 +383,7 @@ weekday_trips_dates <- trips %>%
 
 weekday_stop_times_dates <- stop_times %>%
   filter(trip_id %in% weekday_trips_dates$trip_id) %>%
-  filter(departure_time >= hms("08:00:00")&arrival_time <= hms("18:00:00")) %>%
-  select(1:4) %>%
+  select(trip_id, stop_id, departure_time, arrival_time) %>%
   left_join(weekday_trips_dates %>%
               select(trip_id, date, route_type), by = "trip_id") %>%
   left_join(stops, by = "stop_id") %>%
@@ -244,6 +395,7 @@ weekday_stop_times_dates <- stop_times %>%
 zhv <- st_read(here("geodata/poi.gpkg"), paste0("zhv_", zhv_date))
 
 departure_counts <- weekday_stop_times_dates %>%
+  filter(departure_time >= hms("08:00:00")&arrival_time <= hms("18:00:00")) %>%
   group_by(NVBW_HST_DHID) %>%
   summarise(
     departures = n(),
@@ -257,7 +409,7 @@ departure_counts <- weekday_stop_times_dates %>%
     .groups = "drop"
   ) %>%
   mutate(
-    departures_per_day  = departures / length(weekdays),
+    departures_per_day  = departures / length(nonholiday_weekdays),
     departures_per_hour = departures_per_day / 10
   ) %>%
   left_join(zhv, by = join_by(NVBW_HST_DHID == DHID)) %>%
@@ -289,6 +441,67 @@ departure_counts <- weekday_stop_times_dates %>%
     TRUE ~ NA_real_
   ))
 
+departures_hour <- function(filter_hour, stop_times){
+  weekday_stop_times_dates %>%
+    mutate(hour = hour(departure_time)) %>%
+    filter(hour == filter_hour)
+}
+
+departure_counts_hourly <- list()
+
+for (i in 0:27) {
+  departure_count <- departures_hour(i, weekday_stop_times_dates) %>%
+    group_by(NVBW_HST_DHID) %>%
+    summarise(
+      departures = n(),
+      # Determine highest-ranking route type
+      highest_rank_route_type = {
+        all_types <- unique(route_type)
+        ranks <- sapply(all_types, get_route_rank)
+        # pick the route type with the *lowest* numerical rank
+        all_types[which.min(ranks)]
+      },
+      .groups = "drop"
+    ) %>%
+    mutate(
+      departures_per_hour  = departures / length(nonholiday_weekdays)
+    ) %>%
+    left_join(zhv, by = join_by(NVBW_HST_DHID == DHID)) %>%
+    mutate(
+      stop_type = sapply(highest_rank_route_type, get_route_rank)
+    ) %>%
+    select(1:5, 9:11, 21, 20) %>%
+    mutate(Bedienungsqualität = case_when(
+      stop_type == 3 & departures_per_hour < 2  ~ NA_real_,
+      stop_type == 3 & departures_per_hour < 4  ~ 6,
+      stop_type == 3 & departures_per_hour < 6  ~ 5,
+      stop_type == 3 & departures_per_hour < 12 ~ 4,
+      stop_type == 3 & departures_per_hour < 24 ~ 3,
+      stop_type == 3 & departures_per_hour >= 24 ~ 2,
+      
+      stop_type == 2 & departures_per_hour < 2  ~ NA_real_,
+      stop_type == 2 & departures_per_hour < 4  ~ 5,
+      stop_type == 2 & departures_per_hour < 6  ~ 4,
+      stop_type == 2 & departures_per_hour < 12 ~ 3,
+      stop_type == 2 & departures_per_hour < 24 ~ 2,
+      stop_type == 2 & departures_per_hour >= 24 ~ 1,
+      
+      stop_type == 1 & departures_per_hour < 2  ~ NA_real_,
+      stop_type == 1 & departures_per_hour < 4  ~ 4,
+      stop_type == 1 & departures_per_hour < 6  ~ 3,
+      stop_type == 1 & departures_per_hour < 12 ~ 2,
+      stop_type == 1 & departures_per_hour < 24 ~ 1,
+      stop_type == 1 & departures_per_hour >= 24 ~ 1,
+      TRUE ~ NA_real_
+    )
+    ) %>%
+    mutate(hour = i)
+  
+  departure_counts_hourly[[i+1]] <- departure_count
+}
+
+departure_counts_hourly <- rbind(departure_counts_hourly)
+
 departure_counts_indiviual <- weekday_stop_times_dates %>%
   group_by(stop_id) %>%
   summarise(
@@ -303,7 +516,7 @@ departure_counts_indiviual <- weekday_stop_times_dates %>%
     .groups = "drop"
   ) %>%
   mutate(
-    departures_per_day  = departures / length(weekdays),
+    departures_per_day  = departures / length(nonholiday_weekdays),
     departures_per_hour = departures_per_day / 10
   ) %>%
   left_join(zhv, by = join_by(stop_id == DHID)) %>%
