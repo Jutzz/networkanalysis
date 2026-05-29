@@ -113,10 +113,10 @@ weekdays <- {
 }
 
 #Manually choose a selection of days present in the feed
-weekdays <- {
-  d <- seq.Date(as.Date("2026-05-20"), as.Date("2026-05-21"), by = "day")
-  d[wday(d, week_start = 1) <= 5]  # week_start=1 makes 1=Mon … 7=Sun
-}
+#weekdays <- {
+#  d <- seq.Date(as.Date("2026-05-20"), as.Date("2026-05-21"), by = "day")
+#  d[wday(d, week_start = 1) <= 5]  # week_start=1 makes 1=Mon … 7=Sun
+#}
 
 nonholiday_weekdays <- weekdays[!weekdays %in% c(holidays,school_holidays$date)]
 
@@ -134,7 +134,6 @@ routes <- gtfs_feed$routes
 
 #Analysis of transit availability to check for feed inconsistencies, representative stretches.
 ##Find stats and/or function to find representative dates, to check for large jumps in availability (holidays, partial feeds ending) and for variability across hours.
-
 trip_calendar <- gtfs_feed$.$dates_services %>%
   inner_join(gtfs_feed$trips %>%
                select(service_id, trip_id, route_id),
@@ -144,21 +143,41 @@ trip_calendar <- gtfs_feed$.$dates_services %>%
              by = "route_id") %>%
   filter(!route_type %in% c(102,101,201))
 
-trips_per_day <- trip_calendar %>%
+dropouts <- check_gtfs_discont(gtfs_feed, weekdays, trip_calendar)
+
+cutoff  <- min(dropouts %>%
+  filter(active_days > 5) %>%
+  pull(last_date)
+)
+
+trips_per_weekday <- trip_calendar %>%
   group_by(date) %>%
+  filter(date < cutoff)  %>%
+  summarise(
+    trips = n()
+  ) %>%
+  filter(date %in% nonholiday_weekdays) %>%
+  arrange(date) %>%
+  mutate(week_delta = trips-lag(trips, 5)) %>%
+  mutate(rolling_avg = rollmean(trips, 5, na.pad = TRUE)) %>%
+  mutate(rollingavg_delta = rolling_avg-lag(rolling_avg, 5)) %>%
+  mutate(absolute = abs(rollingavg_delta))
+
+trips_per_normday <- trip_calendar %>%
+  group_by(date) %>%
+  filter(date < cutoff)  %>%
   summarise(
     trips = n()
   ) %>%
   filter(date %in% nonholiday_normdays) %>%
-  filter(date < as.Date("2026-06-29")) %>%
   arrange(date) %>%
   mutate(week_delta = trips-lag(trips, 5)) %>%
   mutate(rolling_avg = rollmean(trips, 5, na.pad = TRUE)) %>%
   mutate(rollingavg_delta = rolling_avg-lag(rolling_avg, 5)) %>%
   mutate(absolute = abs(rollingavg_delta))
   
-x_min <- min(trips_per_day$date, na.rm = TRUE)
-x_max <- max(trips_per_day$date, na.rm = TRUE)
+x_min <- min(trips_per_normday$date, na.rm = TRUE)
+x_max <- max(trips_per_normday$date, na.rm = TRUE)
 
 plotholidays <- get_school_holidays(country = "DE",
                                     subdivision = "DE-NW",
@@ -181,7 +200,7 @@ plotholidays <- get_school_holidays(country = "DE",
     endDate   = pmin(endDate, x_max) + 1
   )
 
-ggplot(trips_per_day, aes(x = date, y = trips)) +
+ggplot(trips_per_weekday, aes(x = date, y = trips)) +
   geom_rect(
     data = plotholidays,
     inherit.aes = FALSE,

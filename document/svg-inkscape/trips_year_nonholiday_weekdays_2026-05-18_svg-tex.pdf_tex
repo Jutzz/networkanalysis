@@ -38,7 +38,7 @@
   \newcommand*\fsize{\dimexpr\f@size pt\relax}%
   \newcommand*\lineheight[1]{\fontsize{\fsize}{#1\fsize}\selectfont}%
   \ifx\svgwidth\undefined%
-    \setlength{\unitlength}{453.54000854bp}%
+    \setlength{\unitlength}{566.92999268bp}%
     \ifx\svgscale\undefined%
       \relax%
     \else%
@@ -50,30 +50,30 @@
   \global\let\svgwidth\undefined%
   \global\let\svgscale\undefined%
   \makeatother%
-  \begin{picture}(1,0.62499446)%
+  \begin{picture}(1,0.49999117)%
     \lineheight{1}%
     \setlength\tabcolsep{0pt}%
     \put(0,0){\includegraphics[width=\unitlength,page=1]{trips_year_nonholiday_weekdays_2026-05-18_svg-tex.pdf}}%
-    \put(0.09452308,0.1637562){\color[rgb]{0.30196078,0.30196078,0.30196078}\makebox(0,0)[rt]{\lineheight{1.25}\smash{\begin{tabular}[t]{r}81000\end{tabular}}}}%
-    \put(0.09452308,0.25874231){\color[rgb]{0.30196078,0.30196078,0.30196078}\makebox(0,0)[rt]{\lineheight{1.25}\smash{\begin{tabular}[t]{r}84000\end{tabular}}}}%
-    \put(0.09452308,0.35375048){\color[rgb]{0.30196078,0.30196078,0.30196078}\makebox(0,0)[rt]{\lineheight{1.25}\smash{\begin{tabular}[t]{r}87000\end{tabular}}}}%
-    \put(0.09452308,0.44873657){\color[rgb]{0.30196078,0.30196078,0.30196078}\makebox(0,0)[rt]{\lineheight{1.25}\smash{\begin{tabular}[t]{r}90000\end{tabular}}}}%
+    \put(0.0756178,0.19042914){\color[rgb]{0.30196078,0.30196078,0.30196078}\makebox(0,0)[rt]{\lineheight{1.25}\smash{\begin{tabular}[t]{r}82500\end{tabular}}}}%
+    \put(0.0756178,0.26576473){\color[rgb]{0.30196078,0.30196078,0.30196078}\makebox(0,0)[rt]{\lineheight{1.25}\smash{\begin{tabular}[t]{r}85000\end{tabular}}}}%
+    \put(0.0756178,0.34111794){\color[rgb]{0.30196078,0.30196078,0.30196078}\makebox(0,0)[rt]{\lineheight{1.25}\smash{\begin{tabular}[t]{r}87500\end{tabular}}}}%
+    \put(0.0756178,0.41645352){\color[rgb]{0.30196078,0.30196078,0.30196078}\makebox(0,0)[rt]{\lineheight{1.25}\smash{\begin{tabular}[t]{r}90000\end{tabular}}}}%
     \put(0,0){\includegraphics[width=\unitlength,page=2]{trips_year_nonholiday_weekdays_2026-05-18_svg-tex.pdf}}%
-    \put(0.13460775,0.13110198){\color[rgb]{0.30196078,0.30196078,0.30196078}\makebox(0,0)[t]{\lineheight{1.25}\smash{\begin{tabular}[t]{c}Mai 26\end{tabular}}}}%
-    \put(0.24714467,0.13110198){\color[rgb]{0.30196078,0.30196078,0.30196078}\makebox(0,0)[t]{\lineheight{1.25}\smash{\begin{tabular}[t]{c}Jun 26\end{tabular}}}}%
-    \put(0.35606562,0.13110198){\color[rgb]{0.30196078,0.30196078,0.30196078}\makebox(0,0)[t]{\lineheight{1.25}\smash{\begin{tabular}[t]{c}Jul 26\end{tabular}}}}%
-    \put(0.46860254,0.13110198){\color[rgb]{0.30196078,0.30196078,0.30196078}\makebox(0,0)[t]{\lineheight{1.25}\smash{\begin{tabular}[t]{c}Aug 26\end{tabular}}}}%
-    \put(0.58113949,0.13110198){\color[rgb]{0.30196078,0.30196078,0.30196078}\makebox(0,0)[t]{\lineheight{1.25}\smash{\begin{tabular}[t]{c}Sep 26\end{tabular}}}}%
-    \put(0.6900604,0.13110198){\color[rgb]{0.30196078,0.30196078,0.30196078}\makebox(0,0)[t]{\lineheight{1.25}\smash{\begin{tabular}[t]{c}Okt 26\end{tabular}}}}%
-    \put(0.80259735,0.13110198){\color[rgb]{0.30196078,0.30196078,0.30196078}\makebox(0,0)[t]{\lineheight{1.25}\smash{\begin{tabular}[t]{c}Nov 26\end{tabular}}}}%
-    \put(0.9114962,0.13110198){\color[rgb]{0.30196078,0.30196078,0.30196078}\makebox(0,0)[t]{\lineheight{1.25}\smash{\begin{tabular}[t]{c}Dez 26\end{tabular}}}}%
-    \put(0.54665517,0.10360716){\makebox(0,0)[t]{\lineheight{1.25}\smash{\begin{tabular}[t]{c}Datum\end{tabular}}}}%
-    \put(0.02945716,0.34759886){\rotatebox{90}{\makebox(0,0)[t]{\lineheight{1.25}\smash{\begin{tabular}[t]{c}Anzahl Fahrten\end{tabular}}}}}%
+    \put(0.11431746,0.10488066){\color[rgb]{0.30196078,0.30196078,0.30196078}\makebox(0,0)[t]{\lineheight{1.25}\smash{\begin{tabular}[t]{c}Mai 26\end{tabular}}}}%
+    \put(0.22985201,0.10488066){\color[rgb]{0.30196078,0.30196078,0.30196078}\makebox(0,0)[t]{\lineheight{1.25}\smash{\begin{tabular}[t]{c}Jun 26\end{tabular}}}}%
+    \put(0.34166476,0.10488066){\color[rgb]{0.30196078,0.30196078,0.30196078}\makebox(0,0)[t]{\lineheight{1.25}\smash{\begin{tabular}[t]{c}Jul 26\end{tabular}}}}%
+    \put(0.45719933,0.10488066){\color[rgb]{0.30196078,0.30196078,0.30196078}\makebox(0,0)[t]{\lineheight{1.25}\smash{\begin{tabular}[t]{c}Aug 26\end{tabular}}}}%
+    \put(0.57273388,0.10488066){\color[rgb]{0.30196078,0.30196078,0.30196078}\makebox(0,0)[t]{\lineheight{1.25}\smash{\begin{tabular}[t]{c}Sep 26\end{tabular}}}}%
+    \put(0.68452894,0.10488066){\color[rgb]{0.30196078,0.30196078,0.30196078}\makebox(0,0)[t]{\lineheight{1.25}\smash{\begin{tabular}[t]{c}Okt 26\end{tabular}}}}%
+    \put(0.80008114,0.10488066){\color[rgb]{0.30196078,0.30196078,0.30196078}\makebox(0,0)[t]{\lineheight{1.25}\smash{\begin{tabular}[t]{c}Nov 26\end{tabular}}}}%
+    \put(0.91187621,0.10488066){\color[rgb]{0.30196078,0.30196078,0.30196078}\makebox(0,0)[t]{\lineheight{1.25}\smash{\begin{tabular}[t]{c}Dez 26\end{tabular}}}}%
+    \put(0.53731501,0.082885){\makebox(0,0)[t]{\lineheight{1.25}\smash{\begin{tabular}[t]{c}Datum\end{tabular}}}}%
+    \put(0.02356552,0.30751591){\rotatebox{90}{\makebox(0,0)[t]{\lineheight{1.25}\smash{\begin{tabular}[t]{c}Anzahl Fahrten\end{tabular}}}}}%
     \put(0,0){\includegraphics[width=\unitlength,page=3]{trips_year_nonholiday_weekdays_2026-05-18_svg-tex.pdf}}%
-    \put(0.34193235,0.03624819){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Herbstferien\end{tabular}}}}%
-    \put(0.50978966,0.03624819){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Pfingstferien\end{tabular}}}}%
-    \put(0.67980774,0.03624819){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Sommerferien\end{tabular}}}}%
-    \put(0.10539313,0.55653302){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}auf Grundlage des DELFI-GTFS vom 18.05.2026 (nur Wochentage)\end{tabular}}}}%
-    \put(0.10539313,0.59207564){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Fahrten pro Tag im Jahresverlauf\end{tabular}}}}%
+    \put(0.23431464,0.02899829){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}gleitender Mittelwert (5 Tage)\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=4]{trips_year_nonholiday_weekdays_2026-05-18_svg-tex.pdf}}%
+    \put(0.51277935,0.02899829){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Herbstferien\end{tabular}}}}%
+    \put(0.64704636,0.02899829){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Pfingstferien\end{tabular}}}}%
+    \put(0.78307731,0.02899829){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Sommerferien\end{tabular}}}}%
   \end{picture}%
 \endgroup%

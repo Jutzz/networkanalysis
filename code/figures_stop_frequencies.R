@@ -12,6 +12,7 @@ library(tidyverse)
 library(plotly)
 library(timeDate)
 library(here)
+library(plotly)
 library(sf)
 library(httr2)
 library(jsonlite)
@@ -94,27 +95,6 @@ school_holidays<- get_school_holidays(country = "DE",
   unnest(date) %>%
   select(name, date)
 
-plotholidays <- get_school_holidays(country = "DE",
-                                    subdivision = "DE-NW",
-                                    start_date = "2026-01-01",
-                                    end_date = "2028-12-31") %>%
-  select(2,3,5) %>%
-  mutate(
-    name = map_chr(name, ~ {
-      x <- .x
-      x$text[x$language == "DE"][1]
-    })
-  ) %>%
-  mutate(
-    startDate = as.Date(startDate),
-    endDate = as.Date(endDate)) %>%
-  filter(endDate >= x_min,
-         startDate <= x_max) %>%
-  mutate(
-    startDate = pmax(startDate, x_min),
-    endDate   = pmin(endDate, x_max) + 1
-  )
-
 #Begin analysis----
 #Read pre-filtered GTFS-Feed
 gtfs_feed <- tidytransit::read_gtfs(paste0("feeds/filtered/de_gtfs_", feed_date, "_", area_name,".zip"))
@@ -173,8 +153,8 @@ trips_per_day <- trip_calendar %>%
   summarise(
     trips = n()
   ) %>%
-  filter(date %in% nonholiday_normdays) %>%
-  filter(date < as.Date("2026-09-01")) %>%
+  filter(date %in% nonholiday_weekdays) %>%
+  #filter(date < as.Date("2026-09-01")) %>%
   arrange(date) %>%
   mutate(week_delta = trips-lag(trips, 5)) %>%
   mutate(rolling_avg = rollmean(trips, 5, na.pad = TRUE)) %>%
@@ -189,8 +169,26 @@ activity_per_day <- trip_calendar %>%
     trips = n()
   ) %>%
   left_join(gtfs_feed$agency %>% dplyr::select(agency_id, agency_name)) %>%
-  filter(date %in% nonholiday_normdays) %>%
-  filter(date %in% c(as.Date("2026-06-25"), as.Date("2026-06-30")))
+  filter(date %in% weekdays)
+
+top_agencies <- activity_per_day %>%
+  group_by(agency_id, agency_name) %>%
+  summarise(
+    total_trips = sum(trips),
+    .groups = "drop"
+  ) %>%
+  slice_max(total_trips, n = 10)
+
+activity_top10 <- activity_per_day %>%
+  filter(agency_id %in% c("7969", "12871", "7764")) %>%
+  mutate(
+    agency_short = recode(
+      agency_name,
+      "Aachener Straßenbahn und Energieversorgungs-AG" = "ASEAG",
+      "Kölner VB" = "KVB",
+      "Rheinbahn Bus" = "Rheinbahn"
+    )
+  )
 
 cutoff <- as.Date("2026-09-01")
 
@@ -244,17 +242,55 @@ activity_per_day %>%
   )
 
 
-p <- ggplot(activity_per_day, mapping = aes(x = date, y = trips, color = agency_id, text = agency_name)) +
-  geom_line()
+p <- ggplot(activity_top10, mapping = aes(x = date, y = trips, color = agency_short, text = agency_short)) +
+  geom_rect(
+    data = plotholidays,
+    inherit.aes = FALSE,
+    aes(
+      xmin = startDate,
+      xmax = endDate,
+      ymin = -Inf,
+      ymax = Inf,
+      fill = name
+    ),
+    alpha = 0.2
+  ) +
+  scale_x_date(date_labels="%b %y",date_breaks  ="1 month") +
+  geom_point() +
+  labs(color = "Verkehrsunternehmen", fill = element_blank(), y = "Anzahl Fahrten", x = "Datum")+
+  theme(legend.position = "bottom") +
+  ylim(4000,9000)
+  
 
 p
 
 ggplotly(p, tooltip = "text", dynamicTicks = TRUE)
 
-ggsave(last_plot(), filename = "document/figures/trips_per_agency_weekdays_2026-05-18.svg", width = 16000, height = 10000, units  = "px", dpi = 300, limitsize = FALSE)  
+ggsave(p, filename = "document/figures/trips_per_agency_weekdays_2026-05-18.svg", width = 200, height = 100, units  = "mm", dpi = 300, limitsize = FALSE)  
 #Create Plot of trips per day with holiday color bars
 x_min <- min(trips_per_day$date, na.rm = TRUE)
 x_max <- max(trips_per_day$date, na.rm = TRUE)
+
+plotholidays <- get_school_holidays(country = "DE",
+                                    subdivision = "DE-NW",
+                                    start_date = "2026-01-01",
+                                    end_date = "2028-12-31") %>%
+  select(2,3,5) %>%
+  mutate(
+    name = map_chr(name, ~ {
+      x <- .x
+      x$text[x$language == "DE"][1]
+    })
+  ) %>%
+  mutate(
+    startDate = as.Date(startDate),
+    endDate = as.Date(endDate)) %>%
+  filter(endDate >= x_min,
+         startDate <= x_max) %>%
+  mutate(
+    startDate = pmax(startDate, x_min),
+    endDate   = pmin(endDate, x_max) + 1
+  )
 
 ggplot(trips_per_day, aes(x = date, y = trips)) +
   geom_rect(
@@ -269,16 +305,16 @@ ggplot(trips_per_day, aes(x = date, y = trips)) +
     ),
     alpha = 0.2
   ) +
+  geom_line(aes(y=rolling_avg, color = "gleitender Mittelwert (5 Tage)"), linewidth = 2) +
   geom_point() +
-  geom_line(aes(y=rolling_avg, color = "gleitender Mittelwert (7 Tage)"), linewidth = 2) +
-  labs(title = "Fahrten pro Tag im Jahresverlauf", subtitle = "auf Grundlage des DELFI-GTFS vom 18.05.2026 (nur Wochentage)", color = element_blank(), fill = NULL) +
+  labs(color = element_blank(), fill = NULL) +
   xlab("Datum") +
   ylab("Anzahl Fahrten") +
-  scale_color_manual(values = c("gleitender Mittelwert (7 Tage)" = "red")) +
+  scale_color_manual(values = c("gleitender Mittelwert (5 Tage)" = "red")) +
   scale_x_date(date_labels="%b %y",date_breaks  ="1 month") +
   theme(legend.position = "bottom")
 
-ggsave(last_plot(), filename = "document/figures/trips_year_nonholiday_weekdays_2026-05-18.svg", width = 160, height = 100, units  = "mm", dpi = 300)  
+ggsave(last_plot(), filename = "document/figures/trips_year_nonholiday_weekdays_2026-05-18.svg", width = 200, height = 100, units  = "mm", dpi = 300)  
 
 ggplot(trips_per_day, aes(x = trips)) +
   geom_dotplot(aes(fill = jump), stackgroups = TRUE, binpositions = "all")
