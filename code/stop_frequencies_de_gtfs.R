@@ -18,20 +18,6 @@ feed_date <- "20260518"
 zhv_date <- "20260521"
 area_name <- "regbez"
 
-get_school_holidays <- function(country, subdivision, start_date, end_date, lang = "DE") {
-  resp <- httr2::request("https://openholidaysapi.org/SchoolHolidays") |>
-    httr2::req_url_query(
-      countryIsoCode = country,
-      validFrom = start_date,
-      validTo = end_date,
-      languageIsoCode = lang,
-      subdivisionCode = subdivision
-    ) |>
-    httr2::req_perform()
-  
-  school_holidays <- fromJSON(rawToChar(resp$body))
-}
-
 holidays_nrw <- function(year) {
   year <- as.integer(year)
   
@@ -73,25 +59,21 @@ get_route_rank <- function(rt) {
 holidays <- holidays_nrw(2026)
 
 #Set up date lists of school holidays and public holidays for filtering stop time data.
-school_holidays<- get_school_holidays(country = "DE",
+school_holidays_NW<- get_school_holidays(country = "DE",
                                             subdivision = "DE-NW",
                                             start_date = "2026-01-01",
-                                            end_date = "2028-12-31") %>%
-  select(2,3,5) %>%
-  mutate(
-    name = map_chr(name, ~ {
-      x <- .x
-      x$text[x$language == "DE"][1]
-    })
-  ) %>%
-  mutate(
-    startDate = as.Date(startDate),
-    endDate = as.Date(endDate),
-    date = map2(startDate, endDate, ~ seq(.x, .y, by = "day"))
-  ) %>%
-  unnest(date) %>%
-  select(name, date)
+                                            end_date = "2028-12-31")
 
+school_holidays_RP<- get_school_holidays(country = "DE",
+                                         subdivision = "DE-RP",
+                                         start_date = "2026-01-01",
+                                         end_date = "2028-12-31")
+
+raw_holidays <- bind_rows(school_holidays_NW, school_holidays_RP) %>%
+  prepare_holidays()
+
+school_holidays <- raw_holidays %>%
+  expand_holidays()
 
 #Read pre-filtered GTFS-Feed
 gtfs_feed <- tidytransit::read_gtfs(paste0("feeds/filtered/de_gtfs_", feed_date, "_", area_name,".zip"))
@@ -161,7 +143,7 @@ trips_per_weekday <- trip_calendar %>%
   mutate(week_delta = trips-lag(trips, 5)) %>%
   mutate(rolling_avg = rollmean(trips, 5, na.pad = TRUE)) %>%
   mutate(rollingavg_delta = rolling_avg-lag(rolling_avg, 5)) %>%
-  mutate(absolute = abs(rollingavg_delta))
+  mutate(absolute = abs(rollingavg_delta)) 
 
 trips_per_normday <- trip_calendar %>%
   group_by(date) %>%
@@ -176,28 +158,15 @@ trips_per_normday <- trip_calendar %>%
   mutate(rollingavg_delta = rolling_avg-lag(rolling_avg, 5)) %>%
   mutate(absolute = abs(rollingavg_delta))
   
-x_min <- min(trips_per_normday$date, na.rm = TRUE)
-x_max <- max(trips_per_normday$date, na.rm = TRUE)
+x_min <- min(trips_per_weekday$date, na.rm = TRUE)
+x_max <- max(trips_per_weekday$date, na.rm = TRUE)
 
-plotholidays <- get_school_holidays(country = "DE",
-                                    subdivision = "DE-NW",
-                                    start_date = "2026-01-01",
-                                    end_date = "2028-12-31") %>%
-  select(2,3,5) %>%
+plotholidays <- raw_holidays %>%
+  filter_holidays_for_plot(x_min, x_max)
+
+plotholidays_labels <- plotholidays %>%
   mutate(
-    name = map_chr(name, ~ {
-      x <- .x
-      x$text[x$language == "DE"][1]
-    })
-  ) %>%
-  mutate(
-    startDate = as.Date(startDate),
-    endDate = as.Date(endDate)) %>%
-  filter(endDate >= x_min,
-         startDate <= x_max) %>%
-  mutate(
-    startDate = pmax(startDate, x_min),
-    endDate   = pmin(endDate, x_max) + 1
+    label_x = startDate + (endDate - startDate) / 2
   )
 
 ggplot(trips_per_weekday, aes(x = date, y = trips)) +
@@ -209,7 +178,8 @@ ggplot(trips_per_weekday, aes(x = date, y = trips)) +
       xmax = endDate,
       ymin = -Inf,
       ymax = Inf,
-      fill = name
+      fill = name,
+      color = subdivision
     ),
     alpha = 0.2
   ) +
@@ -220,8 +190,8 @@ ggplot(trips_per_weekday, aes(x = date, y = trips)) +
   ylab("Anzahl Fahrten") +
   scale_color_manual(values = c("gleitender Mittelwert (7 Tage)" = "red")) +
   scale_x_date(date_labels="%b %y",date_breaks  ="1 month") +
-  theme(legend.position = "bottom")
-
+  theme(legend.position = "bottom") +
+  geom_label(data = plotholidays_labels, inherit.aes = FALSE,  aes(x = label_x, y = median(trips_per_weekday$trips), label = subdivision), vjust = 1.5, size = 3, family = windowsFonts("Source Sans 3 ExtraLight"))
 #R5 Setup
 #TODO: Not really needed here, as checking services is pretty unreliable. Clean separation between exploratory show of work (figures) and processing steps here.
 #What happens reproducibly: Does an agency_id feed part stop at some point? If so, what proportion of daily trips does it have?

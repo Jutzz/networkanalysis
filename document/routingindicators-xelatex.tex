@@ -1,0 +1,260 @@
+\documentclass[11pt,a4paper]{scrartcl}
+\usepackage[top=2.5cm, bottom=2.5cm, left=3cm, right=3cm]{geometry}
+\usepackage[english,ngerman]{babel}
+\usepackage{fontspec}
+\defaultfontfeatures{Ligatures=TeX,Scale=MatchLowercase}
+\setmainfont{Source Serif 4}[Ligatures=TeX]
+\setsansfont{Source Sans 3}[Ligatures=TeX]
+\newcommand{\bodyfont}{\rmfamily}
+\newcommand{\headingfont}{\sffamily}
+\newcommand{\codefont}{\ttfamily}
+\usepackage[babel,german=quotes]{csquotes}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{svg}
+\usepackage{multirow}
+\usepackage{siunitx}
+\usepackage{amssymb}
+\usepackage{parskip}
+\tolerance=1000
+\emergencystretch=1em
+\hypersetup{
+  colorlinks=true,
+  linkcolor=black,
+  citecolor=blue,
+  urlcolor=blue
+}
+\usepackage[style=geographie_koeln,dashed=false,maxcitenames=2,maxbibnames=99,backend=biber,urldate=short,firstinits=true,uniquename=false,babel=other,uniquelist=false]{biblatex}
+\usepackage{caption}
+\captionsetup{
+    font={small,stretch=1},
+    labelfont=bf,
+    textfont={rm}
+}
+
+\addtokomafont{disposition}{\headingfont}
+
+\linespread{1.5}
+
+%\setkomafont{section}{\normalfont\bfseries}
+%\setkomafont{subsection}{\normalfont\bfseries}
+%\setkomafont{}{\normalfont\bfseries}
+
+\newcommand{\leadingzero}[1]{\ifnum #1<10 0\the#1\else\the#1\fi}
+\newcommand{\datumVonHeute}{\leadingzero{\day}.\leadingzero{\month}.\the\year}
+
+\bibliography{test,BA}
+
+\newcommand{\haThema}{Routingbasierte ÖPNV-Indikatoren im Rheinland}
+\newcommand{\haAutor}{Paul Jannis Weiland}
+\newcommand{\haAutorAdresse}{Plankgasse 58}
+\newcommand{\haAutorPLZ}{50668}
+\newcommand{\haAutorOrt}{Köln}
+\newcommand{\haDeckblattTextEins}{Abschlussarbeit}
+\newcommand{\haDeckblattTextZwei}{Bachelor of Arts Geographie}
+\newcommand{\haSchule}{Universität zu Köln}
+\newcommand{\haSchuleAdresse}{Albertus-Magnus-Platz}
+\newcommand{\haSchulePLZ}{50923}
+\newcommand{\haSchuleOrt}{Köln}
+\newcommand{\haGutachter}{Dr. Christian  Willmes}
+\newcommand{\haGutachterText}{}
+
+\title{\haThema}
+\author{\haAutor}
+\date{\today}
+
+\begin{document}
+    
+    % DECKBLATT
+    \begin{titlepage}
+        Universität zu Köln\\
+        Geographisches Institut
+        \begin{center}
+            \vspace{1.5cm}
+            {\scshape\large \haDeckblattTextEins \par}
+            \vspace{1cm}
+            {\scshape\large zum Thema\par}
+            \vspace{1.5cm}
+            {\LARGE\bfseries \haThema \par}
+            \vfill
+            {Erstellt von:\\ {\bfseries \haAutor}\\ \haAutorAdresse\\ \haAutorPLZ~\haAutorOrt \par}
+            \vspace{1cm}
+            {\haDeckblattTextZwei \\ \haSchule \\ \haSchuleAdresse \\ \haSchulePLZ~\haSchuleOrt \par}
+            \vspace{1cm}
+            Gutachter:\\ {\bfseries \haGutachter}\\ \haGutachterText
+            \vfill
+        \end{center}
+        {\haAutorOrt,~\datumVonHeute\par}
+    \end{titlepage}
+    \thispagestyle{empty}
+    \newpage
+    
+    % INHALTSVERZEICHNIS
+    \tableofcontents
+    \thispagestyle{empty}
+    \newpage
+    
+    % Seitenzahl auf 1 setzen
+    \setcounter{page}{1}
+    %\begin{document}
+    \section{Einleitung}
+    Hier steht normaler Text ohne jede Besonderheit, sozusagen der Fließtext.\\
+    \texttt{Wie sieht dieser Text aus, er soll eine Art Codeausschnitt darstellen?}
+    \section{Literatur}
+    \subsection{Netzwerke}
+    \subsection{ÖPNV in Deutschland und Nordrhein-Westfalen}
+    \subsection{Access}
+    \subsection{Indikatoren}
+    %evtl Access und Indikatoren in eins.
+    \section{Methodik}
+    Im Folgenden soll beschrieben werden, wie 
+    \subsection{Vorstellung des Untersuchungsgebietes}
+    Untersucht werden soll das Gebiet des Regierungsbezirks Köln (5.866 – 7.7918°O, 50.323 – 51.251°N), deckungsgleich mit dem Zuständigkeitsbereich des Zweckverbandes go.Rheinland, Aufgabenträger für den SPNV und den Verkehrsverbünden VRS („Verkehrsverbund Rhein-Sieg“) und AVV („Aachener Verkehrsverbund“).
+    \begin{figure}[h]
+        \centering
+        \includegraphics[width=1\linewidth]{figures/Popdensity}
+        \caption{Umriss des Untersuchungsgebiets mit Gemeindegrenzen und Bevölkerungsdichte auf Grundlage des Zensus 2022. \parencite{statistischeamterdesbundesundderlanderErgebnisseZensus20222022}}
+        \label{fig:popdensity}
+    \end{figure}
+    In diesem Gebiet liegt eine heterogene Siedlungsstruktur mit den städtischen Ballungsräumen Köln, Bonn, Aachen und Leverkusen und ländlicheren, weniger dicht besiedelten Räumen vor:  Die Nordeifel im Südwesten und das bergischen Land im Osten. Diese ländlichen Räume unterscheiden sich zusätzlich durch verschiedene Siedlungsanordnungen: Östlich des Rheins (Rheinisch-Bergischer Kreis, Rhein-Sieg-Kreis und Oberbergischer Kreis) liegen (räumlich) kleinere Siedlungen dichter beieinander, westlich (Kreis Euskirchen, Kreis Düren, Rhein-Erft-Kreis, in geringerem Maße Kreis Heinsberg) sind die Siedlungsflächen tendenziell etwas größer und liegen weiter auseinander. Daraus ergeben sich verschiedene Anforderungen an die lokalen Verkehrsnetze und vielfältige Pendlerverflechtungen (Umland-Stadt, Stadt-Umland, Stadt-Stadt). 
+        
+    Durch den Strukturwandel im rheinischen Braunkohlerevier und die im Investitionsgesetz Kohleregionen verankerten Mittel zur Förderung der Eisenbahn- und eisenbahnanliegenden Infrastruktur (Investitionsgesetz Kohleregionen 2023, §§ 22, 27, Anlage 4) ergibt sich zusätzlicher Handlungs- und Informationsbedarf, der eine Untersuchung des verkehrlichen Status Quo des Gebietes relevant macht. Die verwendeten Methoden sind, aufgrund der deutschlandweit verfügbaren Datenquellen, zwar auf ganz Deutschland anwendbar, werden aufgrund des angestrebten Detailgrades der Auswertung und der resultierenden Notwendigkeit, eventuelle Randbedingungen und Ungenauigkeiten manuell zu prüfen auf das beschriebene Gebiet heruntergebrochen.
+    \subsection{Datengrundlagen}
+    \subsubsection{OSM}
+    \subsubsection{GTFS}
+    \subsubsection{Zensus}
+    \subsection{Berechnung der Indikatoren}
+    \subsubsection{Erschließungsqualität}
+    Für die Berechnung der Erschließungsqualität \footnote{Im Abschlussbericht der \textcite{kcwgmbhMethodikUndEmpfehlungen2024} noch als \enquote{Verfügbarkeitsindikator} geführt.} nach den Indikatoren des Bundesministeriums für Digitales und Verkehr \parencite[25-27]{bmdvIndikatorenLeichtGemacht2025} sind folgende Elemente notwendig: Eine Auflistung der Haltestellen im Untersuchungsgebiet mit einer Bedienungsqualität auf Grundlage von Tabelle 1 im Steckbrief \parencite[27]{bmdvIndikatorenLeichtGemacht2025}, eine Anzahl an Startpunkten, von denen aus die Gehzeit zu den umliegenden Haltestellen berechnet wird, und ein routingfähiges Fußwegenetz des Untersuchungsgebietes. Im folgenden soll beschrieben werden, wie diese Daten jeweils bereitgestellt bzw. errechnet werden.
+    %Die Bedienungsqualität einer Haltestelle ergibt sich für diesen Zweck aus der Kombination der Anzahl der Abfahrten pro Stunde, gemittelt über fünf Wochentage, und dem höchstrangigen Verkehrsmittel an der Haltestelle in drei Kategorien (Bus, Stadt-, Straßen-, U-Bahn oder regionaler SPNV).
+    \paragraph{Fahrplandaten}
+        
+    Als Informationsquelle für die Abfahrten dient der deutschlandweite GTFS-Feed des \textcite{delfie.v.DeutschlandweiteSollFahrplandatenGTFS2026}, der wöchentlich aktualisiert wird. Dieser Feed wird zunächst mit der Funktion \texttt{filter\_feed\_by\_area()} aus der Bibliothek  \texttt{tidytransit} \parencite{polettiTidytransitReadValidate2025} auf das Untersuchungsgebiet zugeschnitten.  Dabei wird ein Puffer von fünf Kilometern um das Gebiet angesetzt, um Grenzfälle zu vermindern. Der deutschlandweite Feed nutzt die optionale Tabelle \texttt{transfers.txt}. Diese ermöglicht es, auf Grundlage von Entfernungen berechnete Umstiegszeiten zu überschreiben um beispielsweise kürzere oder längere Umstiege zu verzeichnen Außerdem können „in-seat-transfers“, bei denen das gleiche Fahrzeug als anderer trip weiterfährt (d.h. der Umstieg ist möglich, obwohl die Ankunft und Abfahrt sehr nah beieinander liegen), oder Kupplungen und Flügelungen abgebildet werden \parencite{GoogleTransit2026}. Außerdem verwendet er das optionale Feld \texttt{parent\_station} in der \texttt{stops.txt}. Die Halte sind nicht als einzelner Punkt repräsentiert, sondern als einzelne Bahnsteige/Masten/Einstiegsorte, die unter einer \texttt{parent\_station} zusammengefasst sind. \texttt{filter\_feed\_by\_area()} berücksichtigt diese optionalen Werte nicht. Trips, die zum Teil außerhalb des gewählten Bereiches liegen, werden mit ihren \texttt{stops} beibehalten, nicht aber die zugehörige \texttt{parent\_station} (d.h. beispielsweise ein Gleis eines Bahnhofs ist im gefilterten Feed enthalten, nicht aber der Bahnhof selbst, vgl. auch \textcite[87]{kcwgmbhMethodikUndEmpfehlungen2024}).
+        
+    Ebenso verhält es sich mit Routen, die als \texttt{transfer} einer Route im Bereich angegeben sind, aber außerhalb des Bereichs liegen. Das führt zu Validierungsfehlern bei der Verarbeitung des Feeds, weshalb diese Stops und Routen nach dem Filtern wieder hinzugefügt werden. (\texttt{de\_gtfs\_cleaning.R}) Es ist zu prüfen, welche Ergebnisunterschiede sich aus der Aggregierung der Halte an den einzelnen stops unter dem Standort der entsprechenden \texttt{parent\_station} ergeben. Tendenziell ergibt sich eine bessere Bedienungsqualität, allerdings sind liegen die stops einzelner \texttt{parent\_stations} teils weit auseinander, weswegen sich möglicherweise eine unrealistische Verschiebung der Gehzeiten ergeben könnte. Besonders an größeren SPNV-Stationen, bei denen einzelne SPNV-Gleise und Busbahnhöfe unter einer \texttt{parent\_station} zusammengefasst werden, besteht dieses Problem. Die Bedienungsqualität dieser Stationen wird bei Aggregierung tendeziell überbewertet, allgemein ist aber insbesondere bei Bushaltestellen die Aggregierung sinnvoll. Bei (Haupt-) Bahnhöfen mit weit entfernten Bushaltestellen ist eine Einzelprüfung/Trennung denkbar.
+        
+    Der Wert der Bedienungsqualität der Haltestellen, aus der sich in Kombination mit der Gehwegdistanz zur Haltestelle die Erschließungsqualität ergibt, entspricht folgender Tabelle:
+    \begin{table}[htbp]
+        \centering
+        \fontsize{8}{10}\selectfont
+        \begin{tabular}{|l|c|c|c|}
+            \hline
+            \multirow{2}{*}{\textbf{\begin{tabular}[c]{@{}l@{}}
+                        $\varnothing$ Anzahl \\
+                        Abfahrten / Stunde, \\
+                        8--18 Uhr, Mo--Fr
+            \end{tabular}}}
+            & \multicolumn{3}{c|}{\textbf{Haltestellentyp, definiert durch höchstrangiges Verkehrsmittel}} \\ \cline{2-4}
+            & \textbf{\begin{tabular}[c]{@{}c@{}}
+                    S-Bahn-, \\
+                    Regionalbahn-Haltestelle
+            \end{tabular}}
+            & \textbf{\begin{tabular}[c]{@{}c@{}}
+                    U-Bahn-, Straßenbahn- \\
+                    Haltestelle
+            \end{tabular}}
+            & \textbf{Bushaltestelle} \\ \hline
+            
+            $\geq 24$ Abfahrten & I   & I   & II  \\ \hline
+            $< 24 - 12$ Abfahrten & I   & II  & III \\ \hline
+            $< 12 - 6$ Abfahrten & II  & III & IV  \\ \hline
+            $< 6 - 4$ Abfahrten  & III & IV  & V   \\ \hline
+            $< 4 - 2$ Abfahrt    & IV  & V   & VI  \\ \hline
+        \end{tabular}
+        \caption{Haltestellentypen nach Anzahl der Abfahrten übernommen aus \textcite[27]{bmdvIndikatorenLeichtGemacht2025}}
+        \label{tab:haltestellentypen}
+    \end{table}
+        
+    Schwierigkeiten ergeben sich aus der Formulierung in der Publikation des BMDV. Auf Seite 25 ist von der \enquote{durchschnittlichen Anzahl der Abfahrten pro Stunde zwischen 8 und 18 Uhr an einem Normalwerktag außerhalb der Ferien} \parencite{bmdvIndikatorenLeichtGemacht2025} die Rede, in der Tabelle wird ein Durchschnitt über fünf Wochentage (Mo--Fr) betrachtet. Der Begriff des Normalwerktages wird in den Empfehlungen für Verkehrszählungen der FGSV als \enquote{Dienstag, Mittwoch oder Donnerstag in den Monaten April, Mai, Juni oder September} verstanden, die beiden Angaben widersprechen sich insofern. 
+    %HIER MIT ZITAT EVE/FGSV
+        
+    Die im Indikatorensteckbrief als Hintergrundinformation angeführten Quellen \parencite{orokOsterreichweitenOVGuteklassenRahmen2022, plan4betterIndikatorenUndRouting2026} berechnen den Haltestellentyp als \enquote{Durchschnittliches Kursintervall aus der Summe aller Abfahrten pro Richtung} \parencite[12, Tabelle 1: Haltestellenkategorien]{orokOsterreichweitenOVGuteklassenRahmen2022} als 
+    $\frac{840 min}{Abfahrten*0,5}$
+    in acht Klassen in vier Verkehrsmittelkategorien. Dabei wird der Zeitraum zwischen 6--20 Uhr an einem Stichtag verwendet. 
+        
+    Der Schlussbericht zum Projekt \parencite{kcwgmbhMethodikUndEmpfehlungen2024} ist in der Berechnung der Bedienungsqualitäten mehrschrittig vorgegangen. Es werden  Normalverkehrszeiten (NVZ) inklusive Hauptverkehrszeiten (HVZ) sowie  Schwachverkehrszeiten (SVZ) ermittelt \parencite[82ff]{kcwgmbhMethodikUndEmpfehlungen2024}, in denen jeweils unterschiedliche Bedienungsparadigmen zu erwarten sind. Es wird empfohlen, die Bedienungsqualität in 1h-Intervallen zu ermitteln \parencite[87]{kcwgmbhMethodikUndEmpfehlungen2024}, und die niedrigste Qualitätsstufe der untersuchten Verkehrszeit als maßgeblich zu werten. Ob und über wie viele Tage zu mitteln ist, wird aber auch hier nicht deutlich.
+        
+    Um einen Vergleich zwischen den verschiedenen Methoden herzustellen, wird jede Variante getestet, die Abweichungen ermittelt und abschließend geprüft, welche sich am ehesten zur Anwendung in der Berechnung der Erschließungsqualität eignet.
+    Zuerst soll geprüft werden, ob es sinnvoll ist, die Bedienungsqualität über mehrere Tage hinweg zu mitteln, und welche Tage des Feeds sich dafür anbieten.
+        
+    Der deutschlandweite Feed des \textcite{delfie.v.DeutschlandweiteSollFahrplandatenGTFS2026} enthält (für jede \enquote{Ausgabe}) Daten von Veröffentlichung des Feeds bis zum Ende des Jahres und damit, Stand 18.05.2026,  unter Berücksichtigung der Ferien in Nordrhein-Westfalen, 36 Normalwerktage. Mit der Funktion \texttt{check\_transit\_availability} stellt \texttt{r5r} \parencite{pereiraR5rRapidRealistic2021} eine Möglichkeit zur Analyse der Variabilität des Feeds zur Verfügung. Es wird auf Grundlage des Netzwerkgraphen, der mit \texttt{build\_network} erstellt wurde, extrahiert, wie viele der services aus dem GTFS-Feed an welchen Daten aktiv sind, und welchen Anteil der gesamten services dies ausmacht. Abbildung \ref{fig:activeservicesyearrollavg2026-05-18}  zeigt  den Jahresverlauf aktiver Services auf Grundlage des Feeds vom 18.05.2026. 
+    \begin{figure}[ht]
+        \centering
+        \includegraphics[width=1\linewidth]{figures/active_services_year_rollavg_2026-05-18}
+        \caption{Variabilität des Anteils der aktiven services im GTFS-Datensatz.}
+        \label{fig:activeservicesyearrollavg2026-05-18}
+    \end{figure}
+    Aus der Auswertung der \texttt{services} erscheint die Verfügbarkeit hoch variabel, insbesondere fällt der große Abfall nach Ende der Sommerferien auf. Da die \texttt{services} allerdings arbiträre Referenzen sind, unter denen eine beliebige Anzahl tatsächlicher \texttt{trips} gruppiert sein können, ist die Zahl der aktiven \texttt{services} nur bedingt aussagekräftig über die tatsächliche Aktivität des Netzwerks. Um konkreter festzustellen, ob tatsächlich eine große Variabilität gegeben ist, wurde zusätzlich die Anzahl der \texttt{trips} pro Tag berechnet. Zunächst wird dazu der auf das Untersuchungsgebiet zugeschnittene GTFS-Feed eingelesen. \texttt{tidytransit} erstellt beim Einlesen des Feeds eine Tabelle \texttt{dates\_services}, in der auf Grundlage der Tabellen \texttt{calendar} und \texttt{calendar\_dates} des Feeds verzeichnet ist, an welchem Tag welcher Service aktiv ist. In Kombination mit den \texttt{trips} wird es so möglich, für jeden Tag des Feeds festzustellen, wie viele Fahrten stattfinden. Durch die Kombination mit der Tabelle \texttt{agencies} wird es zudem möglich, die Verkehre so zu unterteilen, das sichtbar wird, welches Verkehrsunternehmen wie viele Fahrten erbringt.  Abbildung \ref{fig:tripsyearrollavg2026-05-18} zeigt die Fahrten pro Wochentag.
+    \begin{figure}[ht]
+        \centering
+        \fontsize{5}{10}\selectfont
+        \caption{Fahrten (\texttt{trips}) je Wochentag auf Grundlage des DELFI-GTFS vom 18.05.2026}
+        \includesvg[width=1\linewidth]{figures/trips_year_nonholiday_weekdays_2026-05-18.svg}
+        \label{fig:tripsyearrollavg2026-05-18}
+    \end{figure}
+
+    Es ergibt sich ein etwas geglättetes Bild, der grundsätzliche Trend einer deutlichen Abnahme nach Ende der Sommerferien bleibt jedoch erhalten. Die Funktion \texttt{check\_gtfs\_discont} liefert eine Liste der \texttt{agencies}, die nicht alle gewählten Tage abdecken. Tritt der Fall ein, das eine \texttt{agency} keine Daten für alle Tage het, kann eine informierte Entscheidung für  den jeweiligen Anwendungsfall getroffen werden, welcher Teil des Feeds als repräsentativ angesehen werden kann. Betrachtet man in diesem Fall die Fahrten pro Tag getrennt nach ausführendem Verkehrsunternehmen (bzw. der verantwortlichen \texttt{agency}), zeigt sich, dass die Verkehre einzelner Verkehrsunternehmen ab dem 01.09 noch nicht verzeichnet sind. Den größten Effekt hat dabei der Wegfall der Abbildung der Fahrten der Aachener Straßenbahn und Energieversorgungs-AG (ASEAG), die rund 5200 Fahrten pro Tag durchführt. Die Fahrten \num{14} weiterer Verkehrsunternehmen sind nicht bis Ende des Feeds fortgeschrieben. Mit dieser Gewissheit kann nur der zeitliche Abschnitt bis Ende Juni als Grundlage für eine repräsentative Auswertung der Abfahrten an den Stationen dienen, vor allem auch, da der Wegfall eines Verkehrsunternehmens sich nicht auf den gesamten Raum einheitlich auswirkt. 
+
+    In Abbildung \ref{fig:tripsyearperagency2026-05-18} ist der Wegfall der Fahrten der ASEAG nach den Sommerferien deutlich erkennbar, ebenso der Unterschied zwischen dem regulären und dem Ferienfahrplan.
+    \begin{figure}[ht]
+        \centering
+        \fontsize{8}{10}\selectfont
+        \caption{Fahrten (\texttt{trips}) je Wochentag der drei größten Verkehrsunternehmen nach Fahrten auf Grundlage des DELFI-GTFS vom 18.05.2026. Die Zahlen  der Rheinbahn und ASEAG für die Feiertage in  Mai und Juni liegen außerhalb der Skala.}
+        \includesvg[width=1\linewidth]{figures/trips_per_agency_weekdays_2026-05-18.svg}
+        \label{fig:tripsyearperagency2026-05-18}
+    \end{figure}
+    Nach dem Streichen der Tage, die ein Ferien- oder Feiertag sind, bleiben 36 Wochentage und 21 Normalwerktage in Mai und Juni, die für die Ermittlung der Bedienungsqualität genutzt werden können. Entfernt werden sowohl die Ferientage in Nordrhein-Westfalen und in Rheinland-Pfalz. Die Sommerferien in Rheinland-Pfalz beginnen bereits am 29.06.. Verkehrsunternehmen aus Rheinland-Pfalz, deren Linien über die Landesgrenze hinaus fahren, verkehren an diesen Tagen also bereits im Ferienfahrplan.
+    Bei den Wochentagen reicht die Zahl der durchgeführten Fahrten von  \num{87412} am 15.05.2026 (Dienstag) bis \num{91715} am 03.06.2026 (Mittwoch), bei den Normalwerktagen liegt das Minimum bei  Trotz mehrerer  Ansätze, die Variabilität einzugrenzen bleibt noch eine Verteilung von über \num{2400} Fahrten.
+    Den Median bildet der 02.06.2026 mit \num{90210} Fahrten.
+        
+        
+    %Anpassen an Status Quo
+%Anhand dieses Datensatzes werden die \texttt{stop\_times} gefiltert und Halte,  deren Abfahrtszeit vor 08:00 oder deren Ankunftszeit nach 18:00 liegt, entfernt. Anschließend werden die \texttt{stops} mit der globalen Haltestellen-ID, die im zentralen Haltestellenverzeichnis referenziert ist, angehängt.
+%Für die Auswahl eines Tages für die Berechnung der Bedienungsqualität entsprechend dem Indikatorensteckbrief (durchschnittliche Abfahrten pro Stunde zwischen 8 und 18 Uhr an einem Normalwerktag außerhalb der Ferien) ergeben sich zwei Möglichkeiten. Die erste besteht aus der Ermittlung eines Normalwerktages mit durchschnittlicher Netzwerkaktivität, die andere aus dem Aggregieren aller im Feed präsenten Normalwerktage.  
+%
+%Betrachtet man die Variabilität der Aktivität der Verkehre werden zwei Dinge deutlich: Es gibt stellenweise große Sprünge aktiver services, insbesondere Anfang September. Dieser Sprung ist mit einem Fahrplanwechsel nicht zu begründen, dieser findet im Nahverkehr üblicherweise %QUELLE 
+%im Dezember statt. dem Beginn oder Ende einer Ferienperiode oder einem Fahrplanwechsel zu begründen, 
+%    
+%Der Indikatorensteckbrief des BMDV setzt für die Berechnung der Bedienungsqualität den Wert der , aggregiert über alle Wochentage hinweg an. Tidytransit erstellt beim Einlesen des Feeds eine Tabelle dates\_services, in der auf Grundlage der calendar.txt und der calendar\_dates.txt des Feeds verzeichnet ist, an welchem Tag welcher Service aktiv ist. Um schließlich die mittleren Abfahrten pro Stunde zu erhalten, wird nach Haltestellen-ID gruppiert, die Halte gezählt und durch die Anzahl der Tage und Stunden geteilt, das höchstrangige Verkehrsmittel anhand der route\_types identifiziert und eine Bedienungsqualität entsprechend der Tabelle zugewiesen.
+%    
+%Daraus könnte sowohl zu schließen sein, dass die Abfahrtszahl sich aus dem Durchschnitt der aggregierten Abfahrtszahlen je Stunde eines Tages ergibt, als auch das sie sich aus   Da es keinen „Soll“-GTFS-Feed gibt, der einen Idealzustand des Netzes ohne Ausfälle, Baustellen, Sonderfahrten bzw. Ausfällen aufgrund von Großveranstaltungen  gibt, stellt sich die Frage, wie eine repräsentative Abbildung der Bedienungsqualitäten extrahiert werden kann.
+%
+%Der Feed des DELFI e.V. vom 30.03.2026 im Zuschnitt auf das Gebiet des Regierungsbezirks Köln zeigt eine Variabilität von 10,12\% (min = 20,73\% am 15.03 (Sonntag), max = 30,86\% am 24.04. (Freitag)). Ohne Wochenenden ergibt sich immer noch eine Varianz von 8,31\% mit min = 22,54\% am 19.03. (Donnerstag). 
+%
+%\input{tables/availability_2026-05-18.tex}
+%Um die Varianz der Fahrplandaten über mehrere Tage und Wochen darzustellen soll die Bedienungsqualität für die Abfahrten jedes einzelnen verfügbaren Tag des Feeds berechnet werden. Diese Daten werden mit einer (statischen) Reisezeitmatrix (Zensusgitter Haltestellen) verrechnet, pro Tag die jeweils beste Möglichkeit ermittelt und die Varianz als gesamte Distanz (Häufige Wechsel zwischen bspw. Erschließungsqualität A und Erschließungsqualität B ergeben einen hohen Wert genauso wie wenige Wechsel zwischen bspw. A und F) und als Spanne (maximale Differenz in der Erschließungsqualität) berechnet werden. 
+    
+    
+    \section{Ergebnisse}
+        \subsection{Indikatoren}
+        \subsection{Weiße Flecken} %Arbeitstitel
+        \section{Diskussion}
+    \section{Fazit}
+        Monographiezitat im Fließtext: \textcite[1]{Buchautor2000}
+        
+        Monographiezitat: \parencite[1]{Buchautor2000}
+        
+        Schriftenreihe: \parencite[22]{Schriftenreihler2000}
+        
+        Beitrag aus Sammelwerk mit zwei Autoren: \parencite[12]{Sammler2000}
+        
+        Englisher Beitrag aus Sammelwerk mit zwei Autoren: \parencite[12]{Collector2000}
+        
+        Zeitschriftenartikel mit 4 Autoren: \parencite[11]{Zeitschriftler2000}
+        
+        Konferenzbeitrag: \parencite[200]{Konferenzler2000}
+        
+        Englischer Konferenzbeitrag: \parencite[200]{ConferenceGuy2000}
+        
+        Doktorarbeit: \parencite[12]{Doktor2000}
+        
+        Internetquelle, nicht von Person, sondern von Organisation: \parencite{Internetorganisation2000}
+        
+        Internetquelle mit DOI: \parencite{Onlinedoiautor2000}
+        
+        Zeitungsartikel: \parencite{Kolumna2000}
+        
+        Karte: \parencite{Kartenorganisation2000}
+        
+        \printbibliography
+    \end{document}

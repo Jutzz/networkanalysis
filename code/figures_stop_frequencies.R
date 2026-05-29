@@ -61,6 +61,16 @@ holidays_nrw <- function(year) {
 #  seq.Date(as.Date("2026-10-17"), as.Date("2026-10-31"), by = "day"),
 #  seq.Date(as.Date("2026-12-23"), as.Date("2027-01-06"), by = "day"))
 
+school_holidays_NW<- get_school_holidays(country = "DE",
+                                         subdivision = "DE-NW",
+                                         start_date = "2026-01-01",
+                                         end_date = "2028-12-31")
+
+school_holidays_RP<- get_school_holidays(country = "DE",
+                                         subdivision = "DE-RP",
+                                         start_date = "2026-01-01",
+                                         end_date = "2028-12-31")
+
 #Set route_type ranking: train, tram, bus, everything else.
 route_type_ranks <- list(
   c("101","102","106","109"),   
@@ -76,24 +86,11 @@ get_route_rank <- function(rt) {
 holidays <- holidays_nrw(2026)
 
 #Set up date lists of school holidays and public holidays for filtering stop time data.
-school_holidays<- get_school_holidays(country = "DE",
-                                      subdivision = "DE-NW",
-                                      start_date = "2026-01-01",
-                                      end_date = "2028-12-31") %>%
-  select(2,3,5) %>%
-  mutate(
-    name = map_chr(name, ~ {
-      x <- .x
-      x$text[x$language == "DE"][1]
-    })
-  ) %>%
-  mutate(
-    startDate = as.Date(startDate),
-    endDate = as.Date(endDate),
-    date = map2(startDate, endDate, ~ seq(.x, .y, by = "day"))
-  ) %>%
-  unnest(date) %>%
-  select(name, date)
+raw_holidays <- bind_rows(school_holidays_NW, school_holidays_RP) %>%
+  prepare_holidays()
+
+school_holidays <- raw_holidays %>%
+  expand_holidays()
 
 #Begin analysis----
 #Read pre-filtered GTFS-Feed
@@ -148,6 +145,8 @@ trip_calendar <- gtfs_feed$.$dates_services %>%
   filter(!route_type %in% c(102,101,201))
 
 #Calculate simple trips per day for normdays (alternatively weekdays, nonholiday weekdays, all days, etc.)
+
+
 trips_per_day <- trip_calendar %>%
   group_by(date) %>%
   summarise(
@@ -271,25 +270,12 @@ ggsave(p, filename = "document/figures/trips_per_agency_weekdays_2026-05-18.svg"
 x_min <- min(trips_per_day$date, na.rm = TRUE)
 x_max <- max(trips_per_day$date, na.rm = TRUE)
 
-plotholidays <- get_school_holidays(country = "DE",
-                                    subdivision = "DE-NW",
-                                    start_date = "2026-01-01",
-                                    end_date = "2028-12-31") %>%
-  select(2,3,5) %>%
+plotholidays <- raw_holidays %>%
+  filter_holidays_for_plot(x_min, x_max)
+
+plotholidays_labels <- plotholidays %>%
   mutate(
-    name = map_chr(name, ~ {
-      x <- .x
-      x$text[x$language == "DE"][1]
-    })
-  ) %>%
-  mutate(
-    startDate = as.Date(startDate),
-    endDate = as.Date(endDate)) %>%
-  filter(endDate >= x_min,
-         startDate <= x_max) %>%
-  mutate(
-    startDate = pmax(startDate, x_min),
-    endDate   = pmin(endDate, x_max) + 1
+    label_x = startDate + (endDate - startDate) / 2
   )
 
 ggplot(trips_per_day, aes(x = date, y = trips)) +
@@ -362,25 +348,12 @@ ggplot(availability, aes(x = date, y = pct_active)) +
 x_min <- min(availability$date, na.rm = TRUE)
 x_max <- max(availability$date, na.rm = TRUE)
 
-plotholidays <- get_school_holidays(country = "DE",
-                                    subdivision = "DE-NW",
-                                    start_date = "2026-01-01",
-                                    end_date = "2028-12-31") %>%
-  select(2,3,5) %>%
+plotholidays <- raw_holidays %>%
+  filter_holidays_for_plot(x_min, x_max)
+
+plotholidays_labels <- plotholidays %>%
   mutate(
-    name = map_chr(name, ~ {
-      x <- .x
-      x$text[x$language == "DE"][1]
-    })
-  ) %>%
-  mutate(
-    startDate = as.Date(startDate),
-    endDate = as.Date(endDate)) %>%
-  filter(endDate >= x_min,
-         startDate <= x_max) %>%
-  mutate(
-    startDate = pmax(startDate, x_min),
-    endDate   = pmin(endDate, x_max) + 1
+    label_x = startDate + (endDate - startDate) / 2
   )
 
 ggplot(availability, aes(x = date, y = pct_active)) +
@@ -392,7 +365,8 @@ ggplot(availability, aes(x = date, y = pct_active)) +
       xmax = endDate,
       ymin = -Inf,
       ymax = Inf,
-      fill = name
+      fill = name,
+      colour = subdivision
     ),
     alpha = 0.2
   ) +
@@ -403,7 +377,8 @@ ggplot(availability, aes(x = date, y = pct_active)) +
   ylab("Anteil aktiver services") +
   scale_color_manual(values = c("gleitender Mittelwert (7 Tage)" = "red")) +
   scale_x_date(date_labels="%b %y",date_breaks  ="1 month") +
-  theme(legend.position = "bottom")
+  theme(legend.position = "bottom") +
+  geom_label(data = plotholidays_labels, inherit.aes = FALSE,  aes(x = label_x, y = max(availability$pct_active), label = subdivision), vjust = 1.5, size = 3 ,fontface = "sourceserif")
 
 ggplot(availability, aes(x = active_services)) +
   geom_dotplot(aes(fill = as.factor(month(date))), stackgroups = TRUE, binpositions = "all")
