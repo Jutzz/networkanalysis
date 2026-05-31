@@ -13,6 +13,7 @@
 \usepackage{siunitx}
 \usepackage{amssymb}
 \usepackage{parskip}
+\usepackage{microtype}
 \hypersetup{
 	colorlinks=true,      
 	linkcolor=black,
@@ -113,7 +114,10 @@
 	Durch den Strukturwandel im rheinischen Braunkohlerevier und die im Investitionsgesetz Kohleregionen verankerten Mittel zur Förderung der Eisenbahn- und eisenbahnanliegenden Infrastruktur (Investitionsgesetz Kohleregionen 2023, §§ 22, 27, Anlage 4) ergibt sich zusätzlicher Handlungs- und Informationsbedarf, der eine Untersuchung des verkehrlichen Status Quo des Gebietes relevant macht. Die verwendeten Methoden sind, aufgrund der deutschlandweit verfügbaren Datenquellen, zwar auf ganz Deutschland anwendbar, werden aufgrund des angestrebten Detailgrades der Auswertung und der resultierenden Notwendigkeit, eventuelle Randbedingungen und Ungenauigkeiten manuell zu prüfen auf das beschriebene Gebiet heruntergebrochen.
 	\subsection{Datengrundlagen}
 	\subsubsection{OSM}
-	\subsubsection{GTFS}
+	\subsubsection{Fahrplandaten}
+	In diesem Kapitel soll ein kurzer Überblick über verschiedene Fahrplandatenformate gegeben werden und im weiteren die Entwicklung, der Aufbau, die Verbreitung und die Funktion des GTFS-Standards beschrieben werden und einige Beispiele zur Anwendung aus der Literatur betrachtet werden.
+	\paragraph{Entwicklung digitaler Fahrplaninformationen}
+	Die Geschichte digitaler Fahrplanformate beginnt in den Achtziger Jahren mit der Entwicklung des \textit{ÖPNV-Datenmodell} durch den Verband deutscher Verkehrsunternehmen (damals Verband öffentlicher Verkehrsbetriebe) \parencite[17]{kaufmannOpeningPublicTransit}. Die entstandenen und seitdem weiterentwickelten Standards \parencite{vdvOPNVDatenmodell50SchnittstellenInitiative1999, vdvVDVStandardschnittstelleLiniennetzFahrplan2021} Ende der Achtziger Jahre in Großbritannien mit dem \enquote{Common Interface File} \parencite[1]{nrCIFspec29}. Dieses Format dient dem Austausch mit dem integrierten Zugplanungssystem ITPS (\textbf{I}ntegrated \textbf{T}rain \textbf{P}lanning \textbf{S}ystem), beziehungsweise der inzwischen obsoleten Train Service Database (TSDB) \parencite[18]{CatalogueRailwayCode} des britischen Eisenbahnninfrastrukturunternehmens Network Rail \parencite[2]{nrCIFspec29}.  
 	\subsubsection{Zensus}
 	\subsection{Berechnung der Indikatoren}
 	\subsubsection{Erschließungsqualität}
@@ -128,7 +132,7 @@
 	Der Wert der Bedienungsqualität der Haltestellen, aus der sich in Kombination mit der Gehwegdistanz zur Haltestelle die Erschließungsqualität ergibt, entspricht folgender Tabelle:
 	\begin{table}[htbp]
 		\centering
-		\fontsize{8}{10}\selectfont
+		\fontsize{9}{10}\selectfont
 		\begin{tabular}{|l|c|c|c|}
 			\hline
 			\multirow{2}{*}{\textbf{\begin{tabular}[c]{@{}l@{}}
