@@ -17,6 +17,7 @@
 *.synctex.gz
 *.toc
 
+
 # Large/raw datasets
 feeds/
 osmdata/
