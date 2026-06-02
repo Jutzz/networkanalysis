@@ -17,6 +17,7 @@ library(sf)
 library(httr2)
 library(jsonlite)
 library(zoo)
+library(extrafont)
 
 files.sources = list.files("code/helper/", full.names = TRUE)
 sapply(files.sources, source)
@@ -189,6 +190,18 @@ activity_top10 <- activity_per_day %>%
     )
   )
 
+activity_top10 <- activity_per_day %>%
+  filter(agency_id %in% c("10729")) %>%
+  mutate(
+    agency_short = recode(
+      agency_name,
+      "Aachener Straßenbahn und Energieversorgungs-AG" = "ASEAG",
+      "Kölner VB" = "KVB",
+      "Rheinbahn Bus" = "Rheinbahn"
+    )
+  )
+
+
 cutoff <- as.Date("2026-09-01")
 
 agency_change <- activity_per_day %>%
@@ -258,7 +271,10 @@ p <- ggplot(activity_top10, mapping = aes(x = date, y = trips, color = agency_sh
   geom_point() +
   labs(color = "Verkehrsunternehmen", fill = element_blank(), y = "Anzahl Fahrten", x = "Datum")+
   theme(legend.position = "bottom") +
-  ylim(4000,9000)
+  #ylim(4000,9000) +
+  #geom_label(data = plotholidays_labels, inherit.aes = FALSE,  aes(x = label_x, y = 87500, label = subdivision), vjust = 1.5, size = 3, fontface = "bold") +
+  theme(legend.position = "bottom", text = element_text(family = windowsFont("Source Sans 3")))
+
   
 
 p
@@ -278,7 +294,7 @@ plotholidays_labels <- plotholidays %>%
     label_x = startDate + (endDate - startDate) / 2
   )
 
-ggplot(trips_per_day, aes(x = date, y = trips)) +
+f <- ggplot(trips_per_day, aes(x = date, y = trips)) +
   geom_rect(
     data = plotholidays,
     inherit.aes = FALSE,
@@ -298,12 +314,18 @@ ggplot(trips_per_day, aes(x = date, y = trips)) +
   ylab("Anzahl Fahrten") +
   scale_color_manual(values = c("gleitender Mittelwert (5 Tage)" = "red")) +
   scale_x_date(date_labels="%b %y",date_breaks  ="1 month") +
-  theme(legend.position = "bottom")
+  theme_light() +
+  geom_label(data = plotholidays_labels, inherit.aes = FALSE,  aes(x = label_x, y = 87500, label = subdivision), vjust = 1.5, size = 3, fontface = "bold") +
+  theme(legend.position = "bottom", text = element_text(family = windowsFont("Source Sans 3")))
 
-ggsave(last_plot(), filename = "document/figures/trips_year_nonholiday_weekdays_2026-05-18.svg", width = 200, height = 100, units  = "mm", dpi = 300)  
+f
+
+ggsave(f, filename = "document/figures/trips_year_nonholiday_weekdays_2026-05-18.svg", width = 200, height = 100, units  = "mm", dpi = 300)  
 
 ggplot(trips_per_day, aes(x = trips)) +
-  geom_dotplot(aes(fill = jump), stackgroups = TRUE, binpositions = "all")
+  geom_dotplot(aes(fill = jump), stackgroups = TRUE, binpositions = "all") +
+  theme_light() +
+  theme(legend.position = "bottom", text = element_text(family = windowsFont("Source Sans 3")))
 
 ggsave(last_plot(), filename = "document/figures/trips_dotplot_nonholiday_normdays_2026-05-18.svg", width = 240, height = 160, units  = "mm", dpi = 300)  
 
@@ -378,7 +400,11 @@ ggplot(availability, aes(x = date, y = pct_active)) +
   scale_color_manual(values = c("gleitender Mittelwert (7 Tage)" = "red")) +
   scale_x_date(date_labels="%b %y",date_breaks  ="1 month") +
   theme(legend.position = "bottom") +
-  geom_label(data = plotholidays_labels, inherit.aes = FALSE,  aes(x = label_x, y = max(availability$pct_active), label = subdivision), vjust = 1.5, size = 3 ,fontface = "sourceserif")
+  geom_label(data = plotholidays_labels, inherit.aes = FALSE,  aes(x = label_x, y = max(availability$pct_active), label = subdivision), vjust = 1.5, size = 3, fontface = "bold") +
+  theme_light() +
+  theme(legend.position = "bottom", text = element_text(family = windowsFont("Source Sans 3")))
+
+ggsave("document/figures/active_services_year_rollavg_2026-05-18.svg", get_last_plot(), )
 
 ggplot(availability, aes(x = active_services)) +
   geom_dotplot(aes(fill = as.factor(month(date))), stackgroups = TRUE, binpositions = "all")

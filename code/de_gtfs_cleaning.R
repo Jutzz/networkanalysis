@@ -7,7 +7,7 @@ library(here)
 #Change feed date to used feed version (filename).
 feed_date <- "20260525"
 area_name <- "regbez"
-
+s
 #TODO: generalize for any spatial filter
 #Uncomment to process new fahrplaene_gesamtdeutschland. Downloaded feed into raw.
 gtfs_feed <- tidytransit::read_gtfs(paste0("feeds/raw/", feed_date, "_fahrplaene_gesamtdeutschland_gtfs.zip"))
