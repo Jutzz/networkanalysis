@@ -149,25 +149,29 @@
 	
 	\texttt{trips.txt} enthält die tatsächlich stattfindenden Fahrten. Jeder \texttt{trip} ist über eine \texttt{trip\_id} eindeutlich gekennzeichnet und gehört über eine  \texttt{route\_id} zu einer \texttt{route}. Über eine \texttt{service\_id} gehört er zu einem \texttt{service}, der in den Tabellen \texttt{calendar} und \texttt{calendar\_dates} referenziert ist. Dabei kann die gleiche Fahrt an mehreren Tagen des Feeds stattfinden. Optional kann hier darüber informiert werden, ob ein \texttt{trip} barrierefrei für Rollstuhlnutzende (\texttt{wheelchair\_accessible}) ist, ob Fahrräder und/oder Autos mitgenommen werden können (\texttt{bikes\_allowed}, \texttt{cars\_allowed}, letzteres ist z.B. für Fähren relevant), außerdem können ein Name (\texttt{trip\_short\_name}) und eine Informationsanzeige am Fahrzeug (\texttt{trip\_headsign}) festgelegt werden. Die \texttt{block\_id} kann genutzt werden, um anzuzeigen, das mehrere Fahrten mit dem selben Fahrzeug durchgeführt werden. In Verbindung mit einem entsprechenden Eintrag in \texttt{transfers.txt} können so sogenannte \enquote{in-seat-transfers} ausgedrückt werden, bei denen ein Ausstieg aus dem Fahrzeug nicht nötig ist. Ein \texttt{trip} kann über eine \texttt{shape\_id} zusätzlich mit einer \texttt{shape} hinterlegt werden, um den Laufweg der Fahrt auf der Karte genauer anzuzeigen (tatsächlicher Streckenverlauf anstatt direkter Stop-zu-Stop-Linien).
 	
-	\texttt{stop\_times.txt} enthält die Halte einer jeden Fahrt. Insofern gehört jede \texttt{stop\_time} über eine \texttt{trip\_id} zu einem \texttt{trip}. Jeder Halt hat eine Ankunfts- und eine Abfahrtszeit (\texttt{arrival\_time}, \texttt{departure\_time}) und findet an einem \texttt{stop} statt, der über die \texttt{stop\_id} referenziert ist. Die einzelnen Halte einer Fahrt sind über die \texttt{stop\_sequence} durchnummeriert. Optional kann der Wert zum \texttt{continuous\_pickup} bzw. \texttt{continuous\_dropoff} für die Strecke zwischen zwei Halten überschrieben werden, wenn beispielsweise nur auf einem Teil der Strecke ein haltestellenunabhängiger Einstieg möglich ist, auch die Informationsanzeige am Fahrzeug kann für einen bestimmten Halt verändert werden.
+	\texttt{stop\_times.txt} enthält die Halte einer jeden Fahrt. Insofern gehört jede \texttt{stop\_time} über eine \texttt{trip\_id} zu einem \texttt{trip}. Jeder Halt hat eine Ankunfts- und eine Abfahrtszeit (\texttt{arrival\_time}, \texttt{departure\_time}) und findet an einem \texttt{stop} statt, der über die \texttt{stop\_id} referenziert ist. Dabei ist zu beachten, dass die Uhrzeiten 24:00:00 überschreiten können, wenn beispielsweise eine Fahrt vor Mitternacht beginnt und nach Mitternacht endet  oder die letzte Fahrt einer Linie erst am Folgedatum beginnt (\textit{service day} $\leftrightarrow$ \textit{calendar day} ) sich. %evtl weitere Quelle für Betriebstage
+	 Eine Ankunft um 01:35 Uhr würde entsprechend als \texttt{arrival\__time = 25:35:00} verzeichnet werden. Die einzelnen Halte einer Fahrt sind über die \texttt{stop\_sequence} durchnummeriert. Optional kann der Wert zum \texttt{continuous\_pickup} bzw. \texttt{continuous\_dropoff} für die Strecke zwischen zwei Halten überschrieben werden, wenn beispielsweise nur auf einem Teil der Strecke ein haltestellenunabhängiger Einstieg möglich ist, auch die Informationsanzeige am Fahrzeug kann für einen bestimmten Halt verändert werden.
 	
 	\texttt{calendar} und \texttt{calendar\_dates} machen die \enquote{Minimalausführung} des GTFS-Standards komplett. Erst durch die hier eingeschriebene Verknüpfung von Kalenderdaten und \texttt{services} entsteht aus den Verzeichnissen \texttt{trips} und \texttt{stop\_times} ein Fahrplan. Der \texttt{calendar} ermöglicht es, für jeden Wochentag festzulegen, ob ein \texttt{service} aktiv ist oder nicht (Felder \texttt{monday}--\texttt{friday}, binär) , und für diese Festlegung jeweils ein Gültigkeitszeitraum (\texttt{start\_date}, \texttt{end\_date}) zu wählen. In \texttt{calendar\_dates} können Abweichungen von den wochentagsbasierten Regelungen in \texttt{calendar} festgelegt werden: Für eine bestimmte \texttt{service\_id} kann an einem bestimmten \texttt{date} \texttt{exception\_type = 1} oder  \texttt{exception\_type = 2} gesetzt werden, ersteres drückt aus, dass dieser service am spezifizierten Datum ausnahmsweise fährt, obwohl er laut \texttt{calendar} nicht aktiv ist, letzteres entsprechend das er \textit{nicht} fährt.
 	Ein simpler \texttt{calendar} mit zwei \texttt{services} für Wochentage und Wochenenden könnte entsprechend so aussehen:
 	\begin{table}[ht]
 		\centering
 		\fontsize{8}{10}
-	\begin{tabular}{cccccccccc}
+	\begin{tabular}{cccccccc}
 		\hline
-		service\_id & monday & tuesday & wednesday & thursday & friday & saturday & sunday & start\_date & end\_date \\
+		service\_id & monday & ... & friday & saturday & sunday & start\_date & end\_date \\
 		\hline
-		normal & 1 & 1 & 1 & 1 & 1 & 0 & 0 & 2026-05-02 & 2026-12-31 \\
-		weekend & 0 & 0 & 0 & 0 & 0 & 1 & 1 & 2026-05-02 & 2026-12-31 \\
+		normal & 1 &  ... & 1 &  0 & 0 & 2026-05-02 & 2026-12-31 \\
+		weekend & 0  & ... & 0 & 1 & 1 & 2026-05-02 & 2026-12-31 \\
 	\end{tabular}
 	\caption{Minimales Beispiel für eine \texttt{calendar.txt}} 
 	\label{calendartxt}
 	\end{table}
+	Für den Fall, das eine sinnvolle Nutzung des \texttt{calendar} aufgrund von zu hoher Variation nicht möglich ist, kann auch ausschließlich \texttt{calendar\_dates} genutzt werden und in dem Sinne jeder service als \enquote{Außnahme} eingetragen werden. Der Feed des \textcite{delfie.v.DeutschlandweiteSollFahrplandatenGTFS2026} nutzt beide Möglichkeiten, das heißt es gibt einige \texttt{services}, die nur als Ausnahme in \texttt{calendar\_dates} aktiviert werden.
 	
-		 
+	
+	
+	Die beschriebenen sieben Dateien ermöglichen es, einen 
 
 	\subsubsection{Zensus}
 	\subsection{Berechnung der Indikatoren}
