@@ -157,6 +157,21 @@ trips_per_normday <- trip_calendar %>%
   mutate(rolling_avg = rollmean(trips, 5, na.pad = TRUE)) %>%
   mutate(rollingavg_delta = rolling_avg-lag(rolling_avg, 5)) %>%
   mutate(absolute = abs(rollingavg_delta))
+
+trip_summary <- data.frame(
+  w = c(
+    min(w$trip, na.rm = TRUE),
+    median(w$trip, na.rm = TRUE),
+    max(w$trip, na.rm = TRUE)
+  ),
+  n = c(
+    min(n$trip, na.rm = TRUE),
+    median(n$trip, na.rm = TRUE),
+    max(n$trip, na.rm = TRUE)
+  ),
+  row.names = c("Min", "Median", "Max")
+)
+
   
 x_min <- min(trips_per_weekday$date, na.rm = TRUE)
 x_max <- max(trips_per_weekday$date, na.rm = TRUE)
@@ -192,51 +207,19 @@ ggplot(trips_per_weekday, aes(x = date, y = trips)) +
   scale_x_date(date_labels="%b %y",date_breaks  ="1 month") +
   theme(legend.position = "bottom") +
   geom_label(data = plotholidays_labels, inherit.aes = FALSE,  aes(x = label_x, y = median(trips_per_weekday$trips), label = subdivision), vjust = 1.5, size = 3, family = windowsFonts("Source Sans 3 ExtraLight"))
-#R5 Setup
-#TODO: Not really needed here, as checking services is pretty unreliable. Clean separation between exploratory show of work (figures) and processing steps here.
+
 #What happens reproducibly: Does an agency_id feed part stop at some point? If so, what proportion of daily trips does it have?
 #Can a threshold be set for that or is it necessarily a manual decision?
-r5_network <- build_network(here("r5core_2026-05-18"), verbose = FALSE, overwrite = FALSE)
-#dates = nonholiday_weekdays#
 
-availability <- check_transit_availability(r5_network, dates = unique(gtfs_feed$.$dates_services$date)) %>%
-  mutate(weekday = weekdays(as.Date(date))) %>%
-  mutate(weekday_n =  format(as.Date(date),"%w")) %>%
-  filter(active_services > 0) %>%
-  arrange(date) %>%
-  mutate(week_delta = active_services-lag(active_services, 7)) %>%
-  mutate(rolling_avg = rollmean(pct_active, 7, na.pad = TRUE)) %>%
-  mutate(rollingavg_delta = rolling_avg-lag(rolling_avg, 7)) %>%
-  mutate(absolute = abs(rollingavg_delta))
+nonholiday_weekdays_fullservice <- nonholiday_weekdays[nonholiday_weekdays < cutoff]
 
-jumps <- availability %>%
-  mutate(absolute = abs(rollingavg_delta)) %>%
-  filter(absolute > 2*(sd(rollingavg_delta, na.rm = TRUE)))
+nonholiday_normdays_fullservice <- nonholiday_normdays[nonholiday_normdays < cutoff]
 
-availability_week <- availability %>%
-  group_by(weekday) %>%
-  mutate(avg_pct = mean(pct_active))%>%
-  mutate(avg_services = mean(active_services))%>%
-  mutate(sd_services = sd(active_services)) %>%
-  mutate(variance_services = var(active_services)) %>%
-  select(5, 11:14) %>%
-  distinct()
-
-ggplot(availability, aes(x = date, y = pct_active)) +
-  geom_line() +
-  geom_line(aes(y=rolling_avg, color = "gleitender Mittelwert (7 Tage)"), linewidth = 2) +
-  labs(title = "Aktive services im Jahresverlauf", subtitle = "auf Grundlage des DELFI-GTFS vom 18.05.2026", color = element_blank(), fill = NULL) +
-  xlab("Datum") +
-  ylab("Anteil aktiver services") +
-  scale_color_manual(values = c("gleitender Mittelwert (7 Tage)" = "red")) +
-  scale_x_date(date_labels="%b %y",date_breaks  ="1 month") +
-  theme(legend.position = "bottom")
-
-ggplot(availability, aes(x = active_services)) +
-  geom_dotplot(aes(fill = as.factor(month(date))), stackgroups = TRUE, binpositions = "all")
+write_lines(nonholiday_weekdays_fullservice, "code/temp/nonholiday_weekdays_cutoff.txt")
+write_lines(nonholiday_normdays_fullservice, "code/temp/nonholiday_normdays_cutoff.txt")
 
 weekday_services <- gtfs_feed$.$dates_services %>%
-  filter(date %in% nonholiday_weekdays)
+  filter(date %in% nonholiday_weekdays_fullservice)
 
 weekday_trips_dates <- trips %>%
   select(trip_id, service_id, route_id) %>%
@@ -260,7 +243,7 @@ zhv <- st_read(here("geodata/poi.gpkg"), paste0("zhv_", zhv_date))
 departure_counts <- weekday_stop_times_dates %>%
   filter(departure_time >= hms("08:00:00")&arrival_time <= hms("18:00:00")) %>%
   group_by(NVBW_HST_DHID) %>%
-  summarise(
+  reframe(
     departures = n(),
     # Determine highest-ranking route type
     highest_rank_route_type = {
@@ -268,11 +251,10 @@ departure_counts <- weekday_stop_times_dates %>%
       ranks <- sapply(all_types, get_route_rank)
       # pick the route type with the *lowest* numerical rank
       all_types[which.min(ranks)]
-    },
-    .groups = "drop"
+    }
   ) %>%
   mutate(
-    departures_per_day  = departures / length(nonholiday_weekdays),
+    departures_per_day  = departures / length(nonholiday_weekdays_fullservice),
     departures_per_hour = departures_per_day / 10
   ) %>%
   left_join(zhv, by = join_by(NVBW_HST_DHID == DHID)) %>%

@@ -34,6 +34,8 @@
 
 \linespread{1.5}
 
+\setcounter{secnumdepth}{4} % Number subsubsections (4) and paragraphs (5)
+\setcounter{tocdepth}{4}    % Include paragraphs in Table of Contents
 %\setkomafont{section}{\normalfont\bfseries}
 %\setkomafont{subsection}{\normalfont\bfseries}
 %\setkomafont{}{\normalfont\bfseries}
@@ -173,7 +175,7 @@
 	
 	\paragraph{DELFI} Der in dieser Arbeit verwendete GTFS-Feed wird durch den DELFI e.V. bereitgestellt. DELFI steht für \textbf{D}urchgängige \textbf{e}lektrische \textbf{F}ahrgast\textbf{I}nformation, und ist ursprünglich als Kooperation der Bundesländer zur Vereinheitlichung der verschiedenen regionalen Auskunftssysteme eingerichtet worden. Durch die Umsetzung der Strategie \enquote{DELFI-2020} \parencite{delfi-lenkungsausschussStategieDELFI20202014} wurde 2016 der DELFI e.V. gegründet, dessen Mitglieder die Betreiber der landesweiten Auskunftssysteme sind \parencite{delfie.v.MitgliederDELFIEV}, für NRW ist dies der Verkehrsverbund Rhein-Ruhr als Geschäftsstelle des \textit{Kompetenzcenter Digitalisierung NRW}. Die regional verfügbaren Soll-Daten werden landesweit gesammelt und koordiniert in der DELFI-Integrationsplattform zu einem deutschlandweiten \textit{DELFI-Timetable} zusammengeführt \parencite{delfie.v.ArchitekturDELFIEV2026}. DELFI stellt die Daten über \textit{OpenData ÖPNV} zum kostenlosen Download (nach Anmeldung) bereit. Angeboten werden die Daten neben dem verpflichtenden NetEx-Format auch als GTFS.
 	
-	\paragraph{Besonderheiten DELFI-GTFS} Der durch den DELFI e.V. bereitgestellte Feed enthält zusätzlich zu den unbedingt notwendigen Tabellen \texttt{frequencies}, \texttt{levels}, \texttt{pathways}, \texttt{transfers} und \texttt{shapes}. 
+	\subparagraph{Besonderheiten DELFI-GTFS} Der durch den DELFI e.V. bereitgestellte Feed enthält zusätzlich zu den unbedingt notwendigen Tabellen \texttt{frequencies}, \texttt{levels}, \texttt{pathways}, \texttt{transfers} und \texttt{shapes}. 
 	
 
 
@@ -182,13 +184,76 @@
 	\subsubsection{Erschließungsqualität}
 	Für die Berechnung der Erschließungsqualität \footnote{Im Abschlussbericht der \textcite{kcwgmbhMethodikUndEmpfehlungen2024} noch als \enquote{Verfügbarkeitsindikator} geführt.} nach den Indikatoren des Bundesministeriums für Digitales und Verkehr \parencite[25-27]{bmdvIndikatorenLeichtGemacht2025} sind folgende Elemente notwendig: Eine Auflistung der Haltestellen im Untersuchungsgebiet mit einer Bedienungsqualität auf Grundlage von Tabelle 1 im Steckbrief \parencite[27]{bmdvIndikatorenLeichtGemacht2025}, eine Anzahl an Startpunkten, von denen aus die Gehzeit zu den umliegenden Haltestellen berechnet wird, und ein routingfähiges Fußwegenetz des Untersuchungsgebietes. Im folgenden soll beschrieben werden, wie diese Daten jeweils bereitgestellt bzw. errechnet werden.
 	%Die Bedienungsqualität einer Haltestelle ergibt sich für diesen Zweck aus der Kombination der Anzahl der Abfahrten pro Stunde, gemittelt über fünf Wochentage, und dem höchstrangigen Verkehrsmittel an der Haltestelle in drei Kategorien (Bus, Stadt-, Straßen-, U-Bahn oder regionaler SPNV).
-	\paragraph{Fahrplandaten}
-	
-	Als Informationsquelle für die Abfahrten dient der deutschlandweite GTFS-Feed des \textcite{delfie.v.DeutschlandweiteSollFahrplandatenGTFS2026}, der wöchentlich aktualisiert wird. Dieser Feed wird zunächst mit der Funktion \texttt{filter\_feed\_by\_area()} aus der Bibliothek  \texttt{tidytransit} \parencite{polettiTidytransitReadValidate2025} auf das Untersuchungsgebiet zugeschnitten.  Dabei wird ein Puffer von fünf Kilometern um das Gebiet angesetzt, um Grenzfälle zu vermindern. Der deutschlandweite Feed nutzt die optionale Tabelle \texttt{transfers.txt}. Diese ermöglicht es, auf Grundlage von Entfernungen berechnete Umstiegszeiten zu überschreiben um beispielsweise kürzere oder längere Umstiege zu verzeichnen Außerdem können „in-seat-transfers“, bei denen das gleiche Fahrzeug als anderer trip weiterfährt (d.h. der Umstieg ist möglich, obwohl die Ankunft und Abfahrt sehr nah beieinander liegen), oder Kupplungen und Flügelungen abgebildet werden \parencite{GoogleTransit2026}. Außerdem verwendet er das optionale Feld \texttt{parent\_station} in der \texttt{stops.txt}. Die Halte sind nicht als einzelner Punkt repräsentiert, sondern als einzelne Bahnsteige/Masten/Einstiegsorte, die unter einer \texttt{parent\_station} zusammengefasst sind. \texttt{filter\_feed\_by\_area()} berücksichtigt diese optionalen Werte nicht. Trips, die zum Teil außerhalb des gewählten Bereiches liegen, werden mit ihren \texttt{stops} beibehalten, nicht aber die zugehörige \texttt{parent\_station} (d.h. beispielsweise ein Gleis eines Bahnhofs ist im gefilterten Feed enthalten, nicht aber der Bahnhof selbst, vgl. auch \textcite[87]{kcwgmbhMethodikUndEmpfehlungen2024}).
+	\paragraph{Fahrplandaten}	Als Informationsquelle für die Abfahrten dient der deutschlandweite GTFS-Feed des \textcite{delfie.v.DeutschlandweiteSollFahrplandatenGTFS2026}, der wöchentlich aktualisiert wird. Dieser Feed wird zunächst mit der Funktion \texttt{filter\_feed\_by\_area()} aus der Bibliothek  \texttt{tidytransit} \parencite{polettiTidytransitReadValidate2025} auf das Untersuchungsgebiet zugeschnitten.  Dabei wird ein Puffer von fünf Kilometern um das Gebiet angesetzt, um Grenzfälle zu vermindern. Der deutschlandweite Feed nutzt die optionale Tabelle \texttt{transfers.txt}. Diese ermöglicht es, auf Grundlage von Entfernungen berechnete Umstiegszeiten zu überschreiben um beispielsweise kürzere oder längere Umstiege zu verzeichnen Außerdem können „in-seat-transfers“, bei denen das gleiche Fahrzeug als anderer trip weiterfährt (d.h. der Umstieg ist möglich, obwohl die Ankunft und Abfahrt sehr nah beieinander liegen), oder Kupplungen und Flügelungen abgebildet werden \parencite{GoogleTransit2026}. Außerdem verwendet er das optionale Feld \texttt{parent\_station} in der \texttt{stops.txt}. Die Halte sind nicht als einzelner Punkt repräsentiert, sondern als einzelne Bahnsteige/Masten/Einstiegsorte, die unter einer \texttt{parent\_station} zusammengefasst sind. \texttt{filter\_feed\_by\_area()} berücksichtigt diese optionalen Werte nicht. Trips, die zum Teil außerhalb des gewählten Bereiches liegen, werden mit ihren \texttt{stops} beibehalten, nicht aber die zugehörige \texttt{parent\_station} (d.h. beispielsweise ein Gleis eines Bahnhofs ist im gefilterten Feed enthalten, nicht aber der Bahnhof selbst, vgl. auch \textcite[87]{kcwgmbhMethodikUndEmpfehlungen2024}).
 	
 	Ebenso verhält es sich mit Routen, die als \texttt{transfer} einer Route im Bereich angegeben sind, aber außerhalb des Bereichs liegen. Das führt zu Validierungsfehlern bei der Verarbeitung des Feeds, weshalb diese Stops und Routen nach dem Filtern wieder hinzugefügt werden. (\texttt{de\_gtfs\_cleaning.R}) Es ist zu prüfen, welche Ergebnisunterschiede sich aus der Aggregierung der Halte an den einzelnen stops unter dem Standort der entsprechenden \texttt{parent\_station} ergeben. Tendenziell ergibt sich eine bessere Bedienungsqualität, allerdings sind liegen die stops einzelner \texttt{parent\_stations} teils weit auseinander, weswegen sich möglicherweise eine unrealistische Verschiebung der Gehzeiten ergeben könnte. Besonders an größeren SPNV-Stationen, bei denen einzelne SPNV-Gleise und Busbahnhöfe unter einer \texttt{parent\_station} zusammengefasst werden, besteht dieses Problem. Die Bedienungsqualität dieser Stationen wird bei Aggregierung tendeziell überbewertet, allgemein ist aber insbesondere bei Bushaltestellen die Aggregierung sinnvoll. Bei (Haupt-) Bahnhöfen mit weit entfernten Bushaltestellen ist eine Einzelprüfung/Trennung denkbar.
 	
+	Die Berechnung der Erschließungsqualität beruht auf einer Auswertung der Abfahrten an einer Haltestelle in einem bestimmten Zeitraum. Bevor diese Bedienungsqualität berechnet werden kann, muss zunächst geprüft werden, ob der gesamte Feed für die Berechnung genutzt werden kann und ob es sinnvoll ist, die Bedienungsqualität über mehrere Tage hinweg zu mitteln.
+	
+	Der deutschlandweite Feed des %Zugeschnittenen Feed im Anhang referenzieren?
+	 \textcite{delfie.v.DeutschlandweiteSollFahrplandatenGTFS2026} enthält (für jede \enquote{Ausgabe}) Daten von Veröffentlichung des Feeds bis zum Ende des Jahres und damit, Stand 18.05.2026,  unter Berücksichtigung der Ferien in Nordrhein-Westfalen und Rheinland-Pfalz 89 Wochentage und 34 Normalwerktage.
+	 	\footnote{Zum Begriff des Normalwerktags siehe Abschnitt \ref{par:Bedienungsqualität} zur 			Berechnung der Bedienungsqualität.}
+	 Mit der Funktion \texttt{check\_transit\_availability} stellt \texttt{r5r} \parencite{pereiraR5rRapidRealistic2021} eine Möglichkeit zur Analyse der Variabilität des Feeds zur Verfügung. Es wird auf Grundlage des Netzwerkgraphen, der mit \texttt{build\_network} erstellt wurde, extrahiert, wie viele der services aus dem GTFS-Feed an welchen Daten aktiv sind, und welchen Anteil der gesamten services dies ausmacht. Abbildung \ref{fig:activeservicesyearrollavg2026-05-18}  zeigt  den Jahresverlauf aktiver Services auf Grundlage des Feeds vom 18.05.2026. 
+	
+	\begin{figure}[ht]
+		\centering
+		\includesvg[width=1\linewidth]{figures/active_services_year_rollavg_2026-05-18.svg}
+		\caption{Variabilität des Anteils der aktiven services im GTFS-Datensatz.}
+		\label{fig:activeservicesyearrollavg2026-05-18}
+	\end{figure}
+	
+	Aus der Auswertung der \texttt{services} erscheint die Verfügbarkeit hoch variabel, insbesondere fällt der große Abfall nach Ende der Sommerferien auf. Da die \texttt{services} allerdings arbiträre Referenzen sind, unter denen eine beliebige Anzahl tatsächlicher \texttt{trips} gruppiert sein können, ist die Zahl der aktiven \texttt{services} nur bedingt aussagekräftig über die tatsächliche Aktivität des Netzwerks. Um konkreter festzustellen, ob tatsächlich eine große Variabilität gegeben ist, wurde zusätzlich die Anzahl der \texttt{trips} pro Tag berechnet.	Zunächst wird dazu der auf das Untersuchungsgebiet zugeschnittene GTFS-Feed eingelesen. \texttt{tidytransit} erstellt beim Einlesen des Feeds eine Tabelle \texttt{dates\_services}, in der auf Grundlage der Tabellen \texttt{calendar} und \texttt{calendar\_dates} des Feeds verzeichnet ist, an welchem Tag welcher Service aktiv ist. In Kombination mit den \texttt{trips} wird es so möglich, für jeden Tag des Feeds festzustellen, wie viele Fahrten stattfinden. Durch die Kombination mit der Tabelle \texttt{agencies} wird es zudem möglich, die Verkehre so zu unterteilen, das sichtbar wird, welches Verkehrsunternehmen wie viele Fahrten erbringt.  Abbildung \ref{fig:tripsyearrollavg2026-05-18} zeigt die Fahrten pro Wochentag.
+\begin{figure}[ht]
+	\centering
+	\caption{Fahrten (\texttt{trips}) je Wochentag auf Grundlage des DELFI-GTFS vom 18.05.2026}
+	\includesvg[width=1\linewidth]{figures/trips_year_nonholiday_weekdays_2026-05-18.svg}
+	\label{fig:tripsyearrollavg2026-05-18}
+\end{figure}
+
+	Es ergibt sich ein etwas geglättetes Bild, der grundsätzliche Trend einer deutlichen Abnahme nach Ende der Sommerferien bleibt jedoch erhalten. Die Funktion \texttt{check\_gtfs\_discont} liefert eine Liste der \texttt{agencies}, die nicht alle gewählten Tage abdecken. Tritt der Fall ein, das eine \texttt{agency} keine Daten für alle Tage hat, kann eine informierte Entscheidung für  den jeweiligen Anwendungsfall getroffen werden, welcher Teil des Feeds als repräsentativ angesehen werden kann. Für den Zweck dieser Arbeit wurde, um eine gewisse Nachvollziehbarkeit herzustellen, als Heuristik jenes Datum als Schnitt gewählt, an dem die erste Agency, die an mehr als fünf Tagen  im untersuchten Zeitraum Fahrten durchführt, nicht mehr im Feed vertreten ist. In diesem Fall ergibt sich als Datum der 10.07.2026, nach dem für die \enquote{Télécabine Charmey-Vounetse} mit durchschnittlich \num[]{13,774} Fahrten pro Werktag keine Fahrten mehr verzeichnet sind. Aus diesem Ergebnis zeigt sich deutlich, das die Wahl eines Stichtages für ein sinnvolles Ende der Repräsentativität des Feeds bestenfalls qualitativ und anwendungsbezogen getroffen werden sollte: Die Agency in diesem Fall ist eigentlich Betreiber einer Seilbahn in der Schweiz \parencite[vgl.][]{regionfreiburgBergbahnenCharmey} und ist mutmaßlich aufgrund eines Fehlers als Betreiber eines Regionalzuges im Feed vertreten. Die größten Wegfälle im Laufe des Feeds machen in diesem Fall die Aachener Straßenbahn und Energieversorgungs-AG (ASEAG) mit rund \num{5200} und die Niederrheinwerke Viersen mobil GmbH mit rund \num{355} Fahrten pro Tag, deren Verkehre jeweils ab dem 01.09 noch nicht verzeichnet sind. Die Fahrten \num{13} weiterer Verkehrsunternehmen sind nicht bis Ende des Feeds fortgeschrieben. Mit dieser Gewissheit kann nur der zeitliche Abschnitt bis Ende Juni \footnote{Die Sommerferien in Rheinland-Pfalz beginnen bereits am 29.06.. Verkehrsunternehmen aus Rheinland-Pfalz, deren Linien über die Landesgrenze hinaus fahren, verkehren an diesen Tagen also bereits im Ferienfahrplan. } als Grundlage für eine repräsentative Auswertung der Abfahrten an den Stationen und damit der Bestimmung der Bedienungsqualität dienen, vor allem auch, da der Wegfall eines Verkehrsunternehmens sich nicht auf den gesamten Raum einheitlich auswirkt. 
+
+	In Abbildung \ref{fig:tripsyearperagency2026-05-18} ist der Wegfall der Fahrten der ASEAG nach den Sommerferien deutlich erkennbar, ebenso der Unterschied zwischen dem regulären und dem Ferienfahrplan.
+\begin{figure}[ht]
+	\centering
+	\caption{Fahrten (\texttt{trips}) je Wochentag der drei größten Verkehrsunternehmen nach Fahrten auf Grundlage des DELFI-GTFS vom 18.05.2026. Die Zahlen  der Rheinbahn und ASEAG für die Feiertage in  Mai und Juni liegen außerhalb der Skala.}
+	\includesvg[width=1\linewidth]{figures/trips_per_agency_weekdays_2026-05-18.svg}
+	\label{fig:tripsyearperagency2026-05-18}
+\end{figure}
+	Nach dem Streichen der Tage, die ein Ferien- oder Feiertag sind, bleiben \num{36} Wochentage und \num{21} Normalwerktage in Mai und Juni, die für die Ermittlung der Bedienungsqualität genutzt werden können. Entfernt werden sowohl die Ferientage in Nordrhein-Westfalen und in Rheinland-Pfalz. 
+	Folgende Werte ergeben sich auf Grundlage dieser Auswahl:
+	Bei den Wochentagen reicht die Zahl der durchgeführten Fahrten von  $\min=87412$ am 15.05.2026 (Freitag) bis $\max=91715$ am 03.06.2026 (Mittwoch), bei den Normalwerktagen gilt $min=89291$  am 16.06.2026 (Dienstag), der 03.06. bleibt der Tag mit den meisten Fahrten. Den Median liegt bei den Wochentagen zwischen dem Wert des 19.05.2026 mit \num{90235} und des 01.06.2026 mit \num{90246} Fahrten ($Median_w=90240,5$), der Median der Normalwerktage liegt auf dem 02.06.2025 mit $Median_n=90240,5$.
+	
+	\begin{table}[htbp]
+		\centering
+		\caption{\texttt{trips} pro Tag zwischen dem 02.05. und dem 31.06.2026, ausgenommen gesetzliche Feiertage}
+		\label{tab:kennwerte_fahrten}
+		\begin{tabular}{lcc}
+			\hline
+			 & Wochentage & Normalwerktage \\
+			\hline
+			$\min$ &
+			 \num{87412}(15.05., FR) &
+			\num{89291}(16.06., DI) \\
+			
+			$ \max$ &
+			\num{91715} (03.06., MI) &
+			\num{91715 }(03.06., MI) \\
+			
+			Median &
+			\num{90240,5} &
+			\num{90210} \\
+			
+			Range &
+			\num{4303} &
+			\num{2424}\\
+			
+			\hline
+			
+		\end{tabular}
+	\end{table}
+	
 	\paragraph{Bedienungsqualität}
+	\label{par:Bedienungsqualität}
 	Der Wert der Bedienungsqualität der Haltestellen, aus der sich in Kombination mit der Gehwegdistanz zur Haltestelle die Erschließungsqualität ergibt, entspricht folgender Tabelle:
 	\begin{table}[htbp]
 		\centering
@@ -229,42 +294,43 @@
 	$\frac{840 min}{Abfahrten*0,5}$
 	in acht Klassen in vier Verkehrsmittelkategorien. Dabei wird der Zeitraum zwischen 6--20 Uhr an einem Stichtag verwendet. 
 	
-	Der Schlussbericht zum Projekt \parencite{kcwgmbhMethodikUndEmpfehlungen2024} ist in der Berechnung der Bedienungsqualitäten mehrschrittig vorgegangen. Es werden  Normalverkehrszeiten (NVZ) inklusive Hauptverkehrszeiten (HVZ) sowie  Schwachverkehrszeiten (SVZ) ermittelt \parencite[82ff]{kcwgmbhMethodikUndEmpfehlungen2024}, in denen jeweils unterschiedliche Bedienungsparadigmen zu erwarten sind. Es wird empfohlen, die Bedienungsqualität in 1h-Intervallen zu ermitteln \parencite[87]{kcwgmbhMethodikUndEmpfehlungen2024}, und die niedrigste Qualitätsstufe der untersuchten Verkehrszeit als maßgeblich zu werten. Ob und über wie viele Tage zu mitteln ist, wird aber auch hier nicht deutlich.
+	Der Schlussbericht zum Projekt \parencite{kcwgmbhMethodikUndEmpfehlungen2024} ist in der Berechnung der Bedienungsqualitäten mehrschrittig vorgegangen. Es werden  Normalverkehrszeiten (NVZ) inklusive Hauptverkehrszeiten (HVZ) sowie  Schwachverkehrszeiten (SVZ) ermittelt \parencite[82ff]{kcwgmbhMethodikUndEmpfehlungen2024}, in denen jeweils unterschiedliche Bedienungsparadigmen zu erwarten sind. Es wird empfohlen, die Bedienungsqualität in 1h-Intervallen zu ermitteln \parencite[87]{kcwgmbhMethodikUndEmpfehlungen2024}, und die niedrigste Qualitätsstufe der untersuchten Verkehrszeit als maßgeblich zu werten \parencite[85]{kcwgmbhMethodikUndEmpfehlungen2024}. Ob und über wie viele Tage zu mitteln ist, wird aber auch hier nicht deutlich.
 	
-	Um einen Vergleich zwischen den verschiedenen Methoden herzustellen, wird jede Variante getestet, die Abweichungen ermittelt und abschließend geprüft, welche sich am ehesten zur Anwendung in der Berechnung der Erschließungsqualität eignet.
-	Zuerst soll geprüft werden, ob es sinnvoll ist, die Bedienungsqualität über mehrere Tage hinweg zu mitteln, und welche Tage des Feeds sich dafür anbieten.
+	Folgende verschiedene Varianten der Abfahrten pro Stunde sollen im Folgenden ermittelt werden: 
+	\begin{itemize}
+		\item Mittlere Abfahrten pro Stunde über alle Wochentage,  die nicht in den Ferien liegen
+		\item Mittlere Abfahrten pro Stunde über alle Normalwerktage,  die nicht in den Ferien liegen
+		\item Geringste Abfahrten in einem 1-h-Intervall der Wochentage
+		\item Geringste Abfahrten in einem 1-h-Intervall der Normalwerktage
+	\end{itemize}
+	Letztere Methode orientiert sich an der Empfehlung des Abschlussberichtes und eignet sich um zu ermitteln, ob es auf bestimmten Linien oder in bestimmten Räumen Tage gibt, die stark vom  Mittelwert abweichen, Für die Umsetzung des Indikators in kontinuierlicher Form könnte sich die Berechnung auf Grundlage jeweils einer konsekutiven Woche besser als ein fortschreitender Mittelwert eignen, um eine bessere zeitliche Auflösung zu ermöglichen und die Nachvollziehbarkeit zu steigern. 
 	
-	Der deutschlandweite Feed des \textcite{delfie.v.DeutschlandweiteSollFahrplandatenGTFS2026} enthält (für jede \enquote{Ausgabe}) Daten von Veröffentlichung des Feeds bis zum Ende des Jahres und damit, Stand 18.05.2026,  unter Berücksichtigung der Ferien in Nordrhein-Westfalen, 36 Normalwerktage. Mit der Funktion \texttt{check\_transit\_availability} stellt \texttt{r5r} \parencite{pereiraR5rRapidRealistic2021} eine Möglichkeit zur Analyse der Variabilität des Feeds zur Verfügung. Es wird auf Grundlage des Netzwerkgraphen, der mit \texttt{build\_network} erstellt wurde, extrahiert, wie viele der services aus dem GTFS-Feed an welchen Daten aktiv sind, und welchen Anteil der gesamten services dies ausmacht. Abbildung \ref{fig:activeservicesyearrollavg2026-05-18}  zeigt  den Jahresverlauf aktiver Services auf Grundlage des Feeds vom 18.05.2026. 
+		Formel \ref{eq:departureshoursteckbrief} stellt die Berechnung des Wertes $\overline{A}$ zur Ermittlung der Bedienungsqualität im Sinne des Steckbriefs dar.
+	\begin{equation}
+		\label{eq:departureshoursteckbrief}
+		\overline{A} = \frac{1}{D}\sum_{d=1}^{D}\left(\frac{1}{10}\sum_{h=8}^{17} A_{d,h}\right)
+	\end{equation}
+	Die Summe der Abfahrten pro Stunde $A_{d,h}$ pro Tag $D$ von 08:00 bis 18:00 wird durch die Anzahl der Tage und der Stunden geteilt. Dabei kann $D$ entweder die Zahl der Wochentage oder die Zahl der Normalwerktage ausdrücken, bei Berechnung mit dem Medianwert ist $D=1$.\item Geringste Abfahrten in einem 1-h-Intervall der Wochentage
 	
-	\begin{figure}[ht]
-		\centering
-		\includesvg[width=1\linewidth]{figures/active_services_year_rollavg_2026-05-18.svg}
-		\caption{Variabilität des Anteils der aktiven services im GTFS-Datensatz.}
-		\label{fig:activeservicesyearrollavg2026-05-18}
-	\end{figure}
-	
-	Aus der Auswertung der \texttt{services} erscheint die Verfügbarkeit hoch variabel, insbesondere fällt der große Abfall nach Ende der Sommerferien auf. Da die \texttt{services} allerdings arbiträre Referenzen sind, unter denen eine beliebige Anzahl tatsächlicher \texttt{trips} gruppiert sein können, ist die Zahl der aktiven \texttt{services} nur bedingt aussagekräftig über die tatsächliche Aktivität des Netzwerks. Um konkreter festzustellen, ob tatsächlich eine große Variabilität gegeben ist, wurde zusätzlich die Anzahl der \texttt{trips} pro Tag berechnet.	Zunächst wird dazu der auf das Untersuchungsgebiet zugeschnittene GTFS-Feed eingelesen. \texttt{tidytransit} erstellt beim Einlesen des Feeds eine Tabelle \texttt{dates\_services}, in der auf Grundlage der Tabellen \texttt{calendar} und \texttt{calendar\_dates} des Feeds verzeichnet ist, an welchem Tag welcher Service aktiv ist. In Kombination mit den \texttt{trips} wird es so möglich, für jeden Tag des Feeds festzustellen, wie viele Fahrten stattfinden. Durch die Kombination mit der Tabelle \texttt{agencies} wird es zudem möglich, die Verkehre so zu unterteilen, das sichtbar wird, welches Verkehrsunternehmen wie viele Fahrten erbringt.  Abbildung \ref{fig:tripsyearrollavg2026-05-18} zeigt die Fahrten pro Wochentag.
-\begin{figure}[ht]
-	\centering
-	\caption{Fahrten (\texttt{trips}) je Wochentag auf Grundlage des DELFI-GTFS vom 18.05.2026}
-	\includesvg[width=1\linewidth]{figures/trips_year_nonholiday_weekdays_2026-05-18.svg}
-	\label{fig:tripsyearrollavg2026-05-18}
-\end{figure}
+	Folgende Optionen stellen sich für die Ermittlung der Bedienungsqualität an den Haltestellen:
+	\begin{itemize}
+		\item Mittel aller Wochentage, die nicht in den Ferien liegen
+		\item Mittel aller Normalwerktage, die nicht in den Ferienliegen
+		\item Mittel einer konsekutiven Woche (kein Feiertag), die nicht in den Ferien liegt
+		\item Mittel der Normalwerktage einer konsekutiven Woche (DI-DO), die nicht in den Ferien liegt
+		\item Werte des Medianwochentages (außerhalb der Ferien)
+		\item Werte des Mediannormalwerktages (außerhalb der Ferien)
+	\end{itemize}
+	%Kontinuierliche  Berechnung auf Grundlage der aktuellen konsekutiven  Woche  (keine Feiertage) bzw. konsekutiver Normalwerktage oder sogar tagesaktuell theoretisch umsetzbar.
+	Für jede Option wird einmal die Methode auf Grundlage des Steckbriefs und jene nach Empfehlung des Abschlussberichtes durchgeführt.
 
-	Es ergibt sich ein etwas geglättetes Bild, der grundsätzliche Trend einer deutlichen Abnahme nach Ende der Sommerferien bleibt jedoch erhalten. Die Funktion \texttt{check\_gtfs\_discont} liefert eine Liste der \texttt{agencies}, die nicht alle gewählten Tage abdecken. Tritt der Fall ein, das eine \texttt{agency} keine Daten für alle Tage hat, kann eine informierte Entscheidung für  den jeweiligen Anwendungsfall getroffen werden, welcher Teil des Feeds als repräsentativ angesehen werden kann. Für den Zweck dieser Arbeit wurde, um eine gewisse Nachvollziehbarkeit herzustellen, als Heuristik jenes Datum als Schnitt gewählt, an dem die erste Agency, die an mehr als fünf Tagen  im untersuchten Zeitraum Fahrten durchführt, nicht mehr im Feed vertreten ist. In diesem Fall ergibt sich als Datum der 10.07.2026, nach dem für die \enquote{Télécabine Charmey-Vounetse} mit durchschnittlich \num[]{13,774} Fahrten pro Werktag keine Fahrten mehr verzeichnet sind. Aus diesem Ergebnis zeigt sich deutlich, das die Wahl eines Stichtages für ein sinnvolles Ende der Repräsentativität des Feeds bestenfalls qualitativ und anwendungsbezogen getroffen werden sollte: Die Agency in diesem Fall ist eigentlich Betreiber einer Seilbahn in der Schweiz \parencite[vgl.][]{regionfreiburgBergbahnenCharmey} und ist mutmaßlich aufgrund eines Fehlers als Betreiber eines Regionalzuges im Feed vertreten. Die größten Wegfälle im Laufe des Feeds machen in diesem Fall die Aachener Straßenbahn und Energieversorgungs-AG (ASEAG) mit rund \num{5200} und die Niederrheinwerke Viersen mobil GmbH mit rund \num{355} Fahrten pro Tag, deren Verkehre jeweils ab dem 01.09 noch nicht verzeichnet sind. Die Fahrten \num{13} weiterer Verkehrsunternehmen sind nicht bis Ende des Feeds fortgeschrieben. Mit dieser Gewissheit kann nur der zeitliche Abschnitt bis Ende Juni \footnote{Die Sommerferien in Rheinland-Pfalz beginnen bereits am 29.06.. Verkehrsunternehmen aus Rheinland-Pfalz, deren Linien über die Landesgrenze hinaus fahren, verkehren an diesen Tagen also bereits im Ferienfahrplan. } als Grundlage für eine repräsentative Auswertung der Abfahrten an den Stationen und damit der Bestimmung der Bedienungsqualität dienen, vor allem auch, da der Wegfall eines Verkehrsunternehmens sich nicht auf den gesamten Raum einheitlich auswirkt. 
-
-	In Abbildung \ref{fig:tripsyearperagency2026-05-18} ist der Wegfall der Fahrten der ASEAG nach den Sommerferien deutlich erkennbar, ebenso der Unterschied zwischen dem regulären und dem Ferienfahrplan.
-\begin{figure}[ht]
-	\centering
-	\caption{Fahrten (\texttt{trips}) je Wochentag der drei größten Verkehrsunternehmen nach Fahrten auf Grundlage des DELFI-GTFS vom 18.05.2026. Die Zahlen  der Rheinbahn und ASEAG für die Feiertage in  Mai und Juni liegen außerhalb der Skala.}
-	\includesvg[width=1\linewidth]{figures/trips_per_agency_weekdays_2026-05-18.svg}
-	\label{fig:tripsyearperagency2026-05-18}
-\end{figure}
-	Nach dem Streichen der Tage, die ein Ferien- oder Feiertag sind, bleiben 36 Wochentage und 21 Normalwerktage in Mai und Juni, die für die Ermittlung der Bedienungsqualität genutzt werden können. Entfernt werden sowohl die Ferientage in Nordrhein-Westfalen und in Rheinland-Pfalz. 
-	Bei den Wochentagen reicht die Zahl der durchgeführten Fahrten von  \num{87412} am 15.05.2026 (Dienstag) bis \num{91715} am 03.06.2026 (Mittwoch), bei den Normalwerktagen liegt das Minimum bei  Trotz mehrerer  Ansätze, die Variabilität einzugrenzen bleibt noch eine Verteilung von über \num{2400} Fahrten.
-	Den Median bildet der 02.06.2026 mit \num{90210} Fahrten.
 	
-	
+	Die Berechnung des Wertes $A$ zur Ermittlung der Bedienungsqualität gemäß Tabelle \ref{tab:haltestellentypen} nach dem Schlussbericht der \textcite{kcwgmbhMethodikUndEmpfehlungen2024} ist in Formel \ref{eq:departureshourschlussbericht} ausgedrückt.
+	\begin{equation}
+		\label{eq:departureshourschlussbericht}
+		A = \min_{d \in \{1,\dots,D\},\, h \in \{8,\dots,17\}} A_{d,h}
+	\end{equation}
+	Hier wäre es zusätzlich möglich zu entscheiden, ob der niedrigste Wert aller Tage $D$ oder der Durchschnitt der niedrigsten Werte über alle Tage $D$ gewählt  werden soll.
 	%Anpassen an Status Quo
 %Anhand dieses Datensatzes werden die \texttt{stop\_times} gefiltert und Halte,  deren Abfahrtszeit vor 08:00 oder deren Ankunftszeit nach 18:00 liegt, entfernt. Anschließend werden die \texttt{stops} mit der globalen Haltestellen-ID, die im zentralen Haltestellenverzeichnis referenziert ist, angehängt.
 %Für die Auswahl eines Tages für die Berechnung der Bedienungsqualität entsprechend dem Indikatorensteckbrief (durchschnittliche Abfahrten pro Stunde zwischen 8 und 18 Uhr an einem Normalwerktag außerhalb der Ferien) ergeben sich zwei Möglichkeiten. Die erste besteht aus der Ermittlung eines Normalwerktages mit durchschnittlicher Netzwerkaktivität, die andere aus dem Aggregieren aller im Feed präsenten Normalwerktage.  
@@ -274,7 +340,7 @@
 %	
 %Der Indikatorensteckbrief des BMDV setzt für die Berechnung der Bedienungsqualität den Wert der , aggregiert über alle Wochentage hinweg an. Tidytransit erstellt beim Einlesen des Feeds eine Tabelle dates\_services, in der auf Grundlage der calendar.txt und der calendar\_dates.txt des Feeds verzeichnet ist, an welchem Tag welcher Service aktiv ist. Um schließlich die mittleren Abfahrten pro Stunde zu erhalten, wird nach Haltestellen-ID gruppiert, die Halte gezählt und durch die Anzahl der Tage und Stunden geteilt, das höchstrangige Verkehrsmittel anhand der route\_types identifiziert und eine Bedienungsqualität entsprechend der Tabelle zugewiesen.
 %	
-%Daraus könnte sowohl zu schließen sein, dass die Abfahrtszahl sich aus dem Durchschnitt der aggregierten Abfahrtszahlen je Stunde eines Tages ergibt, als auch das sie sich aus   Da es keinen „Soll“-GTFS-Feed gibt, der einen Idealzustand des Netzes ohne Ausfälle, Baustellen, Sonderfahrten bzw. Ausfällen aufgrund von Großveranstaltungen  gibt, stellt sich die Frage, wie eine repräsentative Abbildung der Bedienungsqualitäten extrahiert werden kann.
+%Daraus könnte sowohl zu schließen sein, dass die Abfahrtszahl sich aus dem Durchschnitt der aggregierten Abfahrtszahlen je Stunde eines Tages ergibt, als auch das sie sich aus   Da es keinen „Soll“-GTFS-Feed gibt, der einen Idealzustand des Netzes ohne Ausfälle, Baustellen, Sonderfahrten bzw. Ausfällen aufgrund von Großveranstaltungen  gibt, stellt sich die Frage, wie eine repräsentative Abbildung der Bedienungsqualitäten extrahiert werden kann. 
 %
 %Der Feed des DELFI e.V. vom 30.03.2026 im Zuschnitt auf das Gebiet des Regierungsbezirks Köln zeigt eine Variabilität von 10,12\% (min = 20,73\% am 15.03 (Sonntag), max = 30,86\% am 24.04. (Freitag)). Ohne Wochenenden ergibt sich immer noch eine Varianz von 8,31\% mit min = 22,54\% am 19.03. (Donnerstag). 
 %

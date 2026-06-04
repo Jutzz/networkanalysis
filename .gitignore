@@ -25,6 +25,7 @@ geodata/zhv/
 geodata/base_data/
 geodata/poi.gpkg
 geodata/grids.gpkg
+geodata/Bedienungsqualität.gpkg
 
 # Optional generated outputs
 output/
