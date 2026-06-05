@@ -21,6 +21,7 @@
 # Large/raw datasets
 feeds/
 osmdata/
+appendix/
 geodata/zhv/
 geodata/base_data/
 geodata/poi.gpkg

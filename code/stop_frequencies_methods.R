@@ -1,5 +1,3 @@
-options(java.parameters = "-Xmx20G")
-library(r5r)
 library(tidytransit)
 library(gtfstools)
 library(tidyverse)
@@ -26,13 +24,14 @@ route_type_ranks <- list(
   c("101","102","106","109"),   
   c("0","1"),                  
   c("201","3","700", "704"), 
-  c("4","5","715")
+  c("4","5","715", "1000")
 )
 
 route_rank_lookup <- setNames(
   rep(seq_along(route_type_ranks), lengths(route_type_ranks)),
   unlist(route_type_ranks)
 )
+
 
 get_route_rank <- function(rt) {
   unname(route_rank_lookup[as.character(rt)])
@@ -54,7 +53,11 @@ quality_lookup <- tribble(
   1, 3, 3,
   1, 4, 2,
   1, 5, 1,
-  1, 6, 1
+  1, 6, 1,
+  0, 1, 7,
+  1, 1, 7,
+  2, 1, 7,
+  3, 1, 7
 )
 
 #Change feed date and area name to used feed version (filename set in de_gtfs_cleaning).
@@ -89,7 +92,7 @@ nonholiday_weekdays_fullservice <- read_lines("code/temp/nonholiday_weekdays_cut
 
 nonholiday_normdays_fullservice <- read_lines("code/temp/nonholiday_normdays_cutoff.txt")
 
-method <- "normday"
+method <- "weekday"
 
 ifelse(method == "weekday",
          date_select <- nonholiday_weekdays_fullservice,
@@ -155,12 +158,19 @@ departure_counts_daily <- filtered_stop_times_dates %>%
     departure_time <= hms("18:00:00")
   ) %>%
   group_by(date, grouping_id) %>%
-  reframe(
+  summarise(
     departures = n(),
-    stop_type = min(route_rank, na.rm = TRUE)
+    stop_type = min(route_rank, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  tidyr::complete(
+    date,
+    grouping_id,
+    fill = list(departures = 0)
   ) %>%
   mutate(
-    departures_per_hour = departures / 10
+    departures_per_hour = departures / 10,
+    stop_type = ifelse(departures == 0, 0, stop_type)
   ) %>%
   left_join(zhv, by = join_by(grouping_id == DHID)) %>%
   mutate(freq_class = findInterval(
@@ -170,10 +180,9 @@ departure_counts_daily <- filtered_stop_times_dates %>%
     )
   ) %>%
   left_join(quality_lookup, by = join_by(stop_type, freq_class)) %>%
-  select(1,3,2,4,5,22,23,21)
-
-departure_counts_daily <- departure_counts_daily %>%
+  select(1,3,2,4,5,22,23,21) %>%
   mutate(weekday = weekdays.Date(date))
+
 
 st_write(departure_counts_daily %>%
            filter(!is.na(geom)), here("geodata/Bedienungsqualität.gpkg"),
@@ -181,8 +190,6 @@ st_write(departure_counts_daily %>%
 
 
 
-ggplot(departure_counts_daily, aes(x = date, y = departures_per_hour, colour = as.factor(Bedienungsqualität))) +
-  geom_point()
 
 bq_weekday <- st_read("geodata/Bedienungsqualität.gpkg", "20260518_weekday_2026-05-04_2026-06-26")
 
@@ -219,14 +226,36 @@ departures_hour <- function(filter_hour, stop_times){
     filter(hour == filter_hour)
 }
 
-variability <- bq_weekday %>%
-  arrange(stop_id, date) %>%
-  group_by(stop_id) %>%
+variability_daily <- departure_counts_daily %>%
+  arrange(grouping_id, date) %>%
+  group_by(grouping_id) %>%
+  mutate(
+    diff = abs(departures_per_hour - lag(departures_per_hour))
+  ) %>%
   summarise(
-    total_variation = sum(abs(diff(departures_per_hour)), na.rm = TRUE),
+    mean_departures = mean(departures_per_hour, na.rm = TRUE),
+    min_departures = min(departures_per_hour, na.rm = TRUE),
+    max_departures = max(departures_per_hour, na.rm = TRUE),
+    sum_abs_diff = sum(diff, na.rm = TRUE),
+    mean_abs_diff = mean(diff, na.rm = TRUE),
+    pct_variation = 100 * mean_abs_diff / mean_departures,
+    min_quality = min(Bedienungsqualität, na.rm = TRUE),
+    max_quality = max(Bedienungsqualität, na.rm = TRUE),
+    quality_range = max_quality - min_quality,
+    n_changes = sum(
+      Bedienungsqualität != lag(Bedienungsqualität),
+      na.rm = TRUE
+    ),
     .groups = "drop"
   )
 
+ggplot(departure_counts_daily %>% filter(grouping_id == "de:05170:36259"), aes(x = date, y = departures_per_hour, colour = as.factor(Bedienungsqualität))) +
+  geom_point()
+
+variability_daily_geo <- variability_daily %>%
+  left_join(zhv %>% select(DHID,MunicipalityCode,Municipality,geom), by = join_by("grouping_id" == "DHID"))
+
+st_write(variability_daily_geo, "geodata/Bedienungsqualität.gpkg", "variablity_daily", append = FALSE)
 one <- departures_hour(1)
 
 departure_counts_hourly <- filtered_stop_times_dates %>%
@@ -252,7 +281,7 @@ departure_counts_hourly <- filtered_stop_times_dates %>%
   )
   ) %>%
   left_join(quality_lookup, by = join_by(stop_type, freq_class)) %>%
-  select(1,3,2,4,5,22,23,21)
+  select(3:6,1:2,10:12,23,24,22)
 
 departure_counts_hourlyy <- departure_counts_hourly %>%
   mutate(timestamp = as.POSIXct(
@@ -270,6 +299,14 @@ deps_hbf <- filtered_stop_times_dates %>% filter(grouping_id == "de:05315:11201"
   mutate(hour = hour(departure_time)) %>%
   group_by(date, hour, grouping_id)
 
+departure_counts_worst_case <- departure_counts_hourlyy  %>%
+  filter(hour < 18)  %>%
+  group_by(grouping_id) %>%
+  slice_min(departures, n= 1, with_ties = FALSE)
 
 ggplot(departure_counts_hourlyy %>% filter(grouping_id == "de:05315:11212", hour < 18), aes(x = hour, y = departures)) +
   geom_point()
+
+st_write(departure_counts_worst_case %>%
+           filter(!is.na(geom)), here("geodata/Bedienungsqualität.gpkg"),
+         paste("hourly", "worst_case", feed_date, method, min(date_select), max(date_select), sep = "_"), append = FALSE)
