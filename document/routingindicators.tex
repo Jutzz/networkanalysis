@@ -310,7 +310,14 @@
 		\label{eq:departureshoursteckbrief}
 		\overline{A} = \frac{1}{D}\sum_{d=1}^{D}\left(\frac{1}{10}\sum_{h=8}^{17} A_{d,h}\right)
 	\end{equation}
-	Die Summe der Abfahrten pro Stunde $A_{d,h}$ pro Tag $D$ von 08:00 bis 18:00 wird durch die Anzahl der Tage und der Stunden geteilt. Dabei kann $D$ entweder die Zahl der Wochentage oder die Zahl der Normalwerktage ausdrücken, bei Berechnung mit dem Medianwert ist $D=1$.\item Geringste Abfahrten in einem 1-h-Intervall der Wochentage
+	Die Summe der Abfahrten pro Stunde $A_{d,h}$ pro Tag $D$ von 08:00 bis 18:00 wird durch die Anzahl der Tage und der Stunden geteilt. Dabei kann $D$ entweder die Zahl der Wochentage oder die Zahl der Normalwerktage ausdrücken, bei Berechnung mit dem Medianwert ist $D=1$.
+	
+	Die Berechnung des Wertes $A$ zur Ermittlung der Bedienungsqualität gemäß Tabelle \ref{tab:haltestellentypen} nach dem Schlussbericht der \textcite{kcwgmbhMethodikUndEmpfehlungen2024} ist in Formel \ref{eq:departureshourschlussbericht} ausgedrückt.
+	\begin{equation}
+		\label{eq:departureshourschlussbericht}
+		A = \min_{d \in \{1,\dots,D\},\, h \in \{8,\dots,17\}} A_{d,h}
+	\end{equation}
+	
 	
 	Folgende Optionen stellen sich für die Ermittlung der Bedienungsqualität an den Haltestellen:
 	\begin{itemize}
@@ -325,11 +332,7 @@
 	Für jede Option wird einmal die Methode auf Grundlage des Steckbriefs und jene nach Empfehlung des Abschlussberichtes durchgeführt.
 
 	
-	Die Berechnung des Wertes $A$ zur Ermittlung der Bedienungsqualität gemäß Tabelle \ref{tab:haltestellentypen} nach dem Schlussbericht der \textcite{kcwgmbhMethodikUndEmpfehlungen2024} ist in Formel \ref{eq:departureshourschlussbericht} ausgedrückt.
-	\begin{equation}
-		\label{eq:departureshourschlussbericht}
-		A = \min_{d \in \{1,\dots,D\},\, h \in \{8,\dots,17\}} A_{d,h}
-	\end{equation}
+
 	Hier wäre es zusätzlich möglich zu entscheiden, ob der niedrigste Wert aller Tage $D$ oder der Durchschnitt der niedrigsten Werte über alle Tage $D$ gewählt  werden soll.
 	%Anpassen an Status Quo
 %Anhand dieses Datensatzes werden die \texttt{stop\_times} gefiltert und Halte,  deren Abfahrtszeit vor 08:00 oder deren Ankunftszeit nach 18:00 liegt, entfernt. Anschließend werden die \texttt{stops} mit der globalen Haltestellen-ID, die im zentralen Haltestellenverzeichnis referenziert ist, angehängt.

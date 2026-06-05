@@ -402,5 +402,7 @@ st_write(departure_counts_indiviual %>%
            filter(!is.na(geom)), here("geodata/poi.gpkg"), paste0(timestamp, "_stop_frequencies_de_gtfs_noholidays_individual"), append = FALSE)
 
 
+
+
 ggplot(departure_counts, aes(x = departures_per_hour)) +
   geom_histogram(binwidth = 1)
