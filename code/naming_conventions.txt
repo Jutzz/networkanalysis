@@ -1,0 +1,10 @@
+Bedienungsqualität Layers:
+extra_feeddate_method_startdate_enddate
+
+extra: Additional strings explaining the layer, for example no extra would be the standard calculation as mean of multiple days, and something like
+"daily", "hourly", "variability"
+can be used for additional tables.
+
+feeddate: Publication date of the GTFS-Feed the Bedienugsqualität values are based on
+startdate: first date being used for the calculation of Bedienungsqualität
+enddate: last date being used for the calculation of Bedienungsqualität

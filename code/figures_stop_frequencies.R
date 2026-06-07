@@ -191,7 +191,7 @@ activity_top10 <- activity_per_day %>%
   )
 
 activity_top10 <- activity_per_day %>%
-  filter(agency_id %in% c("10729")) %>%
+  filter(agency_id %in% c("7973")) %>%
   mutate(
     agency_short = recode(
       agency_name,

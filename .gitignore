@@ -27,6 +27,7 @@ geodata/base_data/
 geodata/poi.gpkg
 geodata/grids.gpkg
 geodata/Bedienungsqualität.gpkg
+GIS/raster/
 
 # Optional generated outputs
 output/
