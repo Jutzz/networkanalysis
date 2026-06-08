@@ -9,12 +9,23 @@ library(zoo)
 files.sources = list.files("code/helper/", full.names = TRUE)
 sapply(files.sources, source)
 
-freq_date <- "2026-05-21"
+feed_date <- "20260518"
+
+method <- "weekday"
+method_bq <- "median"
+
+#Get dates of representative norm- and weekdays from checking in find_valid_dates.R
+nonholiday_weekdays_fullservice <- read_lines("code/temp/nonholiday_weekdays_cutoff.txt")
+nonholiday_normdays_fullservice <- read_lines("code/temp/nonholiday_normdays_cutoff.txt")
+#Choose number of dates based on method set above.
+ifelse(method == "weekday",
+       date_select <- nonholiday_weekdays_fullservice,
+       date_select <- nonholiday_normdays_fullservice)
 
 #TODO: Make usable for any area: import full zensus and stops data, filter by generic area (limited stops and dests) 
 mapping_matrix <- read_csv2(here("code/erschließung_mat_long.csv"))
 
-stops_table <- st_read(here("geodata/poi.gpkg"), paste0(freq_date, "_stop_frequencies_de_gtfs_noholidays")) %>%
+stops_table <- st_read(here("geodata/Bedienungsqualität.gpkg"), paste(feed_date, method, min(date_select), max(date_select), sep = "_")) %>%
   mutate(stop_type = case_when(
     stop_type == 1 ~ "train",
     stop_type == 2 ~ "tram",

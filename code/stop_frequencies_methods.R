@@ -8,6 +8,7 @@ library(httr2)
 library(jsonlite)
 library(zoo)
 library(extrafont)
+library(fst)
 extrafont::loadfonts()
 
 files.sources = list.files("code/helper/", full.names = TRUE)
@@ -148,6 +149,10 @@ filtered_stop_times_dates <- gtfs_feed$stop_times %>%
   left_join(stops2, by = "stop_id")  %>%
   mutate(route_rank = route_rank_lookup[as.character(route_type)])
 
+write_fst(filtered_stop_times_dates, paste("code/temp/", feed_date, method, "filtered_stop_times_dates.fst", collapse = "_"))
+
+filtered_stop_times_dates <- read_fst(paste("code/temp/", feed_date, method, "filtered_stop_times_dates.fst", collapse = "_"))
+
 bq_weekday <- st_read("geodata/Bedienungsqualität.gpkg", "20260518_weekday_2026-05-04_2026-06-26")
 
 bq_normday <- st_read("geodata/Bedienungsqualität.gpkg", "20260518_normday_2026-05-05_2026-06-25")
@@ -192,6 +197,12 @@ st_write(departure_counts_daily %>%
 
 
 bq_daily <- st_read("geodata/Bedienungsqualität.gpkg", paste("daily", feed_date, method, min(date_select), max(date_select), sep = "_"))
+
+departure_counts_median <- bq_daily %>%
+  group_by(stop_id) %>%
+  summarise(median = median(departures))
+
+st_write(departure_counts_median, paste(paste("median", feed_date, method, min(date_select), max(date_select), sep = "_")))
 
 variability_daily <- st_drop_geometry(bq_daily) %>%
   arrange(stop_id, date) %>%
@@ -509,7 +520,8 @@ shapes_as
 
 
 df <- filtered_stop_times_dates %>%
-  filter(grouping_id == "de:05382:57952") %>%
+  filter(pickup_type == 0,
+         grouping_id == "de:05382:57952") %>%
   filter(
     departure_time >= hms("08:00:00"),
     departure_time <= hms("18:00:00")
@@ -558,14 +570,24 @@ facet_wrap(~weekday, ncol = 1)
 
 library(tidytext)
 
+enr_stop_times <- gtfs_feed$stop_times %>%
+  left_join(gtfs_feed$trips %>% select(trip_id, route_id, service_id)) %>%
+  left_join(gtfs_feed$routes %>% select(route_id, route_short_name, route_type))
+
+fnz <- enr_stop_times %>%
+  filter(route_id == "de:aac:05358|86:rtbus_3")
+
 ggplot(
   fnz,
   aes(
     x = stop_sequence,
     y = departure_time,
-    colour = pickup_type
+    colour = stop_id
   )
 ) +
   geom_point() +
-  #theme(legend.position = "none") +
-  facet_wrap(~trip_id, scales = "free")
+  theme(legend.position = "none") +
+  facet_wrap(~service_id, scales = "free")
+
+  
+  

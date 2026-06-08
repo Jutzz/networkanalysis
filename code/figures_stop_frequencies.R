@@ -46,12 +46,12 @@ holidays_nrw <- function(year) {
     as.Date(DEGermanUnity(year)),
     as.Date(ChristmasDay(year)),
     as.Date(BoxingDay(year)),
-    as.Date(AllSaints(year)),  # All Saints (NRW)
+    as.Date(AllSaints(year)), 
     as.Date(GoodFriday(year)),
     as.Date(EasterMonday(year)),
     as.Date(Ascension(year)),
     as.Date(PentecostMonday(year)),
-    as.Date(CorpusChristi(year))  # NRW-specific
+    as.Date(CorpusChristi(year))
   )
 }
 

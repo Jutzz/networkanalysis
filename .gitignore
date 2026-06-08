@@ -1,6 +1,6 @@
 # R
 .Rhistory
-.RData
+.RData*
 .Ruserdata
 .Rproj.user/
 
@@ -28,6 +28,9 @@ geodata/poi.gpkg
 geodata/grids.gpkg
 geodata/Bedienungsqualität.gpkg
 GIS/raster/
+geodata/gtfs_shapes.gpkg
+/code/temp
+
 
 # Optional generated outputs
 output/
@@ -40,7 +43,7 @@ r5core_2026-05-18/
 *.gpkg-wal
 *.gpkg-shm
 
+
 # OS junk
 .DS_Store
 Thumbs.db
-geodata/gtfs_shapes.gpkg
