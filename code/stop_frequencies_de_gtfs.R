@@ -68,7 +68,7 @@ quality_lookup <- tribble(
 feed_date <- "20260518"
 zhv_date <- "20260521"
 area_name <- "regbez"
-method <- "weekday"
+method <- "normday"
 
 #Read pre-filtered GTFS-Feed
 gtfs_feed <- tidytransit::read_gtfs(paste0("feeds/filtered/de_gtfs_", feed_date, "_", area_name,".zip"))
@@ -119,6 +119,7 @@ filtered_trips_dates <- gtfs_feed$trips %>%
   select(trip_id, date, route_type)
 
 filtered_stop_times_dates <- gtfs_feed$stop_times %>%
+  filter(pickup_type == 0) %>%
   select(trip_id, stop_id, departure_time, arrival_time) %>%
   filter(trip_id %in% filtered_trips_dates$trip_id) %>%
   left_join(filtered_trips_dates %>%
@@ -152,6 +153,7 @@ departure_counts <- filtered_stop_times_dates %>%
   left_join(quality_lookup, by = join_by("stop_type", "freq_class")) %>%
   rename("stop_id" = grouping_id) %>%
   select(1,9,10,11,3,2,4,5,10,22,23,21)
+
 #Write to geopackage. 
 st_write(departure_counts %>%
            filter(!is.na(geom)), here("geodata/Bedienungsqualität.gpkg"),

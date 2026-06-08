@@ -140,6 +140,7 @@ filtered_trips_dates <- gtfs_feed$trips %>%
 # result <- dbGetQuery(con, query)
 
 filtered_stop_times_dates <- gtfs_feed$stop_times %>%
+  filter(pickup_type == 0) %>%
   select(trip_id, stop_id, departure_time, arrival_time) %>%
   filter(trip_id %in% filtered_trips_dates$trip_id) %>%
   left_join(filtered_trips_dates %>%
@@ -233,6 +234,8 @@ variability_daily_geo <- variability_daily %>%
   mutate(depart_plot = paste0(gsub("[^[:alnum:]_-]", "_", stop_id), ".png"))
 
 st_write(variability_daily_geo, "geodata/Bedienungsqualität.gpkg", paste("variablity_daily", feed_date, method, min(date_select), max(date_select), sep = "_"), append = FALSE)
+
+#variability_daily  <- st_read("geodata/Bedienungsqualität.gpkg", paste("variablity_daily", feed_date, "weekday", min(date_select), max(date_select), sep = "_"))
 
 c0 <- variability_daily %>% filter(quality_range == 0)
 c1 <- variability_daily %>% filter(quality_range == 1)
@@ -501,3 +504,68 @@ ggplot(departure_counts_hourlyy %>% filter(grouping_id == "de:05315:11212", hour
 st_write(departure_counts_worst_case %>%
            filter(!is.na(geom)), here("geodata/Bedienungsqualität.gpkg"),
          paste("hourly", "worst_case", feed_date, method, min(date_select), max(date_select), sep = "_"), append = FALSE)
+
+shapes_as
+
+
+df <- filtered_stop_times_dates %>%
+  filter(grouping_id == "de:05382:57952") %>%
+  filter(
+    departure_time >= hms("08:00:00"),
+    departure_time <= hms("18:00:00")
+  ) %>%
+  mutate(timestamp = ymd_hms(paste(as.character(date), as.character(departure_time)))) %>%
+  left_join(gtfs_feed$routes %>% select(route_id, route_short_name, route_long_name), by = "route_id") %>%
+  mutate(
+    dep_time = hms::as_hms(timestamp),
+    date = as.Date(timestamp)
+  ) %>%
+  mutate(
+    weekday = lubridate::wday(
+      date,
+      label = TRUE,
+      week_start = 1
+    )
+  )
+
+p <- ggplot(
+  df %>% arrange(dep_time),
+  aes(
+    x = date,
+    y = dep_time,
+    colour = as.factor(route_id)
+  )
+) +
+  geom_point(size = 1.5) +
+  #ggtitle(stop_name) +
+  # scale_colour_manual(
+  #   name = "Route Type",
+  #   values = route_type_colors,
+  #   drop = FALSE,
+  #   na.value = "grey80"
+  # ) +
+  scale_x_date(
+    date_breaks = "1 week",
+    date_minor_breaks = "1 day",
+    date_labels = "%d.%m"
+  ) +
+  theme_minimal() +
+  theme(
+    legend.position = "bottom",
+    text = element_text(family = windowsFont("Source Sans 3"))
+  ) #+
+facet_wrap(~weekday, ncol = 1)
+
+library(tidytext)
+
+ggplot(
+  fnz,
+  aes(
+    x = stop_sequence,
+    y = departure_time,
+    colour = pickup_type
+  )
+) +
+  geom_point() +
+  #theme(legend.position = "none") +
+  facet_wrap(~trip_id, scales = "free")
