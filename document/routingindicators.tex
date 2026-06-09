@@ -98,6 +98,8 @@
 	\setcounter{page}{1}
 	%\begin{document}
 	\section{Einleitung}
+	- Der Nahverkehr: Soziale und ökonomische Rolle, kurze Geschichte
+	- Indikatoren: Wofür sind sie gut, und was müssen sie können?
 	Hier steht normaler Text ohne jede Besonderheit, sozusagen der Fließtext.\\
 	\texttt{Wie sieht dieser Text aus, er soll eine Art Codeausschnitt darstellen?}
 	\section{Literatur}
@@ -192,7 +194,7 @@
 	
 	Der deutschlandweite Feed des %Zugeschnittenen Feed im Anhang referenzieren?
 	 \textcite{delfie.v.DeutschlandweiteSollFahrplandatenGTFS2026} enthält (für jede \enquote{Ausgabe}) Daten von Veröffentlichung des Feeds bis zum Ende des Jahres und damit, Stand 18.05.2026,  unter Berücksichtigung der Ferien in Nordrhein-Westfalen und Rheinland-Pfalz 89 Wochentage und 34 Normalwerktage.
-	 	\footnote{Zum Begriff des Normalwerktags siehe Abschnitt \ref{par:Bedienungsqualität} zur 			Berechnung der Bedienungsqualität.}
+	 	\footnote{Zum Begriff des Normalwerktags siehe Abschnitt \ref{par:Bedienungsqualität} zur Berechnung der Bedienungsqualität.}
 	 Mit der Funktion \texttt{check\_transit\_availability} stellt \texttt{r5r} \parencite{pereiraR5rRapidRealistic2021} eine Möglichkeit zur Analyse der Variabilität des Feeds zur Verfügung. Es wird auf Grundlage des Netzwerkgraphen, der mit \texttt{build\_network} erstellt wurde, extrahiert, wie viele der services aus dem GTFS-Feed an welchen Daten aktiv sind, und welchen Anteil der gesamten services dies ausmacht. Abbildung \ref{fig:activeservicesyearrollavg2026-05-18}  zeigt  den Jahresverlauf aktiver Services auf Grundlage des Feeds vom 18.05.2026. 
 	
 	\begin{figure}[ht]
@@ -301,10 +303,9 @@
 		\item Mittlere Abfahrten pro Stunde über alle Wochentage,  die nicht in den Ferien liegen
 		\item Mittlere Abfahrten pro Stunde über alle Normalwerktage,  die nicht in den Ferien liegen
 		\item Mittlere Abfahrten pro Stunde pro Wochentag außerhalb der Ferien
-		\item Geringste Abfahrten in einem 1-h-Intervall der Wochentage
-		\item Geringste Abfahrten in einem 1-h-Intervall der Normalwerktage
+		\item Mittlere Abfahrten pro Stunde pro Normalwerktag außerhalb der Ferien
 	\end{itemize}
-	Die Werte pro Tag werden ermittelt, um zu prüfen, ob es Halte/Linien gibt, an denen es hohe Variabilitäten zwischen den Tagen gibt, und inwieweit die Stabilität der Methode des Mittelns über alle Tage dadurch beeinflusst wird.
+	Da es keinen „Soll“-GTFS-Feed gibt, der einen Idealzustand des Netzes ohne Ausfälle, Baustellen, Sonderfahrten bzw. Ausfällen aufgrund von Großveranstaltungen darstellt, werden die Werte pro Tag ermittelt, um zu prüfen, ob es Halte/Linien gibt, an denen es hohe Variabilitäten zwischen den Tagen gibt, und inwieweit die Stabilität der Methode des Mittelns über alle Tage dadurch beeinflusst wird. 
 %	Letztere Methode orientiert sich an der Empfehlung des Abschlussberichtes und eignet sich um zu ermitteln, ob es auf bestimmten Linien oder in bestimmten Räumen Tage gibt, die stark vom  Mittelwert abweichen.
 	 Für die Umsetzung des Indikators in kontinuierlicher Form könnte sich die Berechnung auf Grundlage jeweils einer konsekutiven Woche besser als ein fortschreitender Mittelwert eignen, um eine bessere zeitliche Auflösung zu ermöglichen und die Nachvollziehbarkeit zu steigern. 
 	
@@ -322,11 +323,12 @@
 	\end{equation}
 	
 	Zur Berechnung wird zunächst der auf das Untersuchungsgebiet zugeschnittene GTFS-Feed eingelesen. %Anhangsverweis?  
-	Auf Grundlage der von \texttt{tidytransit} beim Einlesen des Feeds  erstellten Tabelle \texttt{dates\_services}, in der auf Grundlage des \texttt{calendar} und den \texttt{calendar\_dates} des Feeds die wochentagsbasierten Dienstmuster und die \enquote{Ausnahmen} kombiniert werden, so dass für jeden Tag die aktiven Feeds verzeichnet sind, werden die \texttt{trips}, \texttt{routes}, \texttt{stops} und \texttt{stop\_times} so kombiniert, das ein vollständiger Fahrplan jeder Abfahrt an jedem Halt im Untersuchungszeitraum (Wochentage oder Normalwerktage) entsteht. Fernverkehre werden herausgefiltert und die Abfahrtszeiten nur zwischen 08:00 und 18:00 berücksichtigt. Nur Abfahrten mit \texttt{pickup\_type = 0} werden berücksichtigt.\footnote{Die Werte \num{1}, \num{2} und \num{3} beschreiben jeweils Stops, an denen nur ausgestiegen werden kann und Stops, die mit dem Fahrer oder dem durchführenden Verkehrsunternehmen arrangiert werden müssen. %AST/ALT
-	}
-	Die Tabelle wird nach übergeordnetem Halt aggregiert (einzelne Bahnsteige/Masten zu einem Eintrag), die Abfahrten gezählt und der Haltestellentyp entsprechend Tabelle \ref{tab:haltestellentypen} anhand des höchstrangigen Verkehrsmittels bestimmt. Dazu werden anhand der \texttt{route\_types} vorher entsprechende Klassen gebildet. Die gezählten Abfahrten werden durch die Anzahl der Tage und der Stunden geteilt. Aus den resultierenden durchschnittlichen Abfahrten pro Stunde und dem Haltestellentypen ergibt sich schließlich die Bedienungsqualität nach Tabelle \ref{tab:haltestellentypen}. Um das Ergebnis kartographisch darzustellen wird es entlang der \texttt{stop\_id} mit dem Zentralen Haltestellenverzeichnis wie es in \texttt{osm\_extract.R} %name ändern
+	Auf Grundlage der von \texttt{tidytransit} beim Einlesen des Feeds  erstellten Tabelle \texttt{dates\_services}, in der auf Grundlage des \texttt{calendar} und den \texttt{calendar\_dates} des Feeds die wochentagsbasierten Dienstmuster und die \enquote{Ausnahmen} kombiniert werden, so dass für jeden Tag die aktiven Feeds verzeichnet sind, werden die \texttt{trips}, \texttt{routes}, \texttt{stops} und \texttt{stop\_times} so kombiniert, das ein vollständiger Fahrplan jeder Abfahrt an jedem Halt im Untersuchungszeitraum (Wochentage oder Normalwerktage) entsteht. Fernverkehre werden herausgefiltert und die Abfahrtszeiten nur zwischen 08:00 und 18:00 berücksichtigt. Nur Abfahrten mit \texttt{pickup\_type = 0} werden berücksichtigt.\footnote{Die Werte \num{1}, \num{2} und \num{3} beschreiben jeweils Stops, an denen nur ausgestiegen werden kann und Stops, die mit dem Fahrer oder dem durchführenden Verkehrsunternehmen arrangiert werden müssen (\parencite{mobilitydataGeneralTransitFeed2026}).} %AST/ALT
+	Einige Halte in der Tabelle \texttt{stops} sind nicht mit einer \texttt{stop\_id} im DHID-Format hinterlegt, haben aber unter ihrem \texttt{stop\_name} einen Eintrag im zentralen Haltestellenverzeichnis \parencite{wviprof.dr.wermuthZhvwvigmbhde2026}. Deshalb werden die \texttt{stops} zunächst entlang des \texttt{stop\_name} mit einem Export des ZHV verknüpft. Zur späteren Zusammenfassung der einzelnen Masten bzw. Bahnsteige eines Haltes wird dann eine \texttt{grouping\_id} erzeugt, die, je nach Datenlage, aus der \texttt{parent\_station}, sofern sie im DHID/IFOPT-Format vorliegt aus den ersten drei Bestandteilen der \texttt{stop\_id} oder aus der unter dem jeweiligen \texttt{stop\_name} im ZHV hinterlegten DHID erzeugt wird.
+		
+	Die Tabelle wird nach übergeordnetem Halt aggregiert, die Abfahrten gezählt und der Haltestellentyp entsprechend Tabelle \ref{tab:haltestellentypen} anhand des höchstrangigen Verkehrsmittels bestimmt. Dazu werden anhand der \texttt{route\_types} vorher entsprechende Klassen gebildet. Die gezählten Abfahrten werden durch die Anzahl der Tage und der Stunden geteilt. Aus den resultierenden durchschnittlichen Abfahrten pro Stunde und dem Haltestellentypen ergibt sich schließlich die Bedienungsqualität nach Tabelle \ref{tab:haltestellentypen}. Um das Ergebnis kartographisch darzustellen wird es entlang der \texttt{stop\_id} mit den Koordinaten aus dem zentralen Haltestellenverzeichnis wie es in \texttt{osm\_extract.R} %name ändern
 	präpariert wurde verknüpft. 
-	Die resultierende Tabelle ist als \texttt{20260518\_weekday\_2026-05-04\_2026-06-26} im Anhang zu finden.
+	Die resultierende Tabelle ist als \texttt{mean\_20260518\_weekday\_2026-05-04\_2026-06-26} im Anhang zu finden.
 	
 	Die Ermittlung der Werte pro Tag läuft ebenso ab, mit dem Unterschied das Tage, an denen keine Verkehre an einer Haltestelle stattfinden auf Grundlage des aus den GTFS-Tabellen erstellten \enquote{Fahrplans} nicht direkt erfasst werden, liegen für eine Datum/Halt-Kombination keine Fahrten vor wird eine entsprechende Zeile mit \texttt{departures = 0} hinzugefügt.
 		\footnote{Bei Mittlung über alle Tage ergibt sich diese Problematik nicht, da immer durch die gleiche Anzahl Tage geteilt wird und so Tage ohne Abfahrten implizit mit verrechnet werden.}
@@ -338,45 +340,52 @@
 	
 	Aus der Betrachtung der Anzahl der Variationen über den Zeitraum lassen sich verschiedene Muster ableiten. Eine einzelner Sprung deutet auf längerfristige Veränderung in der Bedienung einer Haltestelle hin. Alternativ gibt es Fälle, bei denen die Anzahl der Fahrten gleich bleibt, durch Schienenersatzverkehr mit Bussen sich allerdings der Haltestellentyp ändert (Schienenverkehr zu Bus bzw. Stadtbahn zu Bus), was ebenso eine Variation von ein oder zwei Bedienungsqualitätsstufen mit sich bringt. Letzteres ist beispielsweise entlang der Stadtbahnlinie 66 in Bonn und Sankt Augustin der Fall. In den Abbildungen \ref{fig:} und \ref{fig:} ist sichtbar, wie der nur minimal gesteigerte Takt durch den Moduswechsel im Rahmen des SEV den Bedienungsqualitätswert verändert. Liegen Beginn und Ende eines SEV oder Reihen zusätzlicher Fahrten bzw. ausfallender Fahrten innerhalb des untersuchten Zeitraums, ergeben sich zwei Sprünge in der Bedienungsqualität. Es ergeben sich Cluster von Halten, die nach einem bestimmten Datum konstant mehr oder weniger Abfahrten aufweisen, was auf Veränderung, Hinzukommen oder Wegfall einer Linie im Laufe des Zeitraums hindeutet (eine Veränderung). Ein Großteil der Halte, bei denen es vier Qualitätssprünge gibt, lassen sich durch die Brückentage am 15.05 und 05.06. erklären, insbesondere im Kreis Heinsberg gibt es einige Linien, die an diesen Tagen keine oder deutlich weniger Fahrten verzeichnen.	Halte mit einer größeren Anzahl von Wechseln in der Bedienungsqualität lassen sich durch Variationen in der Bedienung um einen Schwellenwert der Bedienungsqualität an einzelnen Wochentagen erklären. Beispiele sind Verstärkerverkehre, die an verschiedenen Tagen in verschiedenen Takten und verschiedenen Abfahrtszeiten verkehren,  Ortsbusse, die nur an bestimmten Tagen verkehren, und variablere Schulverkehre. (bspw. ein morgendlicher Verstärkerverkehr, der nur Mittwochs verkehrt bzw. der nur Mittwochs nicht verkehrt). Größeren Einfluss nehmen zudem verschiedene Bauarbeiten auf der Linie RB20 mit diversen Ausfällen und Ersatzverkehren. 
 	
-	Die gestaffelte Festlegung von Bedienungsqualitäten führt dazu, das ein Halt, der beispielsweise an allen untersuchten Tagen außer einem durchschnittlich genau zwei Abfahrten pro Stunde (also eine Abfahrt pro Stunde und Richtung) aufweist, durch die Durschschnittsberechnung außerhalb der Bedienungsqualitätsklassen aus Tabelle \ref{tab:haltestellentypen} liegt. Deshalb wurde die Ermittlung der Bedienungsqualität so angepasst, das zusätzlich zur Ausweisung der Qualität auf Grundlage der durchschnittlichen Fahrten (\texttt{bq\_mean}) eine Qualität auf Grundlage des Medians der Fahrten (\texttt{bq\_median}) ausgewiesen wird. Die Variabilitätsanalyse ist in die finale Tabelle inkludiert. Zusätzlich wird die Spalte \texttt{pct\_days\_modal\_quality} ergänzt, in der ersichtlich wird, welcher Prozentsatz der Tage dem Modus der Bedienungsqualität entspricht. Tritt hier ein besonders niedriger Wert auf, ist davon auszugehen, das die Variabilität nicht nur von einmaligen Ausnahmen ausgeht, sondern es regelmäßige oder längerfristige Bedienungsunterschiede gibt.
+	Die gestaffelte Festlegung von Bedienungsqualitäten führt dazu, das ein Halt, der beispielsweise an allen untersuchten Tagen außer einem durchschnittlich genau zwei Abfahrten pro Stunde (also eine Abfahrt pro Stunde und Richtung) aufweist, durch die Durschschnittsberechnung außerhalb der Bedienungsqualitätsklassen aus Tabelle \ref{tab:haltestellentypen} liegt. Deshalb wurde die Ermittlung der Bedienungsqualität so angepasst, das zusätzlich zur Ausweisung der Qualität auf Grundlage der durchschnittlichen Fahrten (\texttt{bq\_mean}) eine Qualität auf Grundlage des Medians der Fahrten (\texttt{bq\_median}) ausgewiesen wird. Zusätzlich kann so verhindert werden, dass räumlich und zeitlich begrenzte Einschränkungen der Bedienung sich ungleichmäßig auf die Bewertung auswirken, da sozusagen für jeden Halt einzeln die Bedienungsqualität ein repräsentativer Tag ermittelt wird.  Die Variabilitätsanalyse ist in die finale Tabelle inkludiert. Zusätzlich wird die Spalte \texttt{pct\_days\_modal\_quality} ergänzt, in der ersichtlich wird, welcher Prozentsatz der Tage dem Modus der Bedienungsqualität entspricht. Tritt hier ein besonders niedriger Wert auf, ist davon auszugehen, das die Variabilität nicht nur von einmaligen Ausnahmen ausgeht, sondern es regelmäßige oder längerfristige Bedienungsunterschiede gibt.
 	%Beispiel: Hürth Efferen: Ende der Umleitung der Linie 712 \parencite{stadthuerthVollsperrungRitterstrasseHuerthEfferen}
 	%Simmerath Lemmersdorf Radarstation: Wochentagsvariabler Fahrplan \parencite{avvFahrplanLinie86}
 	
+	Folgendes ist aus der Ermittlung der Bedienungsqualität festzuhalten: Die Wahl \textbf{eines} \enquote{repräsentativen Stichtags}, wie es im Schlussbericht gefordert wird \parencite[173, 184]{kcwgmbhMethodikUndEmpfehlungen2024} ist aufgrund der Datengrundlage, die nicht für den gesamten abgebildeten Zeitraum alle Fahrten aller Verkehrsunternehmen abbildet, der durch Baustellen, Sonder-, Schul- und Verstärkerverkehre hohen Variabilität und der Vielfältigkeit der Variabilitätsmuster kaum möglich. Aufgrund der gestaffelten Festlegung der Bedienungsqualität in Schwellenwerten können minimale Differenzen in den täglichen Abfahrten zu stark veränderten räumlichen Ergebnissen führen, insbesondere bei Schwankungen um \num{2} Abfahrten pro Stunde (\num{1} pro Richtung) kann eine ausfallende Fahrt an einem Tag des Untersuchungszeitraums zur Nichtbeachtung der Haltestelle bei Ermittlung der Erschließungsqualität bedeuten. Der Einfluss regelmäßig niedriger oder höherer Bedienungsqualität sollte trotzdem nicht ignoriert werden. Die Berechnung der Bedienungsqualität sowohl als Median als auch als Mittelwert der Abfahrten pro Stunde über den Untersuchungszeitraum, sowohl für die Wochen- als auch die Normalwerktage ermöglicht es, die Erschließungsqualität auf Grundlage der verschiedenen Ausprägungen zu berechnen und die Auswirkungen direkt zu vergleichen. Anhand der Variabilitätsanalyse können Halte/Cluster hoher Variabilität nachverfolgt und nachvollzogen werden. 
 	
 	\texttt{filter(departure\_time >= hms("08:00:00")\&departure\_time <= hms("18:00:00"))}
 	%Vor- und Nachteile der Methode: Baustellen und Sperrungen werden durch die Mittelung abgefedert, andererseits können Artefakte entstehen: Haltestellen sind niedriger als sie eigentlich sein sollten, SEV-Verkehre, die an einer anderen (theoretischen) Haltestelle abfahren, als das Verkehrsmittel das sie ersetzen, die eine Ausnahme darstellen werden verwertet als wären sie über den ganzen Zeitraum aktiv, was aufgrund der Methodik nicht das gleiche darstellt als würde das ersetzte Verkehrsmittel die ganze Zeit fahren: zwei Haltestellen Klasse 2 an einer Stelle nicht so gut wie eine mit Klasse 1, Methodik Schlussbericht der Aggregierung aller erreichten Fahrten könnte  Abhilfe schaffen, 0800 bis 1800 führt an Haltestellen mit einem Stundenrythmus z.T. zu $\overline{A}=1.9$.
-	
-	Folgende Optionen stellen sich für die Ermittlung der Bedienungsqualität an den Haltestellen:
-	\begin{itemize}
-		\item Mittel aller Wochentage, die nicht in den Ferien liegen
-		\item Mittel aller Normalwerktage, die nicht in den Ferienliegen
-		\item Mittel einer konsekutiven Woche (kein Feiertag), die nicht in den Ferien liegt
-		\item Mittel der Normalwerktage einer konsekutiven Woche (DI-DO), die nicht in den Ferien liegt
-		\item Werte des Medianwochentages (außerhalb der Ferien)
-		\item Werte des Mediannormalwerktages (außerhalb der Ferien)
-	\end{itemize}
+
 	%Kontinuierliche  Berechnung auf Grundlage der aktuellen konsekutiven  Woche  (keine Feiertage) bzw. konsekutiver Normalwerktage oder sogar tagesaktuell theoretisch umsetzbar.
-	Für jede Option wird einmal die Methode auf Grundlage des Steckbriefs und jene nach Empfehlung des Abschlussberichtes durchgeführt.
 
-	
-
-	Hier wäre es zusätzlich möglich zu entscheiden, ob der niedrigste Wert aller Tage $D$ oder der Durchschnitt der niedrigsten Werte über alle Tage $D$ gewählt  werden soll.
-	%Anpassen an Status Quo
-%Anhand dieses Datensatzes werden die \texttt{stop\_times} gefiltert und Halte,  deren Abfahrtszeit vor 08:00 oder deren Ankunftszeit nach 18:00 liegt, entfernt. Anschließend werden die \texttt{stops} mit der globalen Haltestellen-ID, die im zentralen Haltestellenverzeichnis referenziert ist, angehängt.
-%Für die Auswahl eines Tages für die Berechnung der Bedienungsqualität entsprechend dem Indikatorensteckbrief (durchschnittliche Abfahrten pro Stunde zwischen 8 und 18 Uhr an einem Normalwerktag außerhalb der Ferien) ergeben sich zwei Möglichkeiten. Die erste besteht aus der Ermittlung eines Normalwerktages mit durchschnittlicher Netzwerkaktivität, die andere aus dem Aggregieren aller im Feed präsenten Normalwerktage.  
-%
-%Betrachtet man die Variabilität der Aktivität der Verkehre werden zwei Dinge deutlich: Es gibt stellenweise große Sprünge aktiver services, insbesondere Anfang September. Dieser Sprung ist mit einem Fahrplanwechsel nicht zu begründen, dieser findet im Nahverkehr üblicherweise %QUELLE 
-%im Dezember statt. dem Beginn oder Ende einer Ferienperiode oder einem Fahrplanwechsel zu begründen, 
-%	
-%Der Indikatorensteckbrief des BMDV setzt für die Berechnung der Bedienungsqualität den Wert der , aggregiert über alle Wochentage hinweg an.  Um schließlich die mittleren Abfahrten pro Stunde zu erhalten, wird nach Haltestellen-ID gruppiert, die Halte gezählt und durch die Anzahl der Tage und Stunden geteilt, das höchstrangige Verkehrsmittel anhand der route\_types identifiziert und eine Bedienungsqualität entsprechend der Tabelle zugewiesen.
-%	
-%Daraus könnte sowohl zu schließen sein, dass die Abfahrtszahl sich aus dem Durchschnitt der aggregierten Abfahrtszahlen je Stunde eines Tages ergibt, als auch das sie sich aus   Da es keinen „Soll“-GTFS-Feed gibt, der einen Idealzustand des Netzes ohne Ausfälle, Baustellen, Sonderfahrten bzw. Ausfällen aufgrund von Großveranstaltungen  gibt, stellt sich die Frage, wie eine repräsentative Abbildung der Bedienungsqualitäten extrahiert werden kann. 
-%
-%Der Feed des DELFI e.V. vom 30.03.2026 im Zuschnitt auf das Gebiet des Regierungsbezirks Köln zeigt eine Variabilität von 10,12\% (min = 20,73\% am 15.03 (Sonntag), max = 30,86\% am 24.04. (Freitag)). Ohne Wochenenden ergibt sich immer noch eine Varianz von 8,31\% mit min = 22,54\% am 19.03. (Donnerstag). 
-%
 %\input{tables/availability_2026-05-18.tex}
 %Um die Varianz der Fahrplandaten über mehrere Tage und Wochen darzustellen soll die Bedienungsqualität für die Abfahrten jedes einzelnen verfügbaren Tag des Feeds berechnet werden. Diese Daten werden mit einer (statischen) Reisezeitmatrix (Zensusgitter Haltestellen) verrechnet, pro Tag die jeweils beste Möglichkeit ermittelt und die Varianz als gesamte Distanz (Häufige Wechsel zwischen bspw. Erschließungsqualität A und Erschließungsqualität B ergeben einen hohen Wert genauso wie wenige Wechsel zwischen bspw. A und F) und als Spanne (maximale Differenz in der Erschließungsqualität) berechnet werden. 
+
+	\subsubsection{Erreichbarkeit zentraler Orte}
+	Der zweite Indikator aus dem Forschungsprojekt, der als \enquote{Steckbrief 03} vom BMDV veröffentlicht wurde \parencite[28-30]{bmdvIndikatorenLeichtGemacht2025}, ist die Erreichbarkeit zentraler Orte. Als Grundlage werden ebenso die Fahrplandaten im GTFS-Format, das Bevölkerungsgitter aus den Daten des Zensus und das Wegenetz des Untersuchungsgebietes genutzt. Berechnet wird für jeden Startort die Reisezeit in den Ort mit der jeweils nächsthöheren Zentrumsfunktion. Der Indikator ergibt sich aus dem Anteil der Bevölkerung einer Kommune, der diese Strecke nicht in einer festgelegten Zeit zurücklegen kann. Der Steckbrief stellt die Werte in Tabelle \ref{tab:Indikator3Reisezeiten} als Orientierung zur Verfügung, lässt die tatsächliche Festlegung aber offen.
 	
+\begin{table}[htbp]
+	\centering
+	\label{tab:Indikator3Reisezeiten}
+	\begin{tabular}{|l|c|c|c|}
+		\hline
+		\multirow{2}{*}{} Zielkommune &
+		\multicolumn{3}{c|}{\textbf{\begin{tabular}[c]{@{}c@{}}
+					Orientierungswert der ÖPNV-Reisezeit für die\\
+					umliegenden zentralen Orte zur Zielkommune
+		\end{tabular}}} \\ \cline{2-4}
+		&
+		\textbf{von Nahbereich} &
+		\textbf{von Grundzentrum} &
+		\textbf{von Mittelzentrum} \\ \hline
+		
+		Mittelzentrum &
+		60 min &
+		30 min &
+		keine Analyse \\ \hline
+		
+		Oberzentrum &
+		90 min &
+		60 min &
+		30 min \\ \hline
+		
+	\end{tabular}
+	\caption{Orientierungswerte der ÖPNV-Reisezeit}
+	\label{tab:oepnv_reisezeit}
+\end{table}
 	
 \section{Ergebnisse}
 	\subsection{Indikatoren}

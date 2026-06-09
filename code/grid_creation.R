@@ -10,7 +10,9 @@ area <- st_transform(st_read("geodata/dvg1nw.gpkg", "regbez10kmbuffer"), crs = s
 
 gem <- st_read("geodata/dvg1nw.gpkg", "gemeinden_regbez_kln")
 
-grid <- st_make_grid(area, cellsize = 100, offset = c(4020000,3022000))
+csize <- 250
+
+grid <- st_make_grid(area, cellsize = csize, offset = c(4020000,3022000))
 
 grid_sf <- st_sf(
   geometry = grid
@@ -23,7 +25,7 @@ grid_clipped <- grid_sf[area_intersects,]
 coords <- st_coordinates(st_centroid(grid_clipped))
 
 grid_clipped$id <- paste0(
-  "100mN",
+  csize,"mN",
   floor(coords[,2] / 100),
   "E",
   floor(coords[,1] / 100)
@@ -37,5 +39,5 @@ centroids <- st_centroid(grid_clipped) %>%
 grid_with_ids <- st_as_sf(grid_clipped) %>%
   left_join(st_drop_geometry(centroids))
 
-st_write(grid_with_ids, "geodata/grids.gpkg", "100mregbez10kmbuffer", append = FALSE)
+st_write(grid_with_ids, "geodata/grids.gpkg", paste0(csize, "mregbez10kmbuffer"), append = FALSE)
   

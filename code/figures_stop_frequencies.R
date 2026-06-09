@@ -18,6 +18,7 @@ library(httr2)
 library(jsonlite)
 library(zoo)
 library(extrafont)
+library(fst)
 
 files.sources = list.files("code/helper/", full.names = TRUE)
 sapply(files.sources, source)
@@ -406,14 +407,166 @@ ggplot(availability, aes(x = date, y = pct_active)) +
 
 ggsave("document/figures/active_services_year_rollavg_2026-05-18.svg", get_last_plot(), )
 
-ggplot(availability, aes(x = active_services)) +
-  geom_dotplot(aes(fill = as.factor(month(date))), stackgroups = TRUE, binpositions = "all")
 
-daily_bq <- st_read("geodata/Bedienungsqualität.gpkg", "daily_20260518_weekday_2026-05-04_2026-06-26")
+method <- "weekday"
 
-ggplot(daily_bq %>% filter(departures_per_hour <  20&departures_per_hour>2), aes(x =  weekday, y = departures_per_hour)) +
-  geom_boxplot()
+ifelse(method == "weekday",
+       date_select <- nonholiday_weekdays_fullservice,
+       date_select <- nonholiday_normdays_fullservice)
 
+filtered_services <- gtfs_feed$.$dates_services %>%
+  filter(date %in% date_select)
+#Stop Frequency Variability Figures
+variability_daily  <- st_read("geodata/Bedienungsqualität.gpkg", paste("variablity_daily", feed_date, "weekday", min(date_select), max(date_select), sep = "_"))
 
-mean(daily_bq$departures_per_hour)
+c0 <- variability_daily %>% filter(quality_range == 0)
+c1 <- variability_daily %>% filter(quality_range == 1)
+c2 <- variability_daily %>% filter(quality_range == 2)
+c3 <- variability_daily %>% filter(quality_range == 3)
+c4 <- variability_daily %>% filter(quality_range == 4)
+c5 <- variability_daily %>% filter(quality_range == 5)
+c6 <- variability_daily %>% filter(quality_range == 6)
+
+outdir <- "appendix/figures/stopvar"
+dir.create(outdir, recursive = TRUE, showWarnings = FALSE)
+
+bq_colors <- c(
+  "1" = "#1a9641",
+  "2" = "#8acc62",
+  "3" = "#dbf09e",
+  "4" = "#fedf9a",
+  "5" = "#f59053",
+  "6" = "#d7191c",
+  "7" = "#b8c4cb"
+)
+
+departure_counts_daily <- st_read("geodata/Bedienungsqualität.gpkg", "daily_20260518_weekday_2026-05-04_2026-06-26")
+
+st_drop_geometry(departure_counts_daily) %>%
+  filter(str_detect(stop_id, "de:053")) %>%
+  filter(!stop_id %in% c0$stop_id) %>%
+  distinct(stop_id, Name) %>%
+  left_join(
+    st_drop_geometry(variability_daily) %>%
+      select(stop_id, mean_departures, quality_range, n_changes),
+    by = "stop_id"
+  ) %>%
+  pwalk(function(stop_id,
+                 Name,
+                 mean_departures,
+                 quality_range,
+                 n_changes) {
+    
+    dat <- departure_counts_daily %>%
+      filter(
+        !stop_id %in% c0$stop_id,
+        stop_id == !!stop_id
+      )
+    
+    p <- ggplot(
+      dat,
+      aes(
+        x = date,
+        y = departures_per_hour,
+        fill = as.factor(Bedienungsqualität)
+      )
+    ) +
+      geom_point(shape = 21, stroke = 1, color = "black") +
+      geom_hline(
+        yintercept = mean_departures,
+        linetype = "dashed",
+        colour = "black"
+      ) +
+      annotate(
+        "text",
+        x = max(dat$date, na.rm = TRUE),
+        y = max(dat$departures_per_hour, na.rm = TRUE),
+        hjust = 1,
+        vjust = 1,
+        label = paste0(
+          "mean = ", round(mean_departures, 1),
+          "\nchanges = ", n_changes,
+          "\nrange = ", quality_range
+        )
+      ) +
+      ggtitle(Name) +
+      scale_fill_manual(name = "Bedienungsqualität", values = bq_colors) +
+      scale_x_date(date_breaks = "1 week", date_minor_breaks = "1 day", date_labels = "%d.%m", limits = c(as.Date("2026-05-04"), NA)) +
+      theme(legend.position = "bottom", text = element_text(family = windowsFont("Source Sans 3")))
+    
+    fname <- paste0(
+      gsub("[^[:alnum:]_-]", "_", Name),
+      "__",
+      gsub("[^[:alnum:]_-]", "_", stop_id),
+      "__chg-", n_changes,
+      "__rng-", quality_range,
+      "__mean-", round(mean_departures, 1)
+    )
+    
+    ggsave(
+      file.path(outdir, paste0(fname, ".png")),
+      p,
+      width = 12,
+      height = 7,
+      dpi = 600
+    )
+  })
+
+outdir <- "appendix/figures/stop_routes"
+dir.create(outdir, recursive = TRUE, showWarnings = FALSE)
+
+filtered_stop_times_dates <- read_fst("code/temp/20260518 weekday filtered_stop_times_dates.fst")
+
+changing_stops <- filtered_stop_times_dates %>%
+  filter(str_detect(grouping_id, "de:053"),
+         !grouping_id %in% c0$stop_id) %>%
+  distinct(grouping_id) %>%
+  pull(grouping_id)
+
+route_type_colors <- c(
+  "0" = "#1b9e77",
+  "1" = "#1b9e77",
+  "106" = "#ff0000",
+  "109" = "#ff0000",
+  "201" = "gray20",
+  "3" = "gray20",
+  "700" = "gray20",
+  "704" = "gray20"
+)
+
+for (sid in changing_stops) {
   
+  df <- filtered_stop_times_dates %>%
+    filter(str_detect(stop_id, "de:053")) %>%
+    filter(grouping_id == sid) %>%
+    filter(
+      departure_time >= hms("08:00:00"),
+      departure_time <= hms("18:00:00")
+    ) %>%
+    mutate(timestamp = ymd_hms(paste(as.character(date), as.character(departure_time)))) %>%
+    left_join(gtfs_feed$routes %>% select(route_id, route_short_name, route_long_name), by = "route_id")
+  
+  if (nrow(df) == 0) next
+  
+  stop_name <- df$stop_name[1]  # assumes stop_name is present or joined earlier
+  
+  df <- df %>%
+    mutate(route_label = paste0(route_id, " (", route_short_name, " ", ifelse(!is.na(route_long_name), route_long_name, ""), ")"))
+  
+  p <- ggplot(df, aes(timestamp, route_label, colour = as.factor(route_type))) +
+    geom_point() +
+    ggtitle(stop_name) +
+    scale_colour_manual(name = "Route Type", values = route_type_colors, drop = FALSE, na.value = "grey80") +
+    #scale_x_date(date_breaks = "1 week", date_minor_breaks = "1 day", date_labels = "%d.%m", limits = c(as.Date("2026-05-04"), NA)) +
+    xlim(as_datetime("2026-05-04"), NA) +
+    theme_minimal() +
+    theme(legend.position = "bottom", text = element_text(family = windowsFont("Source Sans 3")))
+  
+  ggsave(
+    file.path(outdir, paste0(gsub("[^[:alnum:]_-]", "_", sid), ".png")),
+    p,
+    width = 20,
+    height = 5,
+    dpi = 600
+  )
+}

@@ -256,25 +256,6 @@ c4 <- variability_daily %>% filter(quality_range == 4)
 c5 <- variability_daily %>% filter(quality_range == 5)
 c6 <- variability_daily %>% filter(quality_range == 6)
 
-c1_low <- c1 %>% filter(n_changes <= 1)
-
-ggplot(departure_counts_daily %>% filter(!stop_id %in% c0$stop_id), aes(x = date, y = departures_per_hour, colour = as.factor(Bedienungsqualität))) +
-  geom_point() +
-  facet_wrap(~ Name)
-
-ggplotly(f)
-
-ggplot(variability_daily %>% filter(quality_range >= 0), aes(x = as.factor(quality_range), y = pct_variation)) +
-  geom_boxplot()
-
-ggplot(bq_weekday %>% filter(!is.na(Bedienungsqualität), stop_type == "3"), aes(x = as.factor(Bedienungsqualität), y = departures_per_hour)) +
-  geom_boxplot()
-
-
-one <- departures_hour(1)
-
-
-
 outdir <- "appendix/figures/stopvar"
 dir.create(outdir, recursive = TRUE, showWarnings = FALSE)
 
@@ -359,22 +340,6 @@ st_drop_geometry(departure_counts_daily) %>%
       dpi = 600
     )
   })
-
-
-departures_singlestop <- filtered_stop_times_dates %>%
-  filter(grouping_id == "de:05378:38435") %>%
-  filter(
-    departure_time >= hms("08:00:00"),
-    departure_time <= hms("18:00:00")
-  ) %>%
-  mutate(timestamp = ymd_hms(paste(as.character(date), as.character(departure_time)))) %>%
-  arrange(date, departure_time) %>%
-  mutate(wday = weekdays(date))
-  
-set.seed(3)
-ggplot(departures_singlestop, aes(x = departure_time, y = route_id, colour = as.factor(route_type))) +
-  geom_point() +
-  facet_wrap(~ wday)
   
 outdir <- "appendix/figures/stop_routes"
 dir.create(outdir, recursive = TRUE, showWarnings = FALSE)
