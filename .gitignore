@@ -30,6 +30,7 @@ geodata/Bedienungsqualität.gpkg
 GIS/raster/
 geodata/gtfs_shapes.gpkg
 /code/temp
+/Literatur/obs_vault/
 
 
 # Optional generated outputs
