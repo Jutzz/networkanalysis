@@ -31,13 +31,13 @@ closed_ways_are_polygons=aeroway,amenity,boundary,building,craft,geological,hist
 # common attributes
 osm_id=yes
 osm_version=no
-osm_timestamp=no
+osm_timestamp=no		
 osm_uid=no
 osm_user=no
 osm_changeset=no
 
 # keys to report as OGR fields
-attributes=name,amenity,leisure,shop,craft,office,brand,restaurant,place,public_transport,historic,education,tourism,building
+attributes=name,amenity,leisure,shop,craft,office,brand,restaurant,place,public_transport,historic,education,tourism,building,natural,highway,isced:level
 # keys that, alone, are not significant enough to report a node as a OGR point
 unsignificant=created_by,converted_by,source,time,ele,attribution
 # keys that should NOT be reported in the "other_tags" field
@@ -90,7 +90,7 @@ osm_changeset=no
 
 # keys to report as OGR fields
 
-attributes=name,amenity,leisure,shop,craft,office,brand,restaurant,place,public_transport,historic,education,tourism,building,type
+attributes=name,amenity,leisure,shop,craft,office,brand,restaurant,place,public_transport,historic,education,tourism,building,type,natural,highway,isced:level
 #keys that should NOT be reported in the "other_tags" field
 ignore=area,created_by,converted_by,source,time,ele,note,todo,openGeoDB:,fixme,FIXME
 # uncomment to avoid creation of "other_tags" field
