@@ -48,3 +48,8 @@ r5core_2026-05-18/
 # OS junk
 .DS_Store
 Thumbs.db
+geodata/zentrale_orte_areas.gpkg
+geodata/zentrale_orte_areas.gpkg
+geodata/pois.gpkg
+geodata/zentrale_orte_bands.gpkg
+geodata/zentrale_orte_areas.gpkg
