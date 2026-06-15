@@ -6,6 +6,7 @@ library(osmextract)
 library(terra)
 library(spatialEco)
 library(smoothr)
+library(nngeo)
 
 files.sources = list.files("code/helper/", full.names = TRUE)
 sapply(files.sources, source)
@@ -155,8 +156,6 @@ poi_flex <- st_transform(st_read("geodata/pois.gpkg", paste0("zo_POI_flex_", osm
   st_join(gem %>% select(KN, geom))
 
 
-N <- "05315000"
-
 unique_kn <- unique(poi$KN)
 total <- length(unique_kn)
 
@@ -193,7 +192,8 @@ for (N in unique(poi$KN)){
     mutate(KN = N) %>%
     smooth(method = "ksmooth", smoothness = 2) %>%
     st_make_valid() %>%
-    st_cast("MULTIPOLYGON")
+    st_cast("MULTIPOLYGON") %>%
+    st_cast("POLYGON", do_split = TRUE)
   
   plot(bands)
   writeRaster(d, paste("output/kderasters/kde", N, "large.tif", sep = "_"), overwrite = TRUE)
@@ -231,7 +231,8 @@ for (N in unique(poi_flex$KN)){
     mutate(KN = N) %>%
     smooth(method = "ksmooth", smoothness = 2) %>%
     st_make_valid() %>%
-    st_cast("MULTIPOLYGON")
+    st_cast("MULTIPOLYGON") %>%
+    st_cast("POLYGON", do_split = TRUE)
   
   plot(bands)
   writeRaster(d, paste("output/kderasters/kde", N, "flex.tif", sep = "_"), overwrite = TRUE)
@@ -239,40 +240,101 @@ for (N in unique(poi_flex$KN)){
   message(N, " done. ", match(N, unique_kn), "/", total)
 }
 
-plot(top10perc) %>%
-  contours()
+bands_flex <- st_read("geodata/zentrale_orte_bands.gpkg", "bands_flex")
 
-step <- as.polygons(top10perc, round = TRUE, digits = 1)
+areas_flex <- st_remove_holes(bands_flex) %>%
+  group_by(KN, density) %>%
+  mutate(
+    area_id = paste0(KN, "_", density, "_", row_number())
+  ) %>%
+  ungroup()
+
+st_write(areas_flex, "geodata/zentrale_orte_areas.gpkg", "areas_flex", append = FALSE)
+
+poi_present_flex <- st_join(poi_flex %>% select(!KN), areas_flex, join = st_within)
+
+presence_flex <- poi_present_flex %>%
+  st_drop_geometry() %>%
+  distinct(area_id, category) %>%
+  mutate(present = 1) %>%
+  tidyr::pivot_wider(
+    names_from = category,
+    values_from = present,
+    values_fill = 0
+  )
+
+areas_flex_p <- left_join(areas_flex, presence_flex, by = "area_id") 
+
+category_names <- unique(poi$category)
+
+areas_flex_p$n_categories <- rowSums(
+  st_drop_geometry(areas_flex_p)[, category_names]
+)
+
+pareto_flex <- areas_flex_p %>%
+  group_by(KN) %>%
+  group_modify(~{
+    x <- .x
+    
+    dominated <- sapply(seq_len(nrow(x)), function(i) {
+      any(
+        (x$density >= x$density[i] &
+           x$n_categories >= x$n_categories[i]) &
+          (x$density > x$density[i] |
+             x$n_categories > x$n_categories[i])
+      )
+    })
+    
+    x[!dominated, ]
+  }) %>%
+  ungroup()
+
+bands_large <- st_read("geodata/zentrale_orte_bands.gpkg", "bands_large")
+ 
+areas_large <- st_remove_holes(bands_large) %>%
+    group_by(KN, density) %>%
+    mutate(
+      area_id = paste0(KN, "_", density, "_", row_number())
+    ) %>%
+    ungroup()
 
 
-step <- st_as_sf(step)
+st_write(areas_large, "geodata/zentrale_orte_areas.gpkg", "areas_large", append = FALSE)
 
-min_value <- as_tibble(d, na.rm = TRUE) %>%
-  slice_max(order_by = lyr.1, prop = .01) %>%
-  min()
+poi_present_large <- st_join(poi %>% select(!KN), areas_large, join = st_within)
 
-top10perc <- d %>% filter(lyr.1 > min_value)
+presence_large <- poi_present_large %>%
+   st_drop_geometry() %>%
+   distinct(area_id, category) %>%
+   mutate(present = 1) %>%
+   tidyr::pivot_wider(
+     names_from = category,
+     values_from = present,
+     values_fill = 0
+   )
 
-plot(top10perc)
+areas_large_p <- left_join(areas_large, presence_large, by = "area_id") 
 
-grid$poi_count <- lengths(st_intersects(grid, poi))
+category_names <- unique(poi$category)
 
-grid_i <- grid %>%
-  group_by(ags) %>%
-  top_n(1, poi_count)
+areas_large_p$n_categories <- rowSums(
+  st_drop_geometry(areas_large_p)[, category_names]
+)
 
-st_write(grid_i, "geodata/poi.gpkg", "zentralorte_gridcells_100", append = FALSE)
-
-grid_poifull <- grid %>%
-  filter(poi_count>0)
-
-st_write(grid_poifull, "geodata/poi.gpkg", "zentraleorte_gridcells_FULL_100", append = FALSE)
-
-cpt <- st_read("geodata/poi.gpkg", "centralplaces_WIP") %>%
-  filter(!is.na(ags))
-
-r5_network <- setup_r5("r5core_2026-05-18/", overwrite = FALSE)
-
-poi <- pois_fun(cpt, id_col = "ags") %>%
-  filter(!is.na(id))
-
+pareto_large <- areas_large_p %>%
+  group_by(KN) %>%
+  group_modify(~{
+    x <- .x
+    
+    dominated <- sapply(seq_len(nrow(x)), function(i) {
+      any(
+        (x$density >= x$density[i] &
+           x$n_categories >= x$n_categories[i]) &
+          (x$density > x$density[i] |
+             x$n_categories > x$n_categories[i])
+      )
+    })
+    
+    x[!dominated, ]
+  }) %>%
+  ungroup()

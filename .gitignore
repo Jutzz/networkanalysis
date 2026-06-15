@@ -27,10 +27,13 @@ geodata/base_data/
 geodata/poi.gpkg
 geodata/grids.gpkg
 geodata/Bedienungsqualität.gpkg
+geodata/zentrale_orte_areas.gpkg
+geodata/pois.gpkg
+geodata/zentrale_orte_bands.gpkg
 GIS/raster/
 geodata/gtfs_shapes.gpkg
-/code/temp
-/Literatur/obs_vault/
+code/temp
+Literatur/obs_vault/
 
 
 # Optional generated outputs
@@ -48,8 +51,3 @@ r5core_2026-05-18/
 # OS junk
 .DS_Store
 Thumbs.db
-geodata/zentrale_orte_areas.gpkg
-geodata/zentrale_orte_areas.gpkg
-geodata/pois.gpkg
-geodata/zentrale_orte_bands.gpkg
-geodata/zentrale_orte_areas.gpkg
