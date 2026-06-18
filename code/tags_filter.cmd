@@ -1,1 +1,1 @@
-osmium tags-filter ..\osmdata\regbez10km-260521.osm.pbf nwr/amenity nwr/shop nwr/tourism nwr/restaurant nwr/craft nwr/cafe nwr/fast_food nwr/railway=station nwr/leisure -o ..\osmdata\zentraler_ort_pois.pbf --overwrite
+osmium tags-filter ..\osmdata\regbez10km-260521.osm.pbf nwr/amenity nwr/shop nwr/tourism nwr/restaurant nwr/office nwr/craft nwr/cafe nwr/fast_food nwr/railway=station nwr/leisure -o ..\osmdata\zentraler_ort_pois.pbf --overwrite

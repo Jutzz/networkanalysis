@@ -37,7 +37,7 @@ osm_user=no
 osm_changeset=no
 
 # keys to report as OGR fields
-attributes=name,amenity,leisure,shop,craft,office,sport,social_facility,place,public_transport,historic,school,tourism,building,natural,highway,isced:level,community_centre,healthcare,railway
+attributes=name,amenity,leisure,shop,craft,office,government,sport,social_facility,social_facility:for,place,public_transport,historic,school,tourism,building,natural,highway,isced:level,community_centre,healthcare,healthcare:speciality,railway,atm
 # keys that, alone, are not significant enough to report a node as a OGR point
 unsignificant=created_by,converted_by,source,time,ele,attribution
 # keys that should NOT be reported in the "other_tags" field
@@ -90,7 +90,7 @@ osm_changeset=no
 
 # keys to report as OGR fields
 
-attributes=name,amenity,leisure,shop,craft,office,sport,social_facility,place,public_transport,historic,school,tourism,building,type,natural,highway,isced:level,community_centre,healthcare,railway
+attributes=name,amenity,leisure,shop,craft,office,government,sport,social_facility,social_facility:for,place,public_transport,historic,school,tourism,building,type,natural,highway,isced:level,community_centre,healthcare,healthcare:speciality,railway,atm
 #keys that should NOT be reported in the "other_tags" field
 ignore=area,created_by,converted_by,source,time,ele,note,todo,openGeoDB:,fixme,FIXME
 # uncomment to avoid creation of "other_tags" field

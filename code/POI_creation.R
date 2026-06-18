@@ -110,7 +110,7 @@ poi_poly <- st_centroid(st_transform(st_read("osmdata/zentraler_ort_pois.gpkg", 
 
 poi_flex <- bind_rows(poi_pt, poi_poly) %>%
   filter(amenity == "pharmacy" | grepl("apotheke", name, ignore.case = TRUE)|
-           office == "government" | amenity == "townhall" | grepl("Bürgerbüro", name, ignore.case = TRUE) |
+           government %in% c("einwohnermeldeamt")| amenity == "townhall" | grepl("Bürger|quartiersbüro|stadtteilbüro", name, ignore.case = TRUE) |
            amenity == "library" | grepl("bibliothek|bücherei", name, ignore.case = TRUE) |
            community_centre == "youth_centre" | grepl("Jugendzentrum", name, ignore.case = TRUE) |
            isced_level == 1 | grepl("Grundschule", name, ignore.case = TRUE) | school == "primary" |
@@ -119,14 +119,15 @@ poi_flex <- bind_rows(poi_pt, poi_poly) %>%
            amenity %in% c("kindergarten", "childcare") | grepl("kita|kindergarten|kindertagesstätte|hort", name, ignore.case = TRUE) |
            amenity %in% c("post_office") |
            leisure == "fitness_centre" |
-           amenity == "nursing_home" | social_facility == "nursing_home" | grepl("Seniorenheim|Altenheim|betreutes wohnen|Seniorenresidenz", name, ignore.case = TRUE) |
+           amenity == "nursing_home" | social_facility == "nursing_home" | social_facility_for == "senior" | social_facility == "assisted_living" | grepl("Seniorenheim|Altenheim|betreutes wohnen|Seniorenresidenz", name, ignore.case = TRUE) |
            shop %in% c("supermarket", "convenience") | building == "supermarket" |
            amenity == "dentist" | healthcare == "dentist" | grepl("Zahnarzt|odonto", name, ignore.case = TRUE)|
            amenity == "bank" | amenity == "atm") %>%
   filter(!amenity %in% c("parking", "bicycle_parking", "parking_space",
                          "charging_station", "police", "trailer_parking")) %>%
+  filter(str_detect(healthcare_speciality, "general") | str_detect(name, "Hausarzt") | is.na(healthcare_speciality)) %>%
   mutate(category = case_when( amenity == "pharmacy" | grepl("apotheke", name, ignore.case = TRUE) ~ "Pharmacy",
-                               office == "government" | amenity == "townhall" | grepl("Bürgerbüro", name, ignore.case = TRUE) ~ "Government Office",
+                               government %in% c("einwohnermeldeamt")| amenity == "townhall" | grepl("Bürger|quartiersbüro|stadtteilbüro", name, ignore.case = TRUE) ~ "Government Office",
                                amenity == "library" | grepl("bibliothek|bücherei", name, ignore.case = TRUE) ~ "Library",
                                community_centre == "youth_centre" | grepl("Jugendzentrum", name, ignore.case = TRUE) ~ "Youth Centre",
                                isced_level == 1 | school == "primary" | grepl("Grundschule", name, ignore.case = TRUE) ~ "Primary School",
@@ -135,7 +136,7 @@ poi_flex <- bind_rows(poi_pt, poi_poly) %>%
                                amenity %in% c("kindergarten", "childcare") | grepl("kita|kindergarten|kindertagesstätte|hort", name, ignore.case = TRUE) ~ "Kindergarten / Childcare",
                                amenity == "post_office" ~ "Post Office",
                                leisure == "fitness_centre" ~ "Fitness Centre",
-                               amenity == "nursing_home" | social_facility == "nursing_home" | grepl("Seniorenheim|Altenheim|betreutes wohnen", name, ignore.case = TRUE) ~ "Nursing Home",
+                               amenity == "nursing_home" | social_facility == "nursing_home" | social_facility_for == "senior" | social_facility == "assisted_living" | grepl("Seniorenheim|Altenheim|betreutes wohnen", name, ignore.case = TRUE) ~ "Nursing Home",
                                shop %in% c("supermarket", "convenience") | building == "supermarket" ~ "Supermarket",
                                amenity == "dentist" | healthcare == "dentist" | grepl("Zahnarzt|odonto", name, ignore.case = TRUE) ~ "Dentist",
                                amenity == "bank" ~ "Bank",
