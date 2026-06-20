@@ -25,7 +25,7 @@ ifelse(method == "weekday",
 #TODO: Make usable for any area: import full zensus and stops data, filter by generic area (limited stops and dests) 
 mapping_matrix <- read_csv2(here("code/erschließung_mat_long.csv"))
 
-stops_table <- st_read(here("geodata/Bedienungsqualität.gpkg"), paste(feed_date, method, min(date_select), max(date_select), sep = "_")) %>%
+stops_table <- st_read(here("geodata/Bedienungsqualität.gpkg"), paste(feed_date, method, min(date_select), max(date_select), sep = "_")) #%>%
   mutate(stop_type = case_when(
     stop_type == 1 ~ "train",
     stop_type == 2 ~ "tram",

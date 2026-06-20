@@ -206,6 +206,8 @@ core$area <- set_units(st_area(core), "km^2")
 #What areas are contained in what other areas?
 idx <- st_within(core, areas_flex_p)
 
+density_parent <- 3
+
 parent_tbl <- purrr::map2_dfr(
   seq_along(idx),
   idx,
@@ -226,36 +228,8 @@ core_parent <- parent_tbl %>%
               select(density, shannon_norm, area_id, area, n_categories_base, n_categories_opt, n_categories_total) %>%
               rename_with(~ paste0("core_", .x)), by = join_by("core_id" == "core_area_id")) %>%
   relocate(parent_KN, parent_id, core_id, parent_density, core_density, parent_shannon_norm, core_shannon_norm, parent_area, core_area, parent_n_categories_base, core_n_categories_base, parent_n_categories_opt, core_n_categories_opt, parent_n_categories_total, core_n_categories_total) %>%
-  filter(parent_density == 3) %>%
-  mutate(ratio_p_c = as.numeric(core_area/parent_area)) %>%
-  mutate(score = (core_density/9 + parent_n_categories_base/15 + parent_n_categories_opt/11 + ratio_p_c*2.5)/4)
-
-#Select the core with the highest density that is not dominated by a core that has a parent density larger than its parent density
-# total_cat <- core_parent %>%
-#   group_by(parent_KN) %>%
-#   arrange(
-#     desc(parent_n_categories_total),
-#     desc(core_density),
-#     desc(core_n_categories_total)
-#   ) %>%
-#   slice(1) %>%
-#   ungroup() %>%
-#   st_as_sf() %>%
-#   left_join(st_drop_geometry(gem) %>% select(KN,GN), by = join_by("parent_KN" == "KN")) %>%
-#   st_centroid()
-# 
-# total_cat <- core_parent %>%
-#   group_by(parent_KN) %>%
-#   arrange(
-#     desc(core_density),
-#     desc(parent_n_categories_total),
-#     desc(core_n_categories_total)
-#   ) %>%
-#   slice(1:3) %>%
-#   ungroup() %>%
-#   st_as_sf() %>%
-#   left_join(st_drop_geometry(gem) %>% select(KN,GN), by = join_by("parent_KN" == "KN")) %>%
-#   st_centroid()
+  filter(parent_density == density_parent) %>%
+  mutate(ratio_p_c = as.numeric(core_area/parent_area))
 
 total_cat <- core_parent %>%
   #filter(parent_KN == "05362004") %>%
@@ -283,7 +257,7 @@ total_cat <- core_parent %>%
 
 
 tcat_scores <- total_cat %>%
-  mutate(score = (core_density/9 + parent_n_categories_base/15 + parent_n_categories_opt/11)/3) %>%
+  mutate(score = (core_density/9 + parent_n_categories_base/15 + core_n_categories_opt/11)/3) %>%
   group_by(parent_KN) %>%
   arrange(cat_rank) %>%
   mutate(
@@ -293,7 +267,14 @@ tcat_scores <- total_cat %>%
   mutate(distance = replace_na(distance, 0)) %>%
   ungroup()
 
-st_write(tcat_scores, "geodata/zentrale_orte_areas.gpkg", "highestdexceptforparentn_allcat_3", append = FALSE)
+#st_write(tcat_scores, "geodata/zentrale_orte_areas.gpkg", "highestdexceptforparentn_allcat_3", append = FALSE)
+
+score_cutoff <- sd(tcat_scores$distance)
+
+zentral <- tcat_scores %>%
+  filter(distance > -0.17)
+
+st_write(zentral, "geodata/poi.gpkg", paste0("zo_pd", density_parent, "_cut",round(score_cutoff, 2)), append = FALSE)
 
 max_d <- core_parent %>%
   group_by(parent_KN) %>%

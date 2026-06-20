@@ -125,7 +125,7 @@ poi_flex <- bind_rows(poi_pt, poi_poly) %>%
            amenity == "bank" | amenity == "atm") %>%
   filter(!amenity %in% c("parking", "bicycle_parking", "parking_space",
                          "charging_station", "police", "trailer_parking")) %>%
-  filter(str_detect(healthcare_speciality, "general") | str_detect(name, "Hausarzt") | is.na(healthcare_speciality)) %>%
+  filter(str_detect(healthcare_speciality, "general|internal") | str_detect(name, "Hausarzt") | is.na(healthcare_speciality)) %>%
   mutate(category = case_when( amenity == "pharmacy" | grepl("apotheke", name, ignore.case = TRUE) ~ "Pharmacy",
                                government %in% c("einwohnermeldeamt")| amenity == "townhall" | grepl("Bürger|quartiersbüro|stadtteilbüro", name, ignore.case = TRUE) ~ "Government Office",
                                amenity == "library" | grepl("bibliothek|bücherei", name, ignore.case = TRUE) ~ "Library",
