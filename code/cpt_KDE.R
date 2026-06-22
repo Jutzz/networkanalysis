@@ -18,25 +18,28 @@ osmdate <- "260521"
 
 gem <- st_transform(st_read("geodata/dvg1nw.gpkg", "gemeinden_regbez_kln"), crs = st_crs(3035))
 
-poi <- st_transform(st_read("geodata/pois.gpkg", paste0("zo_POI_large_", osmdate)), crs = st_crs(gem)) %>%
-  st_join(gem %>% select(KN, geom))
+# poi <- st_transform(st_read("geodata/pois.gpkg", paste0("zo_POI_large_", osmdate)), crs = st_crs(gem)) %>%
+#   st_join(gem %>% select(KN, geom))
 
 poi_flex <- st_transform(st_read("geodata/pois.gpkg", paste0("zo_POI_flex_", osmdate)), crs = st_crs(gem)) %>%
   st_join(gem %>% select(KN, geom)) %>%
-  arrange(KN)
+  arrange(KN) %>%
+  select(osm_id, name, category, KN, amenity, atm)
 
 poi_flex_optional <- st_transform(st_read("geodata/pois.gpkg", paste0("zo_POI_flex_opt", osmdate)), crs = st_crs(gem)) %>%
-  st_join(gem %>% select(KN, geom))
+  st_join(gem %>% select(KN, geom)) %>%
+  mutate(amenity = NA, atm = NA)
 
 
 unique_kn <- unique(poi_flex$KN)
 total <- length(unique_kn)
 
-#KDE for every muni, normalized and written as poly bands
+poi_flex_full <- rbind(poi_flex, poi_flex_optional)
 
+#KDE for every muni, normalized and written as poly bands
 #Flex POI set ----
-for (N in unique(poi_flex$KN)){
-  poi_f <- poi_flex %>%
+for (N in unique(poi_flex_full$KN)){
+  poi_f <- poi_flex_full %>%
     filter(KN == N) %>%
     st_transform(st_crs(3035))
   
@@ -177,22 +180,6 @@ areas_flex_p$area <- units::set_units(st_area(areas_flex_p), "km^2")
 
 category_cols = c(base_cols, opt_cols)
 
-areas_flex_p <- areas_flex_p %>%
-  rowwise() %>%
-  mutate(
-    shannon_norm = {
-      x <- c_across(all_of(category_cols))
-      x <- x[x > 0]
-      if(length(x) <= 1) {
-        0
-      } else {
-        p <- x / sum(x)
-        -sum(p * log(p)) / log(length(x))
-      }
-    }
-  ) %>%
-  ungroup()
-
 st_write(
   areas_flex_p,
   "geodata/zentrale_orte_areas.gpkg",
@@ -311,8 +298,7 @@ core_stat <- core %>%
   ungroup() %>%
   select(!(any_of(category_cols))) %>%
   st_centroid() %>%
-  left_join(gem %>% select(KN, zentralitaet) %>% st_drop_geometry()) %>%
-  left_join(core_diff_score, join_by("area_id" == "to_id"))
+  left_join(gem %>% select(KN, zentralitaet) %>% st_drop_geometry())
 
 # min_g <- core_stat %>% filter(zentralitaet == "Grundzentrum") %>% slice_min(score_max, n = 1, with_ties = FALSE) %>% pull(score_max)
 # min_m <- core_stat %>% filter(zentralitaet == "Mittelzentrum") %>% slice_min(score_max, n = 1, with_ties = FALSE) %>% pull(score_max)
@@ -374,101 +360,102 @@ core_stat_results <- core_stat %>%
       )
     }
   ) %>%
-  ungroup()
+  ungroup() %>%
+  filter(score_group | (secondary_functional_gain >= 2 & cat_base_reached >= 10 & cat_total_reached >= 15))
 
 
 st_write(core_stat_results, "geodata/zentrale_orte_areas.gpkg", "acc_scoring_centroids_filtered", append = FALSE)
 st_write(core_stat, "geodata/zentrale_orte_areas.gpkg", "acc_scoring_centroids", append = FALSE)
 
-st_write(result, "geodata/zentrale_orte_areas.gpkg", "acc_scoring_greedy", append = FALSE)  
-
-ggplot(core_stat, aes(x = zentralitaet, y = cat_total_reached)) + geom_boxplot()
-#What areas are contained in what other areas?
-idx <- st_within(core, areas_flex_p)
-
-parent_tbl <- purrr::map2_dfr(
-  seq_along(idx),
-  idx,
-  ~{
-    areas_flex_p[.y, ] %>%
-      st_drop_geometry() %>%
-      mutate(core_id = core$area_id[.x])
-  }
-) %>%
-  select(KN, area_id, core_id, density, shannon_norm, area, n_categories_base, n_categories_opt, n_categories_total) %>%
-  rename_with(~ paste0("parent_", .x)) %>%
-  rename("core_id" = parent_core_id) %>%
-  rename("parent_id" = parent_area_id)
-
-density_parent <- 3
-
-#How does the density = 3 area compare to the core?
-core_parent <- parent_tbl %>%
-  left_join(core %>%
-              select(density, shannon_norm, area_id, area, n_categories_base, n_categories_opt, n_categories_total) %>%
-              rename_with(~ paste0("core_", .x)), by = join_by("core_id" == "core_area_id")) %>%
-  relocate(parent_KN, parent_id, core_id, parent_density, core_density, parent_shannon_norm, core_shannon_norm, parent_area, core_area, parent_n_categories_base, core_n_categories_base, parent_n_categories_opt, core_n_categories_opt, parent_n_categories_total, core_n_categories_total) #%>%
-  filter(parent_density == density_parent)
-
-st_write(core_parent, "geodata/zentrale_orte_areas.gpkg", "core_parent_nochild", append = FALSE)
-
-
-total_cat <- core_parent %>%
-  #filter(parent_KN == "05362004") %>%
-  group_by(parent_KN) %>%
-  mutate(
-    cat_rank = dense_rank(desc(parent_n_categories_total))
-  ) %>%
-  filter(cat_rank <= 4) %>%
-  arrange(
-    cat_rank,
-    desc(core_density),
-#    desc(core_n_categories_total)
-  ) %>%
-  group_by(parent_KN, cat_rank) %>%
-  slice(1) %>%   # break ties within each distinct category count
-  ungroup() %>%
-  st_as_sf() %>%
-  left_join(
-    st_drop_geometry(gem) %>% select(KN, GN),
-    by = join_by("parent_KN" == "KN")
-  ) %>%
-  st_centroid()
-
-#Write to disk
-
-
-tcat_scores <- total_cat %>%
-  mutate(score = (core_density/9 + parent_n_categories_base/15 + core_n_categories_opt/11)/3) %>%
-  group_by(parent_KN) %>%
-  arrange(cat_rank) %>%
-  mutate(
-    score_rank1 = first(score[cat_rank == 1]),
-    distance = score - score_rank1
-  ) %>%
-  mutate(distance = replace_na(distance, 0)) %>%
-  ungroup()
-
-#st_write(tcat_scores, "geodata/zentrale_orte_areas.gpkg", "highestdexceptforparentn_allcat_3", append = FALSE)
-
-score_cutoff <- sd(tcat_scores$distance)
-
-zentral <- tcat_scores %>%
-  filter(distance > -score_cutoff) %>%
-  left_join(gem %>% select(KN, zentralitaet) %>% st_drop_geometry(), join_by("parent_KN" == "KN"))
-
-st_write(zentral, "geodata/poi.gpkg", paste0("zo_pd", density_parent, "_cut",round(score_cutoff, 2)), append = FALSE)
-
-max_d <- core_parent %>%
-  group_by(parent_KN) %>%
-  arrange(desc(core_density), desc(parent_n_categories_total)) %>%
-  slice(1) %>%
-  ungroup() %>%
-  st_as_sf() %>%
-  left_join(st_drop_geometry(gem) %>% select(KN,GN), by = join_by("parent_KN" == "KN")) %>%
-  st_centroid()
-
-st_write(max_d, "geodata/zentrale_orte_areas.gpkg", "maxdmaxcat", append = FALSE)
+# st_write(result, "geodata/zentrale_orte_areas.gpkg", "acc_scoring_greedy", append = FALSE)  
+# 
+# ggplot(core_stat, aes(x = zentralitaet, y = cat_total_reached)) + geom_boxplot()
+# #What areas are contained in what other areas?
+# idx <- st_within(core, areas_flex_p)
+# 
+# parent_tbl <- purrr::map2_dfr(
+#   seq_along(idx),
+#   idx,
+#   ~{
+#     areas_flex_p[.y, ] %>%
+#       st_drop_geometry() %>%
+#       mutate(core_id = core$area_id[.x])
+#   }
+# ) %>%
+#   select(KN, area_id, core_id, density, shannon_norm, area, n_categories_base, n_categories_opt, n_categories_total) %>%
+#   rename_with(~ paste0("parent_", .x)) %>%
+#   rename("core_id" = parent_core_id) %>%
+#   rename("parent_id" = parent_area_id)
+# 
+# density_parent <- 3
+# 
+# #How does the density = 3 area compare to the core?
+# core_parent <- parent_tbl %>%
+#   left_join(core %>%
+#               select(density, shannon_norm, area_id, area, n_categories_base, n_categories_opt, n_categories_total) %>%
+#               rename_with(~ paste0("core_", .x)), by = join_by("core_id" == "core_area_id")) %>%
+#   relocate(parent_KN, parent_id, core_id, parent_density, core_density, parent_shannon_norm, core_shannon_norm, parent_area, core_area, parent_n_categories_base, core_n_categories_base, parent_n_categories_opt, core_n_categories_opt, parent_n_categories_total, core_n_categories_total) #%>%
+#   filter(parent_density == density_parent)
+# 
+# st_write(core_parent, "geodata/zentrale_orte_areas.gpkg", "core_parent_nochild", append = FALSE)
+# 
+# 
+# total_cat <- core_parent %>%
+#   #filter(parent_KN == "05362004") %>%
+#   group_by(parent_KN) %>%
+#   mutate(
+#     cat_rank = dense_rank(desc(parent_n_categories_total))
+#   ) %>%
+#   filter(cat_rank <= 4) %>%
+#   arrange(
+#     cat_rank,
+#     desc(core_density),
+# #    desc(core_n_categories_total)
+#   ) %>%
+#   group_by(parent_KN, cat_rank) %>%
+#   slice(1) %>%   # break ties within each distinct category count
+#   ungroup() %>%
+#   st_as_sf() %>%
+#   left_join(
+#     st_drop_geometry(gem) %>% select(KN, GN),
+#     by = join_by("parent_KN" == "KN")
+#   ) %>%
+#   st_centroid()
+# 
+# #Write to disk
+# 
+# 
+# tcat_scores <- total_cat %>%
+#   mutate(score = (core_density/9 + parent_n_categories_base/15 + core_n_categories_opt/11)/3) %>%
+#   group_by(parent_KN) %>%
+#   arrange(cat_rank) %>%
+#   mutate(
+#     score_rank1 = first(score[cat_rank == 1]),
+#     distance = score - score_rank1
+#   ) %>%
+#   mutate(distance = replace_na(distance, 0)) %>%
+#   ungroup()
+# 
+# #st_write(tcat_scores, "geodata/zentrale_orte_areas.gpkg", "highestdexceptforparentn_allcat_3", append = FALSE)
+# 
+# score_cutoff <- sd(tcat_scores$distance)
+# 
+# zentral <- tcat_scores %>%
+#   filter(distance > -score_cutoff) %>%
+#   left_join(gem %>% select(KN, zentralitaet) %>% st_drop_geometry(), join_by("parent_KN" == "KN"))
+# 
+# st_write(zentral, "geodata/poi.gpkg", paste0("zo_pd", density_parent, "_cut",round(score_cutoff, 2)), append = FALSE)
+# 
+# max_d <- core_parent %>%
+#   group_by(parent_KN) %>%
+#   arrange(desc(core_density), desc(parent_n_categories_total)) %>%
+#   slice(1) %>%
+#   ungroup() %>%
+#   st_as_sf() %>%
+#   left_join(st_drop_geometry(gem) %>% select(KN,GN), by = join_by("parent_KN" == "KN")) %>%
+#   st_centroid()
+# 
+# st_write(max_d, "geodata/zentrale_orte_areas.gpkg", "maxdmaxcat", append = FALSE)
   
 
 #Testing with bw = 500 if there is any difference
@@ -619,54 +606,54 @@ st_write(max_d, "geodata/zentrale_orte_areas.gpkg", "maxdmaxcat", append = FALSE
 # #Write to disk
 # st_write(best, "geodata/zentrale_orte_areas.gpkg", "highestdexceptforparentn_allcat_500", append = FALSE)
 ##Everything from here: Testing, document briefly how we got here.
-poi_present_flex <- st_join(poi_flex %>% select(!KN), areas_flex, join = st_within) %>%
-  filter(!is.na(area_id))
-
-presence_flex <- poi_present_flex %>%
-  st_drop_geometry() %>%
-  distinct(area_id, category) %>%
-  mutate(present = 1) %>%
-  tidyr::pivot_wider(
-    names_from = category,
-    values_from = present,
-    values_fill = 0
-  )
-
-areas_flex_p <- left_join(areas_flex, presence_flex, by = "area_id") 
-
-categories_base <- unique(poi_flex$category)
-
-categories_optional <- unique(poi_flex_optional$category)
-
-
-areas_flex_p$n_categories <- rowSums(
-  st_drop_geometry(areas_flex_p)[, categories_base]
-)
-
-st_write(areas_flex_p, "geodata/zentrale_orte_areas.gpkg", "areas_flex_catcount")
-
-pareto_flex <- areas_flex_p %>%
-  filter(density >= 1) %>%
-  group_by(KN) %>%
-  group_modify(~{
-    x <- .x
-    
-    dominated <- sapply(seq_len(nrow(x)), function(i) {
-      any(
-        (x$density >= x$density[i] &
-           x$n_categories >= x$n_categories[i]) &
-          (x$density > x$density[i] |
-             x$n_categories > x$n_categories[i])
-      )
-    })
-    
-    x[!dominated, ]
-  }) %>%
-  ungroup()
-
-st_write(pareto_flex, "geodata/zentrale_orte_areas.gpkg", "pareto_flex_opt")
-
-
-d <- sf.kde(st_transform(x = poi_flex %>% filter(str_detect(KN, "053")), crs = st_crs(gem)),  res = 50, bw = 1000, ref = gem)
+# poi_present_flex <- st_join(poi_flex %>% select(!KN), areas_flex, join = st_within) %>%
+#   filter(!is.na(area_id))
+# 
+# presence_flex <- poi_present_flex %>%
+#   st_drop_geometry() %>%
+#   distinct(area_id, category) %>%
+#   mutate(present = 1) %>%
+#   tidyr::pivot_wider(
+#     names_from = category,
+#     values_from = present,
+#     values_fill = 0
+#   )
+# 
+# areas_flex_p <- left_join(areas_flex, presence_flex, by = "area_id") 
+# 
+# categories_base <- unique(poi_flex$category)
+# 
+# categories_optional <- unique(poi_flex_optional$category)
+# 
+# 
+# areas_flex_p$n_categories <- rowSums(
+#   st_drop_geometry(areas_flex_p)[, categories_base]
+# )
+# 
+# st_write(areas_flex_p, "geodata/zentrale_orte_areas.gpkg", "areas_flex_catcount")
+# 
+# pareto_flex <- areas_flex_p %>%
+#   filter(density >= 1) %>%
+#   group_by(KN) %>%
+#   group_modify(~{
+#     x <- .x
+#     
+#     dominated <- sapply(seq_len(nrow(x)), function(i) {
+#       any(
+#         (x$density >= x$density[i] &
+#            x$n_categories >= x$n_categories[i]) &
+#           (x$density > x$density[i] |
+#              x$n_categories > x$n_categories[i])
+#       )
+#     })
+#     
+#     x[!dominated, ]
+#   }) %>%
+#   ungroup()
+# 
+# st_write(pareto_flex, "geodata/zentrale_orte_areas.gpkg", "pareto_flex_opt")
+# 
+# 
+# d <- sf.kde(st_transform(x = poi_flex %>% filter(str_detect(KN, "053")), crs = st_crs(gem)),  res = 50, bw = 1000, ref = gem)
 
             

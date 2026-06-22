@@ -181,7 +181,32 @@ poi_flex_optional <- bind_rows(poi_pt, poi_poly) %>%
   ) %>%
   select(1,2,category,geometry)
 
-st_write(poi %>% filter(category != "Other"), "geodata/pois.gpkg", paste0("zo_POI_large_", osmdate), append = FALSE)
+pitch <- poi_flex_optional %>%
+  filter(category == "Sports Facility") %>%
+  st_buffer(100)
+
+# Graph of overlapping buffers
+adj <- st_intersects(pitch)
+
+g <- graph_from_adj_list(adj, mode = "all")
+pitch$group <- components(g)$membership
+
+merged <- pitch %>%
+  group_by(group) %>%
+  summarise(
+    osm_id = paste(unique(osm_id), collapse = ";"),
+    do_union = TRUE,
+    category = "Sports Facility"
+  )
+
+centers <- st_centroid(merged)
+
+poi_flex_optional <- poi_flex_optional %>%
+  filter(!category == "Sports Facility") %>%
+  bind_rows(centers) %>%
+  select(!group)
+
+#st_write(poi %>% filter(category != "Other"), "geodata/pois.gpkg", paste0("zo_POI_large_", osmdate), append = FALSE)
 st_write(poi_flex, "geodata/pois.gpkg", paste0("zo_POI_flex_", osmdate), append = FALSE)
 st_write(poi_flex_optional, "geodata/pois.gpkg", paste0("zo_POI_flex_opt", osmdate), append = FALSE)
 
