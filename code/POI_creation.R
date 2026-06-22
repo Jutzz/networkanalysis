@@ -25,7 +25,11 @@ osmextract::oe_vectortranslate("osmdata/zentraler_ort_pois.pbf", layer = "points
 osmextract::oe_vectortranslate("osmdata/zentraler_ort_pois.pbf", layer = "multipolygons", never_skip_vectortranslate = TRUE, osmconf_ini = "code/osmconf_cpt.txt")
 
 poi_pt <- st_transform(st_read("osmdata/zentraler_ort_pois.gpkg", "points"), crs = st_crs(3857))
-poi_poly <- st_centroid(st_transform(st_read("osmdata/zentraler_ort_pois.gpkg", "multipolygons"), crs = st_crs(3857)))
+poi_poly <- st_centroid(st_transform(st_read("osmdata/zentraler_ort_pois.gpkg", "multipolygons"), crs = st_crs(3857))) %>%
+  mutate(osm_id = ifelse(
+    is.na(osm_id),
+    osm_way_id,
+    osm_id))
 
 # poi <- bind_rows(poi_pt, poi_poly) %>%
 #   mutate(

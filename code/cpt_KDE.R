@@ -1,6 +1,8 @@
+options(java.parameters = "-Xmx20G")
 library(plyr)
 library(tidyverse)
 library(sf)
+library(r5r)
 library(here)
 library(osmextract)
 library(terra)
@@ -8,6 +10,9 @@ library(spatialEco)
 library(smoothr)
 library(nngeo)
 library(units)
+
+files.sources = list.files("code/helper/", full.names = TRUE)
+sapply(files.sources, source)
 
 osmdate <- "260521"
 
@@ -195,18 +200,191 @@ st_write(
   append = FALSE
 )
 
-#Densest areas
+#A core is a local maximum, an area that doesnt contain another one of higher density.
+contains <- st_contains(areas_flex_p)
+
+areas_flex_p$has_child <- purrr::map_lgl(
+  seq_along(contains),
+  function(i) {
+    idx <- setdiff(contains[[i]], i)
+    
+    any(
+      areas_flex_p$density[idx] >
+        areas_flex_p$density[i]
+    )
+  }
+)
+
 core <- areas_flex_p %>%
-  group_by(KN) %>%
-  slice_max(density, n = 7, with_ties = TRUE) %>%
-  ungroup()
+  filter(!has_child)
+
+# #Densest areas
+# core <- areas_flex_p %>%
+#   group_by(KN) %>%
+#   slice_max(density, n = 7, with_ties = TRUE) %>%
+#   ungroup()
 
 core$area <- set_units(st_area(core), "km^2")
 
+st_write(core %>% st_centroid(), "geodata/zentrale_orte_areas.gpkg", "cores_nochild", append = FALSE)
+
+r5_network <- setup_r5("r5core_2026-05-18/", overwrite = FALSE)
+
+poi_base_df <- pois_fun(poi_flex, id_col = "osm_id")
+poi_optional_df <- pois_fun(poi_flex_optional, id_col = "osm_id")
+
+core_df <- pois_fun(core %>% st_centroid(), id_col = "area_id")
+
+ttm <- travel_time_matrix(r5_network, origins = core_df, destinations = poi_base_df, mode = "WALK", max_trip_duration = 10L, percentiles = 1L, walk_speed = 4L)
+ttm_opt <- travel_time_matrix(r5_network, origins = core_df, destinations = poi_optional_df, mode = "WALK", max_trip_duration = 10L, percentiles = 1L, walk_speed = 4L)
+
+poi_ttm <- poi_flex %>%
+  left_join(ttm, join_by("osm_id" == "from_id"))
+
+poi_ttm_opt <- poi_flex_optional %>%
+  left_join(ttm_opt, join_by("osm_id" == "from_id"))
+  
+
+core_cats <- poi_ttm %>%
+  distinct(to_id, category) %>%
+  mutate(present = 1) %>%
+  pivot_wider(
+    names_from = category,
+    values_from = present,
+    values_fill = 0
+  )
+
+core_cats_opt <- poi_ttm_opt %>%
+  distinct(to_id, category) %>%
+  mutate(present = 1) %>%
+  pivot_wider(
+    names_from = category,
+    values_from = present,
+    values_fill = 0
+  )
+
+core_cat_full <- core_cats %>%
+  full_join(core_cats_opt, by = "to_id") %>%
+  mutate(across(where(is.numeric), ~ replace_na(., 0))) %>%
+  filter(!is.na(to_id))
+
+library(vegan)
+
+mat <- core_cat_full %>%
+  st_drop_geometry() %>%
+  column_to_rownames("to_id") %>%
+  as.matrix()
+
+# jaccard_dist <- vegdist(mat > 0, method = "jaccard")
+# 
+# core_diff <- as.matrix(jaccard_dist)
+# 
+# core_diff_score <- tibble(
+#   to_id = rownames(core_diff),
+#   functional_difference = rowMeans(core_diff)
+# )
+
+
+poi_tt_stat <- poi_ttm %>%
+  group_by(to_id) %>%
+  summarise(poi_base_reached = n(),
+            cat_base_reached = length(unique(category))) %>%
+  st_drop_geometry()
+
+poi_opt_tt_stat <- poi_ttm_opt %>%
+  group_by(to_id) %>%
+  summarise(poi_opt_reached = n(),
+            cat_opt_reached = length(unique(category))) %>%
+  st_drop_geometry()
+
+core_stat <- core %>%
+  left_join(poi_tt_stat, join_by("area_id" == "to_id")) %>%
+  left_join(poi_opt_tt_stat, join_by("area_id" == "to_id")) %>%
+  mutate(across(where(is.numeric), ~ replace_na(., 0))) %>%
+  mutate(cat_total_reached = cat_base_reached + cat_opt_reached) %>%
+  mutate(score = (density/9 + cat_base_reached/15 + cat_opt_reached/11)/3) %>%
+  group_by(KN) %>%
+  mutate(
+    score_max = max(score),
+    score_group = abs(score-score_max) < 0.1
+  ) %>%
+  ungroup() %>%
+  select(!(any_of(category_cols))) %>%
+  st_centroid() %>%
+  left_join(gem %>% select(KN, zentralitaet) %>% st_drop_geometry()) %>%
+  left_join(core_diff_score, join_by("area_id" == "to_id"))
+
+# min_g <- core_stat %>% filter(zentralitaet == "Grundzentrum") %>% slice_min(score_max, n = 1, with_ties = FALSE) %>% pull(score_max)
+# min_m <- core_stat %>% filter(zentralitaet == "Mittelzentrum") %>% slice_min(score_max, n = 1, with_ties = FALSE) %>% pull(score_max)
+# min_o <- core_stat %>% filter(zentralitaet == "Oberzentrum") %>% slice_min(score_max, n = 1, with_ties = FALSE) %>% pull(score_max)
+# 
+# core_stat_results <- core_stat %>%
+#   filter(
+#     (zentralitaet == "Grundzentrum"  & score >= min_g) |
+#       (zentralitaet == "Mittelzentrum" & score >= min_m) |
+#       (zentralitaet == "Oberzentrum"   & score >= min_o)
+#   )
+
+mat_df <- as.data.frame(mat)
+mat_df$area_id <- rownames(mat)
+mat_df <- left_join(mat_df, core_stat %>% select(area_id, KN), by = "area_id")
+
+central_union_list <- core_stat %>%
+  filter(score_group) %>%
+  select(KN, area_id) %>%
+  group_split(KN) %>%
+  map(~{
+    kn <- unique(.x$KN)
+    
+    ids <- .x$area_id
+    
+    m <- mat[ids, , drop = FALSE]
+    
+    tibble(
+      KN = kn,
+      central_union = list(colSums(m) > 0)
+    )
+  }) %>%
+  bind_rows()
+
+central_union_lookup <- setNames(
+  central_union_list$central_union,
+  central_union_list$KN
+)
+
+secondary_gain <- function(id, mat, central_union) {
+  if (!(id %in% rownames(mat))) return(0)
+  
+  new <- mat[id, ] & !central_union
+  sum(new)
+}
+
+core_stat_results <- core_stat %>%
+  rowwise() %>%
+  mutate(
+    secondary_functional_gain = if (
+      score_group
+    ) {
+      NA_real_
+    } else {
+      secondary_gain(
+        area_id,
+        mat,
+        central_union_lookup[[as.character(KN)]]
+      )
+    }
+  ) %>%
+  ungroup()
+
+
+st_write(core_stat_results, "geodata/zentrale_orte_areas.gpkg", "acc_scoring_centroids_filtered", append = FALSE)
+st_write(core_stat, "geodata/zentrale_orte_areas.gpkg", "acc_scoring_centroids", append = FALSE)
+
+st_write(result, "geodata/zentrale_orte_areas.gpkg", "acc_scoring_greedy", append = FALSE)  
+
+ggplot(core_stat, aes(x = zentralitaet, y = cat_total_reached)) + geom_boxplot()
 #What areas are contained in what other areas?
 idx <- st_within(core, areas_flex_p)
-
-density_parent <- 3
 
 parent_tbl <- purrr::map2_dfr(
   seq_along(idx),
@@ -222,14 +400,18 @@ parent_tbl <- purrr::map2_dfr(
   rename("core_id" = parent_core_id) %>%
   rename("parent_id" = parent_area_id)
 
-#How does the density = 2 area compare to the core?
+density_parent <- 3
+
+#How does the density = 3 area compare to the core?
 core_parent <- parent_tbl %>%
   left_join(core %>%
               select(density, shannon_norm, area_id, area, n_categories_base, n_categories_opt, n_categories_total) %>%
               rename_with(~ paste0("core_", .x)), by = join_by("core_id" == "core_area_id")) %>%
-  relocate(parent_KN, parent_id, core_id, parent_density, core_density, parent_shannon_norm, core_shannon_norm, parent_area, core_area, parent_n_categories_base, core_n_categories_base, parent_n_categories_opt, core_n_categories_opt, parent_n_categories_total, core_n_categories_total) %>%
-  filter(parent_density == density_parent) %>%
-  mutate(ratio_p_c = as.numeric(core_area/parent_area))
+  relocate(parent_KN, parent_id, core_id, parent_density, core_density, parent_shannon_norm, core_shannon_norm, parent_area, core_area, parent_n_categories_base, core_n_categories_base, parent_n_categories_opt, core_n_categories_opt, parent_n_categories_total, core_n_categories_total) #%>%
+  filter(parent_density == density_parent)
+
+st_write(core_parent, "geodata/zentrale_orte_areas.gpkg", "core_parent_nochild", append = FALSE)
+
 
 total_cat <- core_parent %>%
   #filter(parent_KN == "05362004") %>%
@@ -272,7 +454,8 @@ tcat_scores <- total_cat %>%
 score_cutoff <- sd(tcat_scores$distance)
 
 zentral <- tcat_scores %>%
-  filter(distance > -0.17)
+  filter(distance > -score_cutoff) %>%
+  left_join(gem %>% select(KN, zentralitaet) %>% st_drop_geometry(), join_by("parent_KN" == "KN"))
 
 st_write(zentral, "geodata/poi.gpkg", paste0("zo_pd", density_parent, "_cut",round(score_cutoff, 2)), append = FALSE)
 
