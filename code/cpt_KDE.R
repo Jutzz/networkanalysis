@@ -10,6 +10,7 @@ library(spatialEco)
 library(smoothr)
 library(nngeo)
 library(units)
+library(vegan)
 
 files.sources = list.files("code/helper/", full.names = TRUE)
 sapply(files.sources, source)
@@ -222,14 +223,65 @@ poi_optional_df <- pois_fun(poi_flex_optional, id_col = "osm_id")
 
 core_df <- pois_fun(core %>% st_centroid(), id_col = "area_id")
 
-ttm <- travel_time_matrix(r5_network, origins = core_df, destinations = poi_base_df, mode = "WALK", max_trip_duration = 10L, percentiles = 1L, walk_speed = 4L)
-ttm_opt <- travel_time_matrix(r5_network, origins = core_df, destinations = poi_optional_df, mode = "WALK", max_trip_duration = 10L, percentiles = 1L, walk_speed = 4L)
+ttm <- travel_time_matrix(r5_network, origins = core_df, destinations = poi_base_df, mode = "WALK", max_trip_duration = 15L, percentiles = 1L, walk_speed = 4L)
+ttm_opt <- travel_time_matrix(r5_network, origins = core_df, destinations = poi_optional_df, mode = "WALK", max_trip_duration = 15L, percentiles = 1L, walk_speed = 4L)
+
+ttm_all <- bind_rows(
+  ttm %>% mutate(type = "base"),
+  ttm_opt %>% mutate(type = "optional")
+)
+
+cutoffs <- c(2, 5, 10, 15)
+
+ttm_cutoff <- ttm_all %>%
+  crossing(cutoff = cutoffs) %>%
+  filter(travel_time_p01 <= cutoff)
+
+poi_base_wide <- ttm_cutoff %>%
+  filter(type == "base") %>%
+  left_join(
+    poi_flex %>% select(osm_id, category),
+    by = c("from_id" = "osm_id"), relationship = "many-to-many"
+  ) %>%
+  group_by(to_id, cutoff) %>%
+  summarise(
+    cat = n_distinct(category),
+    .groups = "drop"
+  ) %>%
+  pivot_wider(
+    names_from = cutoff,
+    values_from = c(cat),
+    names_glue = "{.value}_base_{cutoff}",
+    values_fill = 0
+  )
+
+poi_opt_wide <- ttm_cutoff %>%
+  filter(type == "optional") %>%
+  left_join(
+    poi_flex_optional %>% select(osm_id, category),
+    by = c("from_id" = "osm_id")
+  ) %>%
+  group_by(to_id, cutoff) %>%
+  summarise(
+    cat = n_distinct(category),
+    .groups = "drop"
+  ) %>%
+  pivot_wider(
+    names_from = cutoff,
+    values_from = c(cat),
+    names_glue = "{.value}_opt_{cutoff}",
+    values_fill = 0
+  )
+
 
 poi_ttm <- poi_flex %>%
   left_join(ttm, join_by("osm_id" == "from_id"))
 
 poi_ttm_opt <- poi_flex_optional %>%
   left_join(ttm_opt, join_by("osm_id" == "from_id"))
+
+st_write(poi_ttm, "geodata/pois.gpkg", "poi_flex_tt_15", append = FALSE)
+st_write(poi_ttm_opt, "geodata/pois.gpkg", "poi_flex_opt_tt_15", append = FALSE)
   
 
 core_cats <- poi_ttm %>%
@@ -255,22 +307,10 @@ core_cat_full <- core_cats %>%
   mutate(across(where(is.numeric), ~ replace_na(., 0))) %>%
   filter(!is.na(to_id))
 
-library(vegan)
-
 mat <- core_cat_full %>%
   st_drop_geometry() %>%
   column_to_rownames("to_id") %>%
   as.matrix()
-
-# jaccard_dist <- vegdist(mat > 0, method = "jaccard")
-# 
-# core_diff <- as.matrix(jaccard_dist)
-# 
-# core_diff_score <- tibble(
-#   to_id = rownames(core_diff),
-#   functional_difference = rowMeans(core_diff)
-# )
-
 
 poi_tt_stat <- poi_ttm %>%
   group_by(to_id) %>%
@@ -285,11 +325,18 @@ poi_opt_tt_stat <- poi_ttm_opt %>%
   st_drop_geometry()
 
 core_stat <- core %>%
-  left_join(poi_tt_stat, join_by("area_id" == "to_id")) %>%
-  left_join(poi_opt_tt_stat, join_by("area_id" == "to_id")) %>%
+  left_join(poi_base_wide, join_by("area_id" == "to_id")) %>%
+  left_join(poi_opt_wide, join_by("area_id" == "to_id")) %>%
   mutate(across(where(is.numeric), ~ replace_na(., 0))) %>%
-  mutate(cat_total_reached = cat_base_reached + cat_opt_reached) %>%
-  mutate(score = (density/9 + cat_base_reached/15 + cat_opt_reached/11)/3) %>%
+  mutate(cat_total_15 = cat_base_15 + cat_opt_15,
+         cat_total_10 = cat_base_10 + cat_opt_10,
+         cat_total_5 = cat_base_15 + cat_opt_5,
+         cat_total_2 = cat_base_2 + cat_opt_2) %>%
+  mutate(score = (density/9 +
+                    cat_total_2/26 +
+                    cat_total_5/26 +
+                    cat_total_10/26 +
+                    cat_total_15/26)/5) %>%
   group_by(KN) %>%
   mutate(
     score_max = max(score),
@@ -360,8 +407,8 @@ core_stat_results <- core_stat %>%
       )
     }
   ) %>%
-  ungroup() %>%
-  filter(score_group | (secondary_functional_gain >= 2 & cat_base_reached >= 10 & cat_total_reached >= 15))
+  ungroup() #%>%
+  filter(score_group | (secondary_functional_gain >= 2 & abs(score-score_max) < 0.2))
 
 
 st_write(core_stat_results, "geodata/zentrale_orte_areas.gpkg", "acc_scoring_centroids_filtered", append = FALSE)
@@ -655,5 +702,3 @@ st_write(core_stat, "geodata/zentrale_orte_areas.gpkg", "acc_scoring_centroids",
 # 
 # 
 # d <- sf.kde(st_transform(x = poi_flex %>% filter(str_detect(KN, "053")), crs = st_crs(gem)),  res = 50, bw = 1000, ref = gem)
-
-            
