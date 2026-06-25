@@ -31,86 +31,86 @@ poi_poly <- st_centroid(st_transform(st_read("osmdata/zentraler_ort_pois.gpkg", 
     osm_way_id,
     osm_id))
 
-# poi <- bind_rows(poi_pt, poi_poly) %>%
-#   mutate(
-#     category = case_when(
-#       
-#       # FOOD
-#       amenity %in% c(
-#         "restaurant","cafe","fast_food",
-#         "bar","pub","biergarten"
-#       ) ~ "Gastro",
-#       
-#       shop %in% c(
-#         "bakery","butcher","convenience",
-#         "supermarket","greengrocer"
-#       ) ~ "Food",
-#       
-#       # SHOPPING
-#       !is.na(shop) ~ "Shopping",
-#       
-#       # CULTURE
-#       amenity %in% c(
-#         "theatre","cinema","arts_centre",
-#         "library","archive","events_venue"
-#       ) ~ "Culture",
-#       
-#       tourism %in% c(
-#         "museum","gallery"
-#       ) ~ "Culture",
-#       
-#       # SOCIAL
-#       
-#       amenity %in% c(
-#         "social_facility","community_centre","youth_room","youth_welfare_office"
-#       ) ~ "Social",
-#       
-#       # ADMINISTRATION
-#       amenity %in% c(
-#         "townhall","courthouse"
-#       ) ~ "Administration",
-#       
-#       office == "government" ~ "Administration",
-#       
-#       # INFORMATION
-#       amenity %in% c(
-#         "bank","post_office","atm"
-#       ) ~ "Information",
-#       
-#       # CHILD + ELDERY
-#       amenity %in% c(
-#         "kindergarten", "childcare" ,"nursing_home"
-#       ) ~ "Care",
-#       
-#       # EDUCATION
-#       amenity %in% c(
-#         "school","college","university","prep_school"
-#       ) ~ "Education",
-#       
-#       # HEALTH
-#       amenity %in% c(
-#         "hospital","clinic","doctors",
-#         "pharmacy","dentist"
-#       ) ~ "Health",
-#       
-#       # LEISURE
-#       leisure %in% c("playground","dance","horse_riding","tanning_salon","fitness_centre","hackerspace","sports","sports_centre","pitch","fitness_station","sports_hall","spa","track","dog_park"
-#                      ) ~ "Leisure",
-#       amenity %in% c("dancing_school") ~ "Leisure",
-#       
-#       !is.na(public_transport) ~ "Mobility",
-#       
-#       TRUE ~ "Other"
-#     )
-#   ) %>%
-#   replace_na(list(shop =  "no", amenity = "no", place = "no", boundary = "no", historic = "no", type = "no")) %>%
-#   filter(shop != "vacant",
-#          !amenity %in% c("recycling" ,"vending_machine", "parking_entrance", "parking_space", "parking","waste_basket", "waste_disposal", "fast_food", "restaurant", "hitching_post", "hunting_stand","grit_bin","game_feeding","fountain","charging_station","bicycle_parking","bicycle_rental","bench"),
-#          type != "boundary",
-#          !place %in% c("locality", "farm", "village", "hamlet"),
-#          historic == "no",
-#          is.na(natural),
-#          is.na(highway))
+poi <- bind_rows(poi_pt, poi_poly) %>%
+  mutate(
+    category = case_when(
+
+      # FOOD
+      amenity %in% c(
+        "restaurant","cafe","fast_food",
+        "bar","pub","biergarten"
+      ) ~ "Gastro",
+
+      shop %in% c(
+        "bakery","butcher","convenience",
+        "supermarket","greengrocer"
+      ) ~ "Food",
+
+      # SHOPPING
+      !is.na(shop) ~ "Shopping",
+
+      # CULTURE
+      amenity %in% c(
+        "theatre","cinema","arts_centre",
+        "library","archive","events_venue"
+      ) ~ "Culture",
+
+      tourism %in% c(
+        "museum","gallery"
+      ) ~ "Culture",
+
+      # SOCIAL
+
+      amenity %in% c(
+        "social_facility","community_centre","youth_room","youth_welfare_office"
+      ) ~ "Social",
+
+      # ADMINISTRATION
+      amenity %in% c(
+        "townhall","courthouse"
+      ) ~ "Administration",
+
+      office == "government" ~ "Administration",
+
+      # INFORMATION
+      amenity %in% c(
+        "bank","post_office","atm"
+      ) ~ "Information",
+
+      # CHILD + ELDERY
+      amenity %in% c(
+        "kindergarten", "childcare" ,"nursing_home"
+      ) ~ "Care",
+
+      # EDUCATION
+      amenity %in% c(
+        "school","college","university","prep_school"
+      ) ~ "Education",
+
+      # HEALTH
+      amenity %in% c(
+        "hospital","clinic","doctors",
+        "pharmacy","dentist"
+      ) ~ "Health",
+
+      # LEISURE
+      leisure %in% c("playground","dance","horse_riding","tanning_salon","fitness_centre","hackerspace","sports","sports_centre","pitch","fitness_station","sports_hall","spa","track","dog_park"
+                     ) ~ "Leisure",
+      amenity %in% c("dancing_school") ~ "Leisure",
+
+      !is.na(public_transport) ~ "Mobility",
+
+      TRUE ~ "Other"
+    )
+  ) %>%
+  replace_na(list(shop =  "no", amenity = "no", place = "no", boundary = "no", historic = "no", type = "no")) %>%
+  filter(shop != "vacant",
+         !amenity %in% c("recycling" ,"vending_machine", "parking_entrance", "parking_space", "parking","waste_basket", "waste_disposal", "fast_food", "restaurant", "hitching_post", "hunting_stand","grit_bin","game_feeding","fountain","charging_station","bicycle_parking","bicycle_rental","bench"),
+         type != "boundary",
+         !place %in% c("locality", "farm", "village", "hamlet"),
+         historic == "no",
+         is.na(natural),
+         is.na(highway))
 
 poi_flex <- bind_rows(poi_pt, poi_poly) %>%
   filter(amenity == "pharmacy" | grepl("apotheke", name, ignore.case = TRUE)|
@@ -185,7 +185,6 @@ pitch <- poi_flex_optional %>%
   filter(category == "Sports Facility") %>%
   st_buffer(100)
 
-# Graph of overlapping buffers
 adj <- st_intersects(pitch)
 
 g <- graph_from_adj_list(adj, mode = "all")
@@ -206,7 +205,7 @@ poi_flex_optional <- poi_flex_optional %>%
   bind_rows(centers) %>%
   select(!group)
 
-#st_write(poi %>% filter(category != "Other"), "geodata/pois.gpkg", paste0("zo_POI_large_", osmdate), append = FALSE)
+st_write(poi %>% filter(category != "Other"), "geodata/pois.gpkg", paste0("zo_POI_large_", osmdate), append = FALSE)
 st_write(poi_flex, "geodata/pois.gpkg", paste0("zo_POI_flex_", osmdate), append = FALSE)
 st_write(poi_flex_optional, "geodata/pois.gpkg", paste0("zo_POI_flex_opt", osmdate), append = FALSE)
 

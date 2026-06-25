@@ -555,4 +555,9 @@ ggplot(
   facet_wrap(~service_id, scales = "free")
 
   
-  
+
+thu <- read_csv("output/i3_ttm_hourly/de_gtfs_zensus_zentraleOrte_WALKTRANSIT_80min_2026-06-25_11h.csv")
+wed <- read_csv("output/i3_ttm_hourly/de_gtfs_zensus_zentraleOrte_WALKTRANSIT_80min_2026-06-24_11h.csv") %>%
+  mutate()
+tue <- read_csv("output/i3_ttm_hourly/de_gtfs_zensus_zentraleOrte_WALKTRANSIT_80min_2026-06-23_11h.csv")
+tue_d <- read_csv("output/i3_ttm_hourly/de_gtfs_zensus_zentraleOrte_WALKTRANSIT_80min_2026-06-16_11h.csv")

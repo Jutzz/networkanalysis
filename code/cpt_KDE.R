@@ -91,6 +91,7 @@ st_write(areas_flex, "geodata/zentrale_orte_areas.gpkg", "areas_flex", append = 
 
 areas_flex <- st_read("geodata/zentrale_orte_areas.gpkg", "areas_flex")
 
+#Separating ATMs from Banks for category counting
 atm <- poi_flex %>%
   filter(amenity == "bank" & atm == "yes") %>%
   mutate(amenity = "atm") %>%
@@ -177,10 +178,9 @@ areas_flex_p <- areas_flex_p %>%
     n_categories_total = n_categories_base + n_categories_opt
   )
 
-areas_flex_p$area <- units::set_units(st_area(areas_flex_p), "km^2")
-
 category_cols = c(base_cols, opt_cols)
 
+#Write category count per area for visual control of later results and visualization.
 st_write(
   areas_flex_p,
   "geodata/zentrale_orte_areas.gpkg",
@@ -204,18 +204,12 @@ areas_flex_p$has_child <- purrr::map_lgl(
 )
 
 core <- areas_flex_p %>%
-  filter(!has_child)
-
-# #Densest areas
-# core <- areas_flex_p %>%
-#   group_by(KN) %>%
-#   slice_max(density, n = 7, with_ties = TRUE) %>%
-#   ungroup()
-
-core$area <- set_units(st_area(core), "km^2")
+  filter(!has_child) %>%
+  select(density, KN, area_id)
 
 st_write(core %>% st_centroid(), "geodata/zentrale_orte_areas.gpkg", "cores_nochild", append = FALSE)
 
+#Create r5 Network for walking time analysis, turn cores and POI into routable df with plain coordinates.
 r5_network <- setup_r5("r5core_2026-05-18/", overwrite = FALSE)
 
 poi_base_df <- pois_fun(poi_flex, id_col = "osm_id")
@@ -223,6 +217,7 @@ poi_optional_df <- pois_fun(poi_flex_optional, id_col = "osm_id")
 
 core_df <- pois_fun(core %>% st_centroid(), id_col = "area_id")
 
+#Calculate traveltime matrices from cores to POI
 ttm <- travel_time_matrix(r5_network, origins = core_df, destinations = poi_base_df, mode = "WALK", max_trip_duration = 15L, percentiles = 1L, walk_speed = 4L)
 ttm_opt <- travel_time_matrix(r5_network, origins = core_df, destinations = poi_optional_df, mode = "WALK", max_trip_duration = 15L, percentiles = 1L, walk_speed = 4L)
 
@@ -231,6 +226,7 @@ ttm_all <- bind_rows(
   ttm_opt %>% mutate(type = "optional")
 )
 
+#Count reached categories based on generic cutoffs.
 cutoffs <- c(2, 5, 10, 15)
 
 ttm_cutoff <- ttm_all %>%
@@ -273,7 +269,7 @@ poi_opt_wide <- ttm_cutoff %>%
     values_fill = 0
   )
 
-
+#Add travel times to POI tables for visualizations
 poi_ttm <- poi_flex %>%
   left_join(ttm, join_by("osm_id" == "from_id"))
 
@@ -283,7 +279,7 @@ poi_ttm_opt <- poi_flex_optional %>%
 st_write(poi_ttm, "geodata/pois.gpkg", "poi_flex_tt_15", append = FALSE)
 st_write(poi_ttm_opt, "geodata/pois.gpkg", "poi_flex_opt_tt_15", append = FALSE)
   
-
+#What categories are reached within 15 min?
 core_cats <- poi_ttm %>%
   distinct(to_id, category) %>%
   mutate(present = 1) %>%
@@ -307,60 +303,39 @@ core_cat_full <- core_cats %>%
   mutate(across(where(is.numeric), ~ replace_na(., 0))) %>%
   filter(!is.na(to_id))
 
-mat <- core_cat_full %>%
-  st_drop_geometry() %>%
-  column_to_rownames("to_id") %>%
-  as.matrix()
-
-poi_tt_stat <- poi_ttm %>%
-  group_by(to_id) %>%
-  summarise(poi_base_reached = n(),
-            cat_base_reached = length(unique(category))) %>%
-  st_drop_geometry()
-
-poi_opt_tt_stat <- poi_ttm_opt %>%
-  group_by(to_id) %>%
-  summarise(poi_opt_reached = n(),
-            cat_opt_reached = length(unique(category))) %>%
-  st_drop_geometry()
-
+#This table contains for each core the number of categories reached in each cutoff time, a presence of the category in 15 min walk time and a score.
 core_stat <- core %>%
+  #number of categories by cutoff
   left_join(poi_base_wide, join_by("area_id" == "to_id")) %>%
   left_join(poi_opt_wide, join_by("area_id" == "to_id")) %>%
+  mutate(
+    cat_total_2 = cat_base_2 + cat_opt_2,
+    cat_total_5 = cat_base_5 + cat_opt_5,
+    cat_total_10 = cat_base_10 + cat_opt_10,
+    cat_total_15 = cat_base_15 + cat_opt_15
+  ) %>%
   mutate(across(where(is.numeric), ~ replace_na(., 0))) %>%
-  mutate(cat_total_15 = cat_base_15 + cat_opt_15,
-         cat_total_10 = cat_base_10 + cat_opt_10,
-         cat_total_5 = cat_base_15 + cat_opt_5,
-         cat_total_2 = cat_base_2 + cat_opt_2) %>%
   mutate(score = (density/9 +
                     cat_total_2/26 +
                     cat_total_5/26 +
                     cat_total_10/26 +
                     cat_total_15/26)/5) %>%
+  left_join(core_cat_full, join_by("area_id" == "to_id")) %>%
   group_by(KN) %>%
   mutate(
     score_max = max(score),
     score_group = abs(score-score_max) < 0.1
   ) %>%
   ungroup() %>%
-  select(!(any_of(category_cols))) %>%
   st_centroid() %>%
-  left_join(gem %>% select(KN, zentralitaet) %>% st_drop_geometry())
+  left_join(gem %>% select(KN, GN, zentralitaet) %>% st_drop_geometry())
 
-# min_g <- core_stat %>% filter(zentralitaet == "Grundzentrum") %>% slice_min(score_max, n = 1, with_ties = FALSE) %>% pull(score_max)
-# min_m <- core_stat %>% filter(zentralitaet == "Mittelzentrum") %>% slice_min(score_max, n = 1, with_ties = FALSE) %>% pull(score_max)
-# min_o <- core_stat %>% filter(zentralitaet == "Oberzentrum") %>% slice_min(score_max, n = 1, with_ties = FALSE) %>% pull(score_max)
-# 
-# core_stat_results <- core_stat %>%
-#   filter(
-#     (zentralitaet == "Grundzentrum"  & score >= min_g) |
-#       (zentralitaet == "Mittelzentrum" & score >= min_m) |
-#       (zentralitaet == "Oberzentrum"   & score >= min_o)
-#   )
+#Turn category presence into matrix for analysis of functional differenc between cores
+mat <- core_cat_full %>%
+  st_drop_geometry() %>%
+  column_to_rownames("to_id") %>%
+  as.matrix()
 
-mat_df <- as.data.frame(mat)
-mat_df$area_id <- rownames(mat)
-mat_df <- left_join(mat_df, core_stat %>% select(area_id, KN), by = "area_id")
 
 central_union_list <- core_stat %>%
   filter(score_group) %>%
@@ -380,11 +355,13 @@ central_union_list <- core_stat %>%
   }) %>%
   bind_rows()
 
+#Create lookup table for presence of all categories of primary (best scored) cores.
 central_union_lookup <- setNames(
   central_union_list$central_union,
   central_union_list$KN
 )
 
+#This checks if there are any functions reachable from a core that are not given in the primary core(s) and returns the amount if so.
 secondary_gain <- function(id, mat, central_union) {
   if (!(id %in% rownames(mat))) return(0)
   
@@ -392,6 +369,7 @@ secondary_gain <- function(id, mat, central_union) {
   sum(new)
 }
 
+#Calculate functional gain for cores that dont pass the 10%-Rule and keep them if they provide functional gain and dont fall below the 20%-mark.
 core_stat_results <- core_stat %>%
   rowwise() %>%
   mutate(
@@ -407,11 +385,13 @@ core_stat_results <- core_stat %>%
       )
     }
   ) %>%
-  ungroup() #%>%
-  filter(score_group | (secondary_functional_gain >= 2 & abs(score-score_max) < 0.2))
+  ungroup() %>%
+  filter(score_group | (secondary_functional_gain >= 2 & cat_base_15 >= 5 & abs(score-score_max) < 0.2)) %>%
+  mutate(dist = score-score_max)
 
 
 st_write(core_stat_results, "geodata/zentrale_orte_areas.gpkg", "acc_scoring_centroids_filtered", append = FALSE)
+st_write(core_stat_results, "geodata/poi.gpkg", "zentrale_orte", append = FALSE)
 st_write(core_stat, "geodata/zentrale_orte_areas.gpkg", "acc_scoring_centroids", append = FALSE)
 
 # st_write(result, "geodata/zentrale_orte_areas.gpkg", "acc_scoring_greedy", append = FALSE)  
