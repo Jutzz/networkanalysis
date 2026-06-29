@@ -1,0 +1,184 @@
+\documentclass[tikz,border=10pt]{standalone}
+
+\usepackage{tikz}
+\usetikzlibrary{positioning,fit,arrows.meta}
+
+\begin{document}
+	
+	\begin{tikzpicture}[
+		>=Stealth,
+		node distance=1.5cm and 2cm,
+		every node/.style={font=\small},
+		box/.style={
+			draw,
+			rectangle,
+			align=center,
+			minimum width=4.3cm,
+			minimum height=1cm
+		},
+		component/.style={
+			draw,
+			thick,
+			inner sep=0.25cm
+		},
+		title/.style={
+			draw,
+			fill=gray!20,
+			minimum width=4.5cm,
+			minimum height=0.6cm,
+			font=\small
+		},
+		direct/.style={->, thick},
+		indirect/.style={->, thick, dashed},
+		feedback/.style={->, thick, dotted}
+		]
+		
+		%-----------------------------
+		% LAND USE
+		%-----------------------------
+		\node[box] (demand) {locations and\\characteristics\\of demand};
+		\node[box, below=0.4cm of demand] (opportunities)
+		{locations and\\characteristics\\of opportunities};
+		
+		\node[title, above=0.2cm of demand] (landtitle)
+		{Land-use component};
+		
+		\node[component,
+		fit=(landtitle)(demand)(opportunities)] (land) {};
+		
+		% internal arrows
+		\draw[direct] (demand) -- node[right,font=\scriptsize]
+		{demand,\\competition} (opportunities);
+		\draw[direct] (opportunities) -- node[left,font=\scriptsize]
+		{supply} (demand);
+		
+		%-----------------------------
+		% TRANSPORT
+		%-----------------------------
+		\node[box, right=7cm of demand] (travel)
+		{passenger and\\freight travel};
+		
+		\node[box, below=0.4cm of travel] (infra)
+		{location and\\characteristics of\\infrastructure};
+		
+		\node[title, above=0.2cm of travel] (transtitle)
+		{Transport component};
+		
+		\node[component,
+		fit=(transtitle)(travel)(infra)] (transport) {};
+		
+		\draw[direct] (travel) -- node[right,font=\scriptsize]
+		{demand} (infra);
+		
+		\draw[direct] (infra) -- node[left,font=\scriptsize]
+		{supply} (travel);
+		
+		%-----------------------------
+		% ACCESSIBILITY
+		%-----------------------------
+		\node[box,
+		below=2.2cm of $(demand)!0.5!(travel)$,
+		minimum width=3.7cm]
+		(access)
+		{Accessibility to\\opportunities};
+		
+		%-----------------------------
+		% TEMPORAL
+		%-----------------------------
+		\node[box,
+		below left=2.2cm and 1.6cm of access,
+		minimum width=4.6cm]
+		(temp)
+		{\textbf{Temporal component}\\[2mm]
+			$\bullet$ opening hours of shops\\
+			and services\\
+			$\bullet$ available time for\\
+			activities};
+		
+		%-----------------------------
+		% INDIVIDUAL
+		%-----------------------------
+		\node[box,
+		below right=2.2cm and 1.6cm of access,
+		minimum width=4.8cm]
+		(indiv)
+		{\textbf{Individual component}\\[2mm]
+			$\bullet$ income, gender,\\
+			education level\\
+			$\bullet$ vehicle ownership, etc.};
+		
+		%-----------------------------
+		% DIRECT RELATIONSHIPS
+		%-----------------------------
+		
+		\draw[direct]
+		(demand.east) -- node[above,font=\scriptsize]
+		{travel demand} (travel.west);
+		
+		\draw[direct]
+		(access) -- (demand);
+		
+		\draw[direct]
+		(access) -- (travel);
+		
+		%-----------------------------
+		% INDIRECT RELATIONSHIPS
+		%-----------------------------
+		
+		\draw[indirect]
+		(opportunities.south) -- (temp.north);
+		
+		\draw[indirect]
+		(infra.south) -- (indiv.north);
+		
+		\draw[indirect]
+		(temp.east) -- node[below,font=\scriptsize]
+		{available time} (indiv.west);
+		
+		%-----------------------------
+		% FEEDBACK LOOPS
+		%-----------------------------
+		
+		\draw[feedback]
+		(access.west) -- ++(-1,0)
+		|- node[pos=0.25,left,font=\scriptsize]
+		{available opportunities}
+		(opportunities.east);
+		
+		\draw[feedback]
+		(access.east) -- ++(1,0)
+		|- node[pos=0.25,right,font=\scriptsize]
+		{travel time,\\costs, effort}
+		(infra.west);
+		
+		\draw[feedback]
+		(access.south) -- ++(0,-0.8)
+		-| node[pos=0.25,left,font=\scriptsize]
+		{time restrictions}
+		(temp.east);
+		
+		\draw[feedback]
+		(access.south) -- ++(0,-0.8)
+		-|
+		node[pos=0.25,right,font=\scriptsize]
+		{needs, abilities,\\opportunities}
+		(indiv.west);
+		
+		%-----------------------------
+		% LEGEND
+		%-----------------------------
+		
+		\node[below=2cm of access] (l1) {};
+		
+		\draw[direct] ($(l1)+(-5,0)$) -- ++(1,0)
+		node[right] {\scriptsize direct relationship};
+		
+		\draw[indirect] ($(l1)+(0,0)$) -- ++(1,0)
+		node[right] {\scriptsize indirect relationship};
+		
+		\draw[feedback] ($(l1)+(5,0)$) -- ++(1,0)
+		node[right] {\scriptsize feedback loop};
+		
+	\end{tikzpicture}
+	
+\end{document}
