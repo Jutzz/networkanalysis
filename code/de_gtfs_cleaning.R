@@ -1,13 +1,14 @@
 library(tidytransit)
+library(gtfstools)
 library(dplyr)
 library(readr)
 library(sf)
 library(here)
 
 #Change feed date to used feed version (filename).
-feed_date <- "20260525"
+feed_date <- "20260518"
 area_name <- "regbez"
-s
+
 #TODO: generalize for any spatial filter
 #Uncomment to process new fahrplaene_gesamtdeutschland. Downloaded feed into raw.
 gtfs_feed <- tidytransit::read_gtfs(paste0("feeds/raw/", feed_date, "_fahrplaene_gesamtdeutschland_gtfs.zip"))
@@ -36,7 +37,12 @@ area_feed$stops <- area_feed$stops %>%
   bind_rows(de_gtfs_parent_stops) 
   
 area_feed$routes <- area_feed$routes %>%
-  bind_rows(de_gtfs_transfer_routes) 
+  bind_rows(de_gtfs_transfer_routes)
+
+area_feed <- area_feed %>%
+  frequencies_to_stop_times() %>%
+  as_tidygtfs()
+  
 
 #Writing into /feeds, copy manually into r5core_current for processing with r5r.
-tidytransit::write_gtfs(area_feed, paste0("feeds/filtered/de_gtfs_",feed_date, "_",area_name,".zip"))
+tidytransit::write_gtfs(area_feed, paste0("feeds/filtered/nofreq_de_gtfs_",feed_date, "_",area_name,".zip"))

@@ -1,10 +1,10 @@
 #Setup----
+library(tidyverse)
+library(sf)
+library(here)
 library(tidytransit)
 library(gtfstools)
-library(tidyverse)
 library(timeDate)
-library(here)
-library(sf)
 library(httr2)
 library(jsonlite)
 library(zoo)
@@ -73,7 +73,7 @@ quality_lookup <- tribble(
 feed_date <- "20260518"
 zhv_date <- "20260521"
 area_name <- "regbez"
-method <- "normday"
+method <- "weekday"
 
 #Read pre-filtered GTFS-Feed
 gtfs_feed <- tidytransit::read_gtfs(paste0("feeds/filtered/de_gtfs_", feed_date, "_", area_name,".zip"))
@@ -117,11 +117,11 @@ filtered_services <- gtfs_feed$.$dates_services %>%
   filter(date %in% date_select)
 
 filtered_trips_dates <- gtfs_feed$trips %>%
-  select(trip_id, service_id, route_id) %>%
+  dplyr::select(trip_id, service_id, route_id) %>%
   left_join(gtfs_feed$routes %>% select(route_id, route_type)) %>%
   inner_join(filtered_services, by = "service_id") %>%
   filter(!route_type %in% c("101", "102", "201", ""))  %>%
-  select(trip_id, date, route_type)
+  dplyr::select(trip_id, date, route_type)
 
 filtered_stop_times_dates <- gtfs_feed$stop_times %>%
   filter(pickup_type == 0) %>%
@@ -240,3 +240,39 @@ variability_daily <- st_drop_geometry(departure_counts_daily) %>%
 st_write(variability_daily %>%
            filter(!is.na(geom)), here("geodata/Bedienungsqualität.gpkg"),
          paste(feed_date, method, min(date_select), max(date_select), sep = "_"), append = FALSE)
+
+#Also calculate hourly counts for additional analysis or later use.
+departure_counts_hourly <- filtered_stop_times_dates %>%
+  filter(
+    departure_time >= hms("08:00:00"),
+    departure_time <= hms("18:00:00")
+  ) %>%
+  mutate(hour = hour(departure_time)) %>%
+  group_by(date, hour, grouping_id) %>%
+  reframe(
+    departures = n(),
+    stop_type = min(route_rank, na.rm = TRUE)
+  ) %>%
+  tidyr::complete(
+    date,
+    grouping_id,
+    hour,
+    fill = list(departures = 0)
+  ) %>%
+  mutate(
+    departures_per_hour = departures
+  ) %>%
+  left_join(zhv, by = join_by(grouping_id == DHID)) %>%
+  mutate(freq_class = findInterval(
+    departures_per_hour,
+    vec = c(0, 2, 4, 6, 12, 24),
+    rightmost.closed = FALSE
+  )
+  ) %>%
+  left_join(quality_lookup, by = join_by(stop_type, freq_class)) 
+
+  departure_counts_hourly <- departure_counts_hourly %>%
+    select(Name, grouping_id, Municipality, date, hour, Bedienungsqualität, departures_per_hour, stop_type, MunicipalityCode, geom) %>%
+    rename("stop_id" = grouping_id)
+
+st_write(st_as_sf(departure_counts_hourly), "geodata/Bedienungsqualität.gpkg", paste("hourly", feed_date, method, min(date_select), max(date_select), sep = "_"), append = FALSE)

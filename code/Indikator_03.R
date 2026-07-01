@@ -248,3 +248,5 @@ cat(paste0("Day ", day, " started.\n"))
   }
   cat(paste0("Day ", day ," done.\n"))
 }
+
+detailed_itineraries(r5_network)

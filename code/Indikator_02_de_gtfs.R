@@ -25,18 +25,18 @@ ifelse(method == "weekday",
 #TODO: Make usable for any area: import full zensus and stops data, filter by generic area (limited stops and dests) 
 mapping_matrix <- read_csv2(here("code/erschließung_mat_long.csv"))
 
-stops_table <- st_read(here("geodata/Bedienungsqualität.gpkg"), paste(feed_date, method, min(date_select), max(date_select), sep = "_")) #%>%
+stops_table <- st_read(here("geodata/Bedienungsqualität.gpkg"), paste(feed_date, method, min(date_select), max(date_select), sep = "_")) %>%
   mutate(stop_type = case_when(
-    stop_type == 1 ~ "train",
-    stop_type == 2 ~ "tram",
-    stop_type == 3 ~ "bus",
-    stop_type == 4 ~ "other",
+    stop_type_median == 1 ~ "train",
+    stop_type_median == 2 ~ "tram",
+    stop_type_median == 3 ~ "bus",
+    stop_type_median == 4 ~ "other",
     TRUE ~ NA_character_ # Handles any other values
   )) %>%
-  filter(!is.na(Bedienungsqualität))
+  filter(!is.na(bq_median))
 
 stops_id <- st_drop_geometry(stops_table) %>%
-  mutate(id = as.character(NVBW_HST_DHID))
+  mutate(id = as.character(stop_id))
 
 #----stops data----
 #Einlesen von Gitter und POI
@@ -61,7 +61,7 @@ zensus_grid_df <- pointgrid_fun(polygrid100, id_col = "id") %>%
 stops <- st_as_sf(stops_table, coords = c("Längengrad", "Breitengrad"), crs = 4326) %>%
   st_filter(st_buffer(st_transform(area, crs = st_crs(stops_table)), 10000), .predicate = st_intersects)
 
-pois_df <- pois_fun(pois = get(poi_type), id_col = "NVBW_HST_DHID") %>%
+pois_df <- pois_fun(pois = get(poi_type), id_col = "stop_id") %>%
   filter(!is.nan(lat))
 
 #----Setup and Functions----
@@ -77,8 +77,9 @@ Erreichbarkeit <- function(origins, destinations) {
     max_walk_time = max_walk_time,
     departure_datetime = departure,
     max_trip_duration = max_trip_duration,
-    time_window = 60,  # Time window in minutes for departures
-    percentiles = 1,
+    time_window = 1L,  # Time window in minutes for departures
+    percentiles = 1L,
+    
     progress = FALSE
   )
 }
@@ -102,74 +103,43 @@ erschließung_map <- function(grid){
 
 #Join mit Stops, errechnen der Erschließungsqualität, Auswahl der Station mit der besten Erschließungsqualität je Zelle, schreiben
 ##TODO: Clean up, develop strategy for filenames/metadata, make faster!
-i2_mapping <- function(ttm, matrix, departure){
+i2_mapping <- function(ttm, matrix, departure, bq_col){
   
-  mapping <- matrix  
+  mapping <- matrix
   
   ttm_with_quality <- ttm %>%
-    left_join(stops_id %>% select(id, Bedienungsqualität), by = c("from_id" = "id")) %>%
-    mutate(Bedienungsqualität = ifelse(is.na(Bedienungsqualität), Inf, Bedienungsqualität))
+    left_join(stops_id %>% select(id, {{bq_col}}), by = c("to_id" = "id")) %>%
+    mutate(Bedienungsqualität = ifelse(is.na({{bq_col}}), Inf, {{bq_col}}))
+  
+  print(unique(ttm_with_quality$Bedienungsqualität))
   
   eq <- erschließung_map(ttm_with_quality)
   
+  print(eq)
+  
   best_connections <- eq %>%
-    group_by(to_id) %>%
+    group_by(from_id) %>%
     arrange(Erschließungsqualität) %>%
     slice(1) %>%
     ungroup()
   
   grid_with_times <<- polygrid100 %>%
     left_join(best_connections %>%
-                select(from_id, to_id, travel_time_p01, Erschließungsqualität), by = c("id" = "to_id")) %>%
+                select(from_id, to_id, travel_time_p01, Erschließungsqualität), by = c("id" = "from_id")) %>%
     mutate(start_time = departure) %>%
     mutate(end_time = start_time + minutes(travel_time_p01)) %>%
-    left_join(stops_id, by = c("from_id" = "id"))
+    left_join(stops_id, by = c("to_id" = "id"))
   
-  travel_times <<- grid_with_times %>%
-    select(id, from_id, travel_time_p01, Einwohner, NVBW_HST_DHID, geom)
-}
-
-#Find median row to determine representative day for routing
-get_median_row <- function(data, column) {
-  median_val <- median(data[[column]], na.rm = TRUE)
-  
-  exact_match <- data %>% filter(.data[[column]] == median_val)
-  
-  if (nrow(exact_match) > 0) {
-    return(exact_match)
-  } else {
-    return(data %>% slice(which.min(abs(.data[[column]] - median_val))))
-  }
+  travel_times_grid <<- grid_with_times %>%
+    select(id, to_id, travel_time_p01, Einwohner, stop_id, geom)
 }
 
 #----Analysis Start----
 
 #R5 Setup
-r5_network <- build_network(here("r5core_current"), verbose = FALSE, overwrite = FALSE)
+r5_network <- build_network(here("r5core_2026-05-18/"), verbose = FALSE, overwrite = FALSE)
 
-#Analysis of transit availability to pick representative (week-)day
-##TODO: Is this necessary here? All days should be the same for WALK routing.
-##Find stats and/or function to find representative dates, to check for large jumps in availability (holidays, partial feeds ending) and for variability across hours.
-availability <- check_transit_availability(r5_network, start_date = as.Date("2026-05-02"), end_date = as.Date("2026-07-19")) %>%
-  mutate(weekday = weekdays(as.Date(date))) %>%
-  mutate(weekday_n =  format(as.Date(date),"%w"))
-
-
-availability_week <- availability %>%
-  group_by(weekday) %>%
-  mutate(avg_pct = mean(pct_active))%>%
-  mutate(avg_services = mean(active_services))%>%
-  #select(5:7) %>%
-  distinct()
-
-ggplot(availability, aes(x = date, y = pct_active)) +
-  geom_line() +
-  geom_line(aes(y=rollmean(pct_active, 5, na.pad=TRUE), color = "#ff0000"))
-
-median_date <- get_median_row(availability %>%
-                                filter(!weekday_n%in%c(0,6)), "pct_active")
-departure_date <- median_date$date[1]
-
+departure_date <- date_select[1]
 #Parameter für Erreichbarkeitsanalyse
 modes <- c("WALK")
 modes_filename <- paste(modes, collapse = "")
@@ -183,13 +153,36 @@ ttm <- Erreichbarkeit(origins = pois_df, destinations = zensus_grid_df)
 
 write.csv2(ttm, file = "output/walk_20min_zensus_stops.csv")
 #This is the part that actually changes Indikator 2 with differing strategies for stop frequency calculation. 
-i2_mapping(ttm, mapping_matrix, departure)
+i2_mapping(ttm, mapping_matrix, departure, bq_col = bq_median)
 
 #Write out a travel times table and an accessibility table to geopackages.
-st_write(travel_times, here("output/indikator_02.gpkg"), layer = paste0(freq_date, "_DEgtfs_zensus_", poi_type, "_walktime"), append = FALSE)
-st_write(grid_with_times, here("results/indikator_02.gpkg"), layer = paste0(freq_date, "_i2_zensus_erschließungswerte_best_", area_name), append = FALSE)
+st_write(travel_times_grid, here("output/indikator_02.gpkg"), layer = paste0(method_bq, "_DEgtfs_zensus_", poi_type, "_walktime"), append = FALSE)
+st_write(grid_with_times, here("results/indikator_02.gpkg"), layer = paste0(method_bq, "_i2_zensus_erschließungswerte_best_", area_name), append = FALSE)
 
+#----Hourly----
 
+table_name <- paste(
+  "hourly",
+  feed_date,
+  method,
+  min(date_select),
+  max(date_select),
+  sep = "_"
+)
+
+for(d in nonholiday_weekdays_fullservice){
+  for (h in 8:17) {
+    query <- sprintf(
+      'SELECT * FROM "%s" WHERE date = "%s" AND hour = %d',
+      table_name,
+      as.character(d),
+      h
+    )
+    stops_table <- st_read("geodata/Bedienungsqualität.gpkg", query = query)
+  }
+}
+
+d <- "2026-05-05"
 
 #----Additional ttms for testing----
 #stops <- st_as_sf(gtfs_feed$stops, coords = c("stop_lon", "stop_lat"), crs = st_crs(4326))
@@ -230,7 +223,7 @@ summary_stats <- tr %>%
   summarise(
     mean_tt = mean(total_time),
     sd_tt = sd(total_time),
-    min_tt = min(total_time),
+    min_tt = min(total_time), 
     max_tt = max(total_time),
     p10 = quantile(total_time, 0.1),
     p50 = quantile(total_time, 0.5),

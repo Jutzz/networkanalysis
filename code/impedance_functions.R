@@ -1,6 +1,7 @@
 library(ggplot2)
 library(dplyr)
 library(extrafont)
+library(paletteer)
 
 negexp <- function(C) exp(-0.054 * C)
 negexp_norm <- function(C) exp(-0.001 * C^2)
@@ -32,6 +33,7 @@ P <- ggplot(data.frame(C = c(0, 60)), aes(x = C)) +
     y = "Impedanz",
     color = "Impedanzfunktion"
   ) +
+  scale_color_paletteer_d("yarrr::basel") +
   theme(legend.position = "bottom", text = element_text(family = windowsFont("Source Sans 3")))
   
-ggsave(plot = P)
+ggsave(plot = P, filename = "document/figures/impedancefunctions.svg", width = 7.8)
