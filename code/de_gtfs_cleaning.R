@@ -46,3 +46,13 @@ area_feed <- area_feed %>%
 
 #Writing into /feeds, copy manually into r5core_current for processing with r5r.
 tidytransit::write_gtfs(area_feed, paste0("feeds/filtered/nofreq_de_gtfs_",feed_date, "_",area_name,".zip"))
+
+stops <- unique(area_feed$stops$stop_id)
+
+pfaedle_feed <- area_feed
+
+pfaedle_feed$pathways <- pfaedle_feed$pathways %>%
+  filter(from_stop_id %in% stops, to_stop_id %in% stops)
+
+tidytransit::write_gtfs(pfaedle_feed, paste0("feeds/filtered/pfaedle_de_gtfs_",feed_date, "_",area_name,".zip"))
+

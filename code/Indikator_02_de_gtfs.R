@@ -5,6 +5,8 @@ library(r5r)
 library(here)
 library(lubridate)
 library(zoo)
+library(arrow)
+library(plotly)
 
 files.sources = list.files("code/helper/", full.names = TRUE)
 sapply(files.sources, source)
@@ -134,6 +136,40 @@ i2_mapping <- function(ttm, matrix, departure, bq_col){
     select(id, to_id, travel_time_p01, Einwohner, stop_id, geom)
 }
 
+i2_mapping_hourly <- function(ttm, matrix, departure, bq_col){
+  
+  mapping <- matrix
+  
+  bq_lookup <- stops_table[["Bedienungsqualität"]]
+  names(bq_lookup) <- stops_table$stop_id
+  
+  ttm_with_quality <- ttm %>%
+    left_join(
+      stops_table,
+      by = c("to_id" = "stop_id")
+    ) %>%
+    select(from_id, to_id, travel_time_p01, date, hour, departures_per_hour, Bedienungsqualität)
+  
+  ttm_with_quality$Bedienungsqualität <-
+    bq_lookup[ttm_with_quality$to_id]
+  
+  eq <- erschließung_map(ttm_with_quality)
+  
+  dt <- as.data.table(eq)
+  
+  best_connections <- dt[
+    order(Erschließungsqualität, travel_time_p01),
+    .SD[1],
+    by = from_id
+  ]
+  
+  grid_with_times <- st_drop_geometry(polygrid100) %>%
+    select(id) %>%
+    left_join(best_connections %>%
+      select(from_id, to_id, travel_time_p01, Erschließungsqualität, departures_per_hour), by = c("id" = "from_id"))
+}
+
+
 #----Analysis Start----
 
 #R5 Setup
@@ -152,6 +188,8 @@ max_trip_duration <- 20
 ttm <- Erreichbarkeit(origins = pois_df, destinations = zensus_grid_df)
 
 write.csv2(ttm, file = "output/walk_20min_zensus_stops.csv")
+
+ttm <- read_csv2("output/walk_20min_zensus_stops.csv")
 #This is the part that actually changes Indikator 2 with differing strategies for stop frequency calculation. 
 i2_mapping(ttm, mapping_matrix, departure, bq_col = bq_median)
 
@@ -170,20 +208,71 @@ table_name <- paste(
   sep = "_"
 )
 
+stops_core <- read_fst("output/hourly_20260518_weekday_2026-05-04_2026-06-26_.fst")
+
 for(d in nonholiday_weekdays_fullservice){
   for (h in 8:17) {
-    query <- sprintf(
-      'SELECT * FROM "%s" WHERE date = "%s" AND hour = %d',
-      table_name,
-      as.character(d),
-      h
-    )
-    stops_table <- st_read("geodata/Bedienungsqualität.gpkg", query = query)
-  }
+    stops_table <- stops_core[
+      stops_core$date == as.character(d) &
+        stops_core$hour == h,
+    ]
+    
+    g <- i2_mapping_hourly(ttm, mapping_matrix, departure = as_datetime(d) + hours(h), bq_col = Bedienungsqualität)
+    
+    hgrid <- g %>%
+      dplyr::mutate(date = as.character(d), hour = h) %>%
+      select(date,hour,id, to_id, travel_time_p01, departures_per_hour, Erschließungsqualität)
+    
+    fst::write_fst(hgrid, file.path("output/hourly_eq", paste0("eq_", d, "_", h, ".fst")))
+    }
 }
 
-d <- "2026-05-05"
+files <- list.files("output/hourly_eq", full.names = TRUE)
 
+final <- data.table::rbindlist(lapply(files, fst::read_fst))
+
+arrow::write_parquet(final, "output/hourly_eq/results_full.parquet")
+
+eq_profile <- function(id, parquet_dir = "output/hourly_eq/results_full.parquet") {
+  ds <- open_dataset(parquet_dir)
+  
+  ds %>%
+    filter(id == !!id) %>%
+    select(date, hour, Erschließungsqualität, to_id, departures_per_hour, travel_time_p01) %>%
+    collect() %>%
+    mutate(
+      datetime = as.POSIXct(date) + hour * 3600
+    ) %>%
+    arrange(datetime)
+  # 
+  # stops_table <- stops_core[
+  #   stops_core$stop_id %in% ds$]
+}
+changes_grid <- zensus_grid %>%
+  left_join(changing_ids)
+
+st_write(changes_grid, "output/indikator_02.gpkg", "changes_hours")
+
+profile <- eq_profile("100mN31130E41574")
+
+p <- ggplot(profile, aes(x = hour, y = departures_per_hour)) + 
+  geom_path(group = "departures_per_hour")+
+  geom_point(aes(color = to_id))
+  
+ggplotly(p)
+
+ds <- open_dataset("output/hourly_eq/results_full.parquet")
+
+
+changing_ids <- ds %>%
+  group_by(id) %>%
+  summarise(
+    n_eq = n_distinct(Erschließungsqualität),
+    n_stops = n_distinct(to_id),
+    .groups = "drop"
+  ) %>%
+  filter(n_eq > 1) %>%
+  collect()
 #----Additional ttms for testing----
 #stops <- st_as_sf(gtfs_feed$stops, coords = c("stop_lon", "stop_lat"), crs = st_crs(4326))
 tts <- gtfs_feed %>% filter_feed_by_date("2026-04-07") %>%

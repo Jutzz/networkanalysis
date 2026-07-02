@@ -8,6 +8,7 @@ library(timeDate)
 library(httr2)
 library(jsonlite)
 library(zoo)
+library(fst)
 #Read helper functions
 files.sources = list.files("code/helper/", full.names = TRUE)
 sapply(files.sources, source)
@@ -274,5 +275,13 @@ departure_counts_hourly <- filtered_stop_times_dates %>%
   departure_counts_hourly <- departure_counts_hourly %>%
     select(Name, grouping_id, Municipality, date, hour, Bedienungsqualität, departures_per_hour, stop_type, MunicipalityCode, geom) %>%
     rename("stop_id" = grouping_id)
+  
+  stops_fst <- departure_counts_hourly %>%
+    st_drop_geometry() %>%
+    select(date, hour, stop_id, departures_per_hour, Bedienungsqualität) 
 
 st_write(st_as_sf(departure_counts_hourly), "geodata/Bedienungsqualität.gpkg", paste("hourly", feed_date, method, min(date_select), max(date_select), sep = "_"), append = FALSE)
+
+write_fst(stops_fst, paste("output/hourly", feed_date, method, min(date_select), max(date_select), ".fst", sep = "_"))
+
+          
