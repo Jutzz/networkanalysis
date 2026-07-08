@@ -273,6 +273,10 @@ changing_ids <- ds %>%
   ) %>%
   filter(n_eq > 1) %>%
   collect()
+
+
+
+
 #----Additional ttms for testing----
 #stops <- st_as_sf(gtfs_feed$stops, coords = c("stop_lon", "stop_lat"), crs = st_crs(4326))
 tts <- gtfs_feed %>% filter_feed_by_date("2026-04-07") %>%

@@ -1,5 +1,6 @@
 options(java.parameters = "-Xmx20G")
 library(r5r)
+library(fst)
 library(tidyverse)
 library(sf)
 library(gpkg)
@@ -60,28 +61,29 @@ Erreichbarkeit_nofiltering <- function(origins, destinations, departure) {
     destinations = destinations,
     mode = modes,
     max_rides = max_rides,
-    walk_speed = 4.2,
+    walk_speed = 4,
     mode_egress = "WALK",
     max_walk_time = max_walk_time,
     departure_datetime = departure,
     max_trip_duration = max_trip_duration,
     time_window = 60,  # Time window in minutes for departures
-    percentiles = 1,
+    percentiles = c(1L, 25L, 50L, 75L, 99L ),
+    draws_per_minute = 1L,
     progress = TRUE
   )
   
-  grid_with_times <- polygrid100 %>%
-    filter(if ("Einwohner" %in% names(.)) Einwohner != 0 else TRUE) %>%
-    left_join(ttm %>%
-                dplyr::select(from_id, to_id, travel_time_p01), by = c("id" = "to_id")) %>%
-    mutate(start_time = as.POSIXct("2026-05-12 09:00:00")) %>%
-    mutate(end_time = start_time + minutes(travel_time_p01)) %>%
-    left_join(zentraleOrteid, by = c("from_id" = "id")) %>%
-    #dplyr::select(!c("ART", "STAND", "KN7stellig")) %>%
-    rename("GN_ziel" = GN, "core_ziel" = area_id)
-  
-  st_write(grid_with_times, here("output/indikator_03.gpkg"), layer = paste0("de_gtfs_polygrid_100m_all_destinations_subset", "_", poi_type, "_", modes_filename, "_", max_trip_duration,"min"), append = FALSE)
-  return(ttm)
+  # grid_with_times <- polygrid100 %>%
+  #   filter(if ("Einwohner" %in% names(.)) Einwohner != 0 else TRUE) %>%
+  #   left_join(ttm %>%
+  #               dplyr::select(from_id, to_id, travel_time_p01), by = c("id" = "to_id")) %>%
+  #   mutate(start_time = as.POSIXct("2026-05-12 09:00:00")) %>%
+  #   mutate(end_time = start_time + minutes(travel_time_p01)) %>%
+  #   left_join(zentraleOrteid, by = c("from_id" = "id")) %>%
+  #   #dplyr::select(!c("ART", "STAND", "KN7stellig")) %>%
+  #   rename("GN_ziel" = GN, "core_ziel" = area_id)
+  # 
+  # st_write(grid_with_times, here("output/indikator_03.gpkg"), layer = paste0("de_gtfs_polygrid_100m_all_destinations_subset", "_", poi_type, "_", modes_filename, "_", max_trip_duration,"min"), append = FALSE)
+  # return(ttm)
 }
 
 catchment_fun <- function(grid, overlay){
@@ -139,7 +141,7 @@ modes <- c("WALK", "TRANSIT")
 modes_filename <- paste(modes, collapse = "")
 max_walk_time <- 19
 max_rides = 3
-#departure <- as.POSIXct("2026-05-12 09:00:00")
+departure <- as.POSIXct("2026-05-12 09:00:00")
 max_trip_duration <- 80
 #Einlesen von Gitter, Gemeinden und POI
 zensus_grid <- st_read(here("geodata/zensus.gpkg"), "regbez_zensus_populated") %>%
@@ -165,9 +167,9 @@ zensus_grid_df <- pointgrid_fun(polygrid100, "id")
 pois_df <- pois_fun(pois = get(poi_type), id_col = "area_id")
 
 #Erreichbarkeitsanalyse
-ttm <- Erreichbarkeit_nofiltering(origins = pois_df, destinations = zensus_grid_df)
+ttm <- Erreichbarkeit_nofiltering(origins = pois_df, destinations = zensus_grid_df, departure = as.POSIXct("2026-05-12 12:00:00"))
 
-Erreichbarkeit(origins = pois_df, destinations = zensus_grid_df, departure = as.POSIXct("2026-05-12 12:00:00"))
+Erreichbarkeit(origins = pois_df, destinations = zensus_grid_df, departure = )
 
 all_clear()
 
@@ -239,14 +241,17 @@ days <- normdays
 hours <- c(8,10,11,15)
 
 
-for (day in days) {
-cat(paste0("Day ", day, " started.\n"))
-  for (h in hours) {
-    cat(paste0("Hour ", h , " of Day ", day, " started.\n"))
-    Erreichbarkeit(origins = pois_df, destinations = zensus_grid_df, departure = as.POSIXct(paste0(day, h, ":00:00")))
-    cat(paste0("Hour ", h ," done.\n"))
+for(d in days){
+  for (h in 8:17) {
+    departure_dt <- as_datetime(d) + hours(h)
+    
+    cat(paste(departure_dt,"\n"))
+    
+    ttm <- Erreichbarkeit_nofiltering(origins = pois_df, destinations = zensus_grid_df, departure = departure_dt) %>%
+      mutate(departure = departure_dt)
+    
+    fst::write_fst(ttm, file.path("output/i3_ttm_hourly/", paste0("i3_ttm_", d, "_", h, ".fst")))
   }
-  cat(paste0("Day ", day ," done.\n"))
 }
 
-detailed_itineraries(r5_network)
+
