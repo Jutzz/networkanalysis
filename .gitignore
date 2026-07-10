@@ -41,6 +41,8 @@ output/
 results/
 r5core_current/
 r5core_2026-05-18/
+r5core_fares/
+
 
 # GIS temporary files
 *.qgz~
