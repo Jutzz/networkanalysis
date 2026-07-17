@@ -1,3 +1,5 @@
+regbez_25km Zensus Grids AGS are based on VG250, not DVG1!
+
 Bedienungsqualität Layers:
 extra_feeddate_method_startdate_enddate
 

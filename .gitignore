@@ -41,6 +41,7 @@ output/
 results/
 r5core_current/
 r5core_2026-05-18/
+r5core_2026-05-18_large/
 r5core_fares/
 
 
@@ -48,6 +49,7 @@ r5core_fares/
 *.qgz~
 *.gpkg-wal
 *.gpkg-shm
+*.qmd
 
 
 # OS junk

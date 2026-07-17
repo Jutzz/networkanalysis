@@ -153,11 +153,11 @@ plot(stops_geo["THID"])
 f <- st_contains(stops_geo, gem)
 
 r5r::get_gtfs_errors(r5r_network = r5_network)
-r5_network <- build_network("r5core_fares/", overwrite = TRUE, verbose = TRUE)
+r5_network <- build_network("r5core_fares/", overwrite = FALSE, verbose = TRUE)
 
 stops_df  <- pois_fun(stops_geo, id_col = "stop_id")
 
-ttm <- travel_time_matrix(r5r_network = r5_network, origins = stops_df, destinations = stops_df, departure_datetime = as.POSIXct("2026-05-12 12:00:00"),
+ttm <- travel_time_matrix(r5r_network = r5_network, origins = sample_n(stops_df, 5000), destinations = stops_df, departure_datetime = as.POSIXct("2026-05-12 12:00:00"),
                    mode = c("WALK", "TRANSIT"),
                    max_trip_duration = 120L,
                    max_rides = 3L,
@@ -165,3 +165,29 @@ ttm <- travel_time_matrix(r5r_network = r5_network, origins = stops_df, destinat
                    percentiles = c(1L, 25L, 50L, 75L, 99L ),
                    draws_per_minute = 1L,
                    progress = TRUE)
+
+from_idx <- match(ttm$from_id, stops_geo$stop_id)
+to_idx   <- match(ttm$to_id, stops_geo$stop_id)
+
+ttm$distance <- st_distance(
+  stops_geo[from_idx, ],
+  stops_geo[to_idx, ],
+  by_element = TRUE
+)
+
+ttm_km <- ttm %>%
+  mutate(distance_km = as.numeric(distance)/1000) %>%
+  mutate(price_eezy =  1.77+(distance_km*0.23)) %>%
+  group_by(from_id) %>%
+  summarise(price_mean = mean(price_eezy),
+            tt_mean = mean(travel_time_p01),
+            reached = n())
+
+ttm_geo <- ttm_km %>%
+  left_join(stops_geo, by = join_by("from_id" == "stop_id")) %>%
+  rename("stop_id" = from_id)
+
+st_write(ttm_geo, "code/temp/stops_fareas.gpkg", "stops_s1000_fare")
+
+ ggplot(ttm_geo, aes(x = reached, y =price_mean)) +
+   geom_point()
