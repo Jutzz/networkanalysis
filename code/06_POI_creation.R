@@ -31,6 +31,7 @@ poi_poly <- st_centroid(st_transform(st_read("osmdata/zentraler_ort_pois.gpkg", 
     osm_way_id,
     osm_id))
 
+# Selbstentworfener POI-Satz mit größerer Auswahl, allerdings keine große Veränderung zu POI nach Flex et al. 2016.
 poi <- bind_rows(poi_pt, poi_poly) %>%
   mutate(
     category = case_when(
@@ -181,15 +182,26 @@ poi_flex_optional <- bind_rows(poi_pt, poi_poly) %>%
   ) %>%
   select(1,2,category,geometry)
 
+#Sportplätze die weniger als 100 m auseinanderliegen werden zu einem POI
+#zusammengefasst, um zu verhindern, das eine einzige zentralörtliche Funktion
+#die Dichte zu stark beeinflusst. So sorgen sechs Beachvolleyballplätze in
+#nächster Nähe zueinander zu einer sehr hohen Dichte, sind aber in der
+#zentralörtlichen Funktion nicht so bedeutend wie sechs POI unterschiedlicher
+#Kategorien.
+
+#Buffer
 pitch <- poi_flex_optional %>%
   filter(category == "Sports Facility") %>%
   st_buffer(100)
 
+#Identify overlaps
 adj <- st_intersects(pitch)
 
+#Group overlapping Buffers
 g <- graph_from_adj_list(adj, mode = "all")
 pitch$group <- components(g)$membership
 
+#Merge groups
 merged <- pitch %>%
   group_by(group) %>%
   summarise(
@@ -198,6 +210,7 @@ merged <- pitch %>%
     category = "Sports Facility"
   )
 
+#Get Centroids
 centers <- st_centroid(merged)
 
 poi_flex_optional <- poi_flex_optional %>%
@@ -208,4 +221,3 @@ poi_flex_optional <- poi_flex_optional %>%
 st_write(poi %>% filter(category != "Other"), "geodata/pois.gpkg", paste0("zo_POI_large_", osmdate), append = FALSE)
 st_write(poi_flex, "geodata/pois.gpkg", paste0("zo_POI_flex_", osmdate), append = FALSE)
 st_write(poi_flex_optional, "geodata/pois.gpkg", paste0("zo_POI_flex_opt", osmdate), append = FALSE)
-

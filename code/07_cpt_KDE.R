@@ -12,6 +12,12 @@ library(nngeo)
 library(units)
 library(vegan)
 
+#Geldautomaten, die in Openstreetmap mit dem Tag atm=yes als Teil einer
+#Bankfiliale versehen sind, werden in die Zählung der POI/Funktionen separat mit
+#einbezogen, nicht allerdings in die KDE, da zwei Punkte am exakt selben Ort die
+#Dichte überproportional beeinflussen würden und stellenweise jeder Automat in
+#einer Filiale einzeln verzeichnet ist.
+
 files.sources = list.files("code/helper/", full.names = TRUE)
 sapply(files.sources, source)
 
@@ -19,6 +25,7 @@ osmdate <- "260521"
 
 gem <- st_transform(st_read("geodata/dvg1nw.gpkg", "gemeinden_regbez_kln"), crs = st_crs(3035))
 
+#Größerer POI-Satz bringt keine nennenswerten Verschiebungen, daher auskommentiert.
 # poi <- st_transform(st_read("geodata/pois.gpkg", paste0("zo_POI_large_", osmdate)), crs = st_crs(gem)) %>%
 #   st_join(gem %>% select(KN, geom))
 
@@ -37,7 +44,7 @@ total <- length(unique_kn)
 
 poi_flex_full <- rbind(poi_flex, poi_flex_optional)
 
-#KDE for every muni, normalized and written as poly bands
+#KDE for every muni, normalized and written as polygons (bands).
 #Flex POI set ----
 for (N in unique(poi_flex_full$KN)){
   poi_f <- poi_flex_full %>%
@@ -394,6 +401,8 @@ st_write(core_stat_results, "geodata/zentrale_orte_areas.gpkg", "acc_scoring_cen
 st_write(core_stat_results, "geodata/poi.gpkg", "zentrale_orte", append = FALSE)
 st_write(core_stat, "geodata/zentrale_orte_areas.gpkg", "acc_scoring_centroids", append = FALSE)
 
+# OLD------
+# From here: Other methods tried before using walking distance: Parent/Child, Pareto-Optimization
 # st_write(result, "geodata/zentrale_orte_areas.gpkg", "acc_scoring_greedy", append = FALSE)  
 # 
 # ggplot(core_stat, aes(x = zentralitaet, y = cat_total_reached)) + geom_boxplot()
