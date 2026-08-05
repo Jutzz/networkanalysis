@@ -19,6 +19,17 @@ area <- st_read(here("geodata/dvg1nw.gpkg"), area_name)
 de_gtfs_area <- filter_feed_by_area(gtfs_feed, area)
 tidytransit::write_gtfs(de_gtfs_area, paste0("feeds/filtered/de_gtfs_",feed_date,"_",area_name,".zip"))
 
+#DE: Der deutschlandweite Feed nutzt die optionale Tabelle transfers.txt, um
+#Kuppelungen, Flügelungen und in-seat-transfers abzubilden. Außerdem verwendet
+#er das optionale Feld parent_station in der stops.txt, wodurch einzelne
+#Einstiegspunkte eines größeren Haltes zusammengefasst werden können.
+#filter_feed_by_area() berücksichtigt diese optionalen Werte nicht,  Trips, die
+#zum Teil außerhalb des gewählten Bereiches liegen, werden mit ihren stops
+#beibehalten, nicht aber die zugehörige parent_station (d.h. beispielsweise ein
+#Gleis eines Bahnhofs ist im gefilterten Feed enthalten, nicht aber der Bahnhof
+#selbst. Ebenso verhält es sich mit Routen, die als transfer einer Route im
+#Bereich angegeben sind, aber außerhalb des Bereichs liegen.
+
 #filter_feed_by_area doesnt keep parent_stops and routes in transfers, so this is handled manually
 de_gtfs_stops <- read_csv(paste0("feeds/extract/", feed_date,"_fahrplaene_gesamtdeutschland_gtfs/stops.txt"))
 de_gtfs_routes <- read_csv(paste0("feeds/extract/", feed_date,"_fahrplaene_gesamtdeutschland_gtfs/routes.txt"))
