@@ -49,7 +49,7 @@
 
 \bibliography{test,BA}
 
-\newcommand{\haThema}{Routingbasierte ÖPNV-Indikatoren im Rheinland}
+\newcommand{\haThema}{RoutingbasierteErreichbarkeitsindikatoren für die Nahverkehrsplanung im Rheinland}
 \newcommand{\haAutor}{Paul Jannis Weiland}
 \newcommand{\haAutorAdresse}{Plankgasse 58}
 \newcommand{\haAutorPLZ}{50668}
@@ -353,13 +353,7 @@
 	Der deutschlandweite Feed des %Zugeschnittenen Feed im Anhang referenzieren?
 	\textcite{delfie.v.DeutschlandweiteSollFahrplandatenGTFS2026} enthält Daten von Veröffentlichung des Feeds bis zum Ende des Jahres und damit, Stand 18.05.2026, unter Berücksichtigung der Ferien in Nordrhein-Westfalen und Rheinland-Pfalz 89 Wochentage und 34 Normalwerktage.
 	 	\footnote{Zum Begriff des Normalwerktags siehe Abschnitt \ref{par:Bedienungsqualität} zur Berechnung der Bedienungsqualität.}
-	Da die Berechnung der Erschließungsqualität auf einer Auswertung der Abfahrten an einer Haltestelle in einem bestimmten Zeitraum beruht, muss zunächst geprüft werden, welche dieser Tage genutzt werden können, und ob es sinnvoll ist, die Bedienungsqualität über mehrere Tage hinweg zu mitteln.
-%	 Mit der Funktion \texttt{check\_transit\_availability} stellt \texttt{r5r} \parencite{pereiraR5rRapidRealistic2021} eine Möglichkeit zur Analyse der Variabilität des Feeds zur Verfügung. Es wird auf Grundlage des Netzwerkgraphen, der mit \texttt{build\_network} erstellt wurde, extrahiert, wie viele der services aus dem GTFS-Feed an welchen Daten aktiv sind, und welchen Anteil der gesamten services dies ausmacht. Abbildung \ref{fig:activeservicesyearrollavg2026-05-18} zeigt den Jahresverlauf aktiver Services auf Grundlage des Feeds vom 18.05.2026. 
-%	
-
-%	
-%	Aus der Auswertung der \texttt{services} erscheint die Verfügbarkeit hoch variabel, insbesondere fällt der große Abfall nach Ende der Sommerferien auf.
-	Da im DELFI-Feed verschiedene Varianten des Umgangs mit den \texttt{exceptions} in \texttt{calendar\_dates} vertreten sind, lässt sich nur aus einer Analyse der \texttt{services}, wie \texttt{check\_transit\_availability()} aus \texttt{r5r} sie ermöglicht, nicht allzu viel ableiten. Deutlich wird allerdings eine deutliche Abnahme aktiver \texttt{services }nach Ende der Sommerferien in NRW (vgl. Abbildung \ref{fig:activeservicesyearrollavg2026-05-18})
+	Da die Berechnung der Erschließungsqualität auf einer Auswertung der Abfahrten an einer Haltestelle in einem bestimmten Zeitraum beruht, muss zunächst geprüft werden, welche dieser Tage genutzt werden können, und ob es sinnvoll ist, die Bedienungsqualität über mehrere Tage hinweg zu mitteln.	Da im DELFI-Feed verschiedene Varianten des Umgangs mit den \texttt{exceptions} in \texttt{calendar\_dates} vertreten sind, lässt sich nur aus einer Analyse der \texttt{services}, wie \texttt{check\_transit\_availability()} aus \texttt{r5r} sie ermöglicht, nicht allzu viel ableiten. Deutlich wird allerdings eine deutliche Abnahme aktiver \texttt{services }nach Ende der Sommerferien in NRW (vgl. Abbildung \ref{fig:activeservicesyearrollavg2026-05-18})
 	
 	\begin{figure}[ht]
 		\centering
@@ -369,8 +363,7 @@
 	\end{figure}
 	
 	\texttt{tidytransit} erstellt beim Einlesen des Feeds eine Tabelle \texttt{dates\_services}, die auf Grundlage des \texttt{calendar} und der \texttt{calendar\_dates} verzeichnet, wann welcher Service aktiv ist. In Kombination mit den \texttt{trips} wird es so möglich, für jeden Tag festzustellen, wie viele Fahrten stattfinden, \ref{fig:tripsyearrollavg2026-05-18} zeigt die Fahrten pro Wochentag. Es ergibt sich ein etwas geglättetes Bild, der grundsätzliche Trend einer deutlichen Abnahme nach Ende der Sommerferien bleibt jedoch erhalten.
-	
-	
+		
 	\begin{figure}[ht]
 		\centering
 		\caption{Fahrten (\texttt{trips}) je Wochentag auf Grundlage des DELFI-GTFS vom 18.05.2026}
@@ -378,7 +371,7 @@
 		\label{fig:tripsyearrollavg2026-05-18}
 	\end{figure}
 	
-	Durch die Kombination mit der Tabelle \texttt{agencies} wird es zudem möglich, die Verkehre so zu unterteilen, das sichtbar wird, welches Verkehrsunternehmen wie viele Fahrten erbringt. Die Funktion \texttt{check\_gtfs\_discont} liefert eine Liste der \texttt{agencies}, die nicht alle gewählten Tage abdecken. Tritt der Fall ein, das eine \texttt{agency} keine Daten für alle Tage hat, kann eine informierte Entscheidung getroffen werden, welcher Teil des Feeds sinnvoll für die Berechnung der Bedienungsqualität genutzt werden kann. In \texttt{03\_find\_valid\_dates} wurde heuristisch jenes Datum als Schnitt gewählt, an dem die erste Agency, die an mehr als fünf Tagen im untersuchten Zeitraum Fahrten durchführt, nicht mehr im Feed vertreten ist. In diesem Fall ergab sich der 10.07.2026, nach dem für die \texttt{agency} \enquote{Télécabine Charmey-Vounetse} mit rund \num{14} Fahrten pro Werktag keine Fahrten mehr verzeichnet sind. Es zeigt sich deutlich, das die Wahl des Zeitraums für die Ermittlung bestenfalls qualitativ und anwendungsbezogen getroffen werden sollte: Die Agency in diesem Fall ist eigentlich Betreiber einer Seilbahn in der Schweiz \parencite[vgl.][]{regionfreiburgBergbahnenCharmey} und ist mutmaßlich aufgrund eines Fehlers als Betreiber eines Regionalzuges im Feed vertreten. Die größten Wegfälle im Laufe des Feeds machen in diesem Fall die Aachener Straßenbahn- und Energieversorgungs-AG (ASEAG) mit rund \num{5200} und die Niederrheinwerke Viersen mobil GmbH mit rund \num{355} Fahrten pro Tag aus, deren Verkehre jeweils ab dem 01.09 noch nicht verzeichnet sind. 	In Abbildung \ref{fig:tripsyearperagency2026-05-18} ist der Wegfall der Fahrten der ASEAG nach den Sommerferien deutlich erkennbar, ebenso der Unterschied zwischen dem regulären und dem Ferienfahrplan. 
+	Durch die Kombination mit der Tabelle \texttt{agencies} kann geprüft werden, welches Verkehrsunternehmen wie viele Fahrten erbringt. Die Funktion \texttt{check\_gtfs\_discont()} liefert eine Liste der \texttt{agencies}, die nicht alle gewählten Tage abdecken. Tritt der Fall ein, das eine \texttt{agency} keine Daten für alle Tage hat, kann eine informierte Entscheidung getroffen werden, welcher Teil des Feeds sinnvoll für die Berechnung der Bedienungsqualität genutzt werden kann. In \texttt{03\_find\_valid\_dates.R} wurde heuristisch jenes Datum als Schnitt gewählt, an dem die erste Agency, die an mehr als fünf Tagen im untersuchten Zeitraum Fahrten durchführt, nicht mehr im Feed vertreten ist. In diesem Fall ergab sich der 10.07.2026, nach dem für die \texttt{agency} \enquote{Télécabine Charmey-Vounetse} mit rund \num{14} Fahrten pro Werktag keine Fahrten mehr verzeichnet sind. Es zeigt sich deutlich, das die Wahl des Zeitraums für die Ermittlung bestenfalls qualitativ und anwendungsbezogen getroffen werden sollte: Die Agency in diesem Fall ist eigentlich Betreiber einer Seilbahn in der Schweiz \parencite[vgl.][]{regionfreiburgBergbahnenCharmey} und ist mutmaßlich aufgrund eines Fehlers als Betreiber eines Regionalzuges im Feed vertreten. Die größten Wegfälle im Laufe des Feeds machen in diesem Fall die Aachener Straßenbahn- und Energieversorgungs-AG (ASEAG) mit rund \num{5200} und die Niederrheinwerke Viersen mobil GmbH mit rund \num{355} Fahrten pro Tag aus, deren Verkehre jeweils ab dem 01.09 noch nicht verzeichnet sind.  In Abbildung \ref{fig:tripsyearperagency2026-05-18} ist der Wegfall der Fahrten der ASEAG nach den Sommerferien deutlich erkennbar, ebenso der Unterschied zwischen dem regulären und dem Ferienfahrplan. 
 	
 \begin{figure}[ht]
 	\centering
@@ -477,6 +470,7 @@
 		A = \min_{d \in \{1,\dots,D\},\, h \in \{8,\dots,17\}} A_{d,h}
 	\end{equation}
 	
+	\todo[inline]{Anpassen/Klären: Ist stündliche Berechnung ausreichend/besser? Wenn ja, hier ergänzen/erklären. Beispiel: Wipperfürth Sankt-Angela-Gymnasium: Schulverkehr/Verstärkerfahrten 12/13/14 Uhr, Rest des Tages nichts. Variabilität darstellen: Um 13 Uhr BQ III/tlw. EQ B, sonst nur VI - allerdings definitiv nicht das gleiche wie den ganzen Tag Stundentakt.}
 	Um der Zielvorstellung einer über den gesamten Untersuchungsraum vergleichbaren Darstellung eines \textit{typischen} Angebots gerecht zu werden, sollen zunächst folgende Varianten der Bedienungsqualität ermittelt werden: 
 	\begin{itemize}
 		\item Mittlere Abfahrten pro Stunde über alle Wochentage, die nicht in den Ferien liegen
@@ -500,7 +494,7 @@
 	Die resultierende Tabelle ist als \texttt{daily\_20260518\_weekday\_2026-05-04\_2026-06-26} im Anhang zu finden.
 	Auf dieser Grundlage werden je Halt Mittelwert, Minimum und Maximum der durchschnittlichen Abfahrten pro Stunde, die mittlere und Summe der Differenz zwischen den Tagen (absolute Werte), prozentuale Variation, minimale und maximale resultierende Bedienungsqualität und die Anzahl der Wechsel der Bedienungsqualität ermittelt. Die resultierende Tabelle ist als \texttt{variablity\_daily\_20260518\_weekday\_2026-05-04\_2026-06-26} im Anhang zu finden. Die Ergebnisse werden unter \ref{sec:resultsbedienung} betrachtet und diskutiert.
 	
-	Für die Berechnung der eigentlichen Access-Messgröße wird zunächst für jede Zensuszelle mit der \texttt{r5r}-Funktion \texttt{travel\_time\_matrix()} ermittelt, welche Halte in maximal 20 Minuten Gehzeit erreicht werden können. Danach wird das Optimum aus Gehzeit und Bedienungsqualität ermittelt, also die maximale Erschließungsqualität, die vom Startort (in der gesetzten Stunde) erreicht werden kann. Dabei ist zu beachten, das es Fälle geben kann, bei denen dies weder die Haltestelle mit dem kürzesten Zuweg noch jene mit der besten Bedienungsqualität ist. Den eigentlichen Indikator stellen pro Gemeinde die Bevölkerungsanteile je Qualitätsstufe dar (A-F, bzw. nicht erschlossen/keine Haltestelle in < 20 min erreicht).
+	Für die Berechnung der eigentlichen Access-Messgröße wird zunächst für jede Zensuszelle mit der \texttt{r5r}-Funktion \texttt{travel\_time\_matrix()} ermittelt, welche Halte in maximal 20 Minuten Gehzeit erreicht werden können (\texttt{09\_i2\_traveltimes.R}). Danach wird das Optimum aus Gehzeit und Bedienungsqualität ermittelt, also die maximale Erschließungsqualität, die vom Startort (in der gesetzten Stunde) erreicht werden kann. Dabei ist zu beachten, das es Fälle geben kann, bei denen dies weder die Haltestelle mit dem kürzesten Zuweg noch jene mit der besten Bedienungsqualität ist. Den eigentlichen Indikator stellen pro Gemeinde die Bevölkerungsanteile je Qualitätsstufe dar (A-F, bzw. nicht erschlossen/keine Haltestelle in < 20 min erreicht).
 	Diese Analyse wird für jede Stunde jeden Wochentages wie in Abschnitt \ref{sec:scheduledates} festgelegt durchgeführt.
 	\todo{Folgender Absatz zur Diskussion?}
 	

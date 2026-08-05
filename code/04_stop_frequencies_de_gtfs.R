@@ -133,6 +133,9 @@ filtered_stop_times_dates <- gtfs_feed$stop_times %>%
   left_join(stops2, by = "stop_id")  %>%
   mutate(route_rank = route_rank_lookup[as.character(route_type)])
 
+rm(gtfs_feed)
+rm(filtered_trips_dates)
+gc()
 #Count departures between 08:00 and 18:00 for all week-/normdays, calculate mean.
 #Assign stop type and Bedienungsqualität based on Steckbrief table.
 #Join with zhv as modified in osm_extract.R for geodata.
@@ -276,12 +279,15 @@ departure_counts_hourly <- filtered_stop_times_dates %>%
     select(Name, grouping_id, Municipality, date, hour, Bedienungsqualität, departures_per_hour, stop_type, MunicipalityCode, geom) %>%
     rename("stop_id" = grouping_id)
   
-  stops_fst <- departure_counts_hourly %>%
-    st_drop_geometry() %>%
-    select(date, hour, stop_id, departures_per_hour, Bedienungsqualität) 
-
 st_write(st_as_sf(departure_counts_hourly), "geodata/Bedienungsqualität.gpkg", paste("hourly", feed_date, method, min(date_select), max(date_select), sep = "_"), append = FALSE)
+
+#Creating a minimal version to write as fst for usage in 10_i2_analysis.
+stops_fst <- departure_counts_hourly %>%
+  st_drop_geometry() %>%
+  select(date, hour, stop_id, departures_per_hour, Bedienungsqualität) 
+
 
 write_fst(stops_fst, paste("output/hourly", feed_date, method, min(date_select), max(date_select), ".fst", sep = "_"))
 
-          
+rm(departure_counts_hourly)
+gc()
