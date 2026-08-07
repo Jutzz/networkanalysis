@@ -1,9 +1,10 @@
 #TODO: Add (correct) timestamp to hourly files, add min/max values to summary
 #table, tables showing variability between hours, between days, between weeks.
-#Disaggregation by Municipality, find way to build list of contiguos areas with
-#over 200 people (to be reached). Find a way to get min and max to work with NAs.
+#Disaggregation by Municipality.
 library(dplyr)
 library(tidyr)
+library(readr)
+library(lubridate)
 library(data.table)
 library(fst)
 library(arrow)
@@ -36,7 +37,7 @@ mapping_matrix <- read_csv2(here("code/erschließung_mat_long_numeric.csv"))
 
 stops_table <- st_read(
   here("geodata/Bedienungsqualität.gpkg"),
-  paste(feed_date, method, min(date_select), max(date_select), sep = "_")
+  paste("var_daily",feed_date, method, min(date_select), max(date_select), sep = "_")
 ) %>%
   mutate(
     stop_type = case_when(
@@ -165,6 +166,8 @@ table_name <- paste("hourly",
                     sep = "_")
 
 stops_core <- read_fst("output/hourly_20260518_weekday_2026-05-04_2026-06-26_.fst")
+ttm <- read.csv2("output/walk_20min_zensus_stops.csv") %>%
+  select(from_id, to_id, travel_time_p01)
 
 for (d in nonholiday_weekdays_fullservice) {
   for (h in 8:17) {
@@ -179,7 +182,7 @@ for (d in nonholiday_weekdays_fullservice) {
     hgrid <- g %>%
       dplyr::mutate(date = as.character(d),
                     hour = h,
-                    timestamp = ) %>%
+                    timestamp = ymd_hms(paste(d, hms::hms(hours = h)), tz = "Europe/Berlin")) %>%
       select(
         date,
         hour,
@@ -194,9 +197,10 @@ for (d in nonholiday_weekdays_fullservice) {
   }
 }
 
-files <- list.files("output/hourly_eq",
+files <- list.files("output/hourly_eq/",
                     full.names = TRUE,
-                    recursive = FALSE)
+                    recursive = FALSE,
+                    pattern = "eq_")
 
 final <- data.table::rbindlist(lapply(files, fst::read_fst))
 

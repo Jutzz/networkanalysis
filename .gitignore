@@ -55,3 +55,4 @@ r5core_fares/
 # OS junk
 .DS_Store
 Thumbs.db
+geodata/dwellings.gpkg
