@@ -1,3 +1,4 @@
+#TODO: Calculate daily (weekdaily?) and total timespan values from hourly dataset
 #Setup----
 library(tidyverse)
 library(sf)
