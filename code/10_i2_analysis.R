@@ -197,6 +197,7 @@ for (d in nonholiday_weekdays_fullservice) {
   }
 }
 
+
 files <- list.files("output/hourly_eq/",
                     full.names = TRUE,
                     recursive = FALSE,
