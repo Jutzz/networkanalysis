@@ -138,118 +138,11 @@ rm(gtfs_feed)
 rm(filtered_trips_dates)
 gc()
 
+#Calculation of daily values moved to next script based on hourly values.
 #Count departures between 08:00 and 18:00 for all week-/normdays, calculate mean.
 #Assign stop type and Bedienungsqualität based on Steckbrief table.
 #Join with zhv as modified in osm_extract.R for geodata.
-departure_counts_daily <- filtered_stop_times_dates %>%
-  filter(
-    departure_time >= hms("08:00:00"),
-    departure_time < hms("18:00:00")
-  ) %>%
-  group_by(date, grouping_id) %>%
-  summarise(
-    departures = n(),
-    stop_type = min(route_rank, na.rm = TRUE),
-    .groups = "drop"
-  ) %>%
-  tidyr::complete(
-    date,
-    grouping_id,
-    fill = list(departures = 0)
-  ) %>%
-  mutate(
-    departures_per_hour = departures / 10,
-    stop_type = ifelse(departures == 0, 0, stop_type)
-  ) %>%
-  left_join(zhv, by = join_by(grouping_id == DHID)) %>%
-  mutate(freq_class = findInterval(
-    departures_per_hour,
-    vec = c(0, 2, 4, 6, 12, 24),
-    rightmost.closed = FALSE
-  )
-  ) %>%
-  left_join(quality_lookup, by = join_by(stop_type, freq_class)) %>%
-  select(1,3,2,Name,4,5,22,23,21) %>%
-  mutate(weekday = weekdays.Date(date)) %>%
-  rename("stop_id" = grouping_id)
 
-variability_daily <- st_drop_geometry(departure_counts_daily) %>%
-  arrange(stop_id, date) %>%
-  group_by(stop_id, Name) %>%
-  mutate(
-    diff = abs(departures_per_hour - lag(departures_per_hour))
-  ) %>%
-  summarise(
-    mean_departures = mean(departures_per_hour, na.rm = TRUE),
-    median_departures = median(departures_per_hour, na.rm = TRUE),
-    min_departures = min(departures_per_hour, na.rm = TRUE),
-    max_departures = max(departures_per_hour, na.rm = TRUE),
-    stop_type_mean = max(stop_type),
-    stop_type_median = floor(median(stop_type)),
-    sum_abs_diff = sum(diff, na.rm = TRUE),
-    mean_abs_diff = mean(diff, na.rm = TRUE),
-    pct_variation = 100 * mean_abs_diff / mean_departures,
-    min_quality = min(Bedienungsqualität, na.rm = TRUE),
-    max_quality = max(Bedienungsqualität, na.rm = TRUE),
-    quality_range = max_quality - min_quality,
-    n_changes = sum(
-      Bedienungsqualität != lag(Bedienungsqualität),
-      na.rm = TRUE
-    ),
-    days_observed = n(),
-    modal_quality = as.numeric(
-      names(which.max(table(Bedienungsqualität)))
-    ),
-    pct_days_modal_quality =
-      100 * max(table(Bedienungsqualität)) / n(),
-    .groups = "drop"
-  ) %>%  mutate(freq_class_mean = findInterval(
-    mean_departures,
-    vec = c(0, 2, 4, 6, 12, 24),
-    rightmost.closed = FALSE)
-  ) %>%  mutate(freq_class_median = findInterval(
-    median_departures,
-    vec = c(0, 2, 4, 6, 12, 24),
-    rightmost.closed = FALSE)
-  )%>%
-  left_join(quality_lookup, by = join_by("stop_type_mean" == "stop_type", "freq_class_mean" == "freq_class")) %>%
-    rename("bq_mean" = Bedienungsqualität) %>%
-    left_join(quality_lookup, by = join_by("stop_type_median" == "stop_type", "freq_class_median" == "freq_class")) %>%
-    rename("bq_median" = Bedienungsqualität) %>%
-  left_join(zhv %>% select(DHID, Name, MunicipalityCode, Municipality, geom), by = join_by("stop_id" == "DHID" , Name)) %>%
-  relocate(Name,
-          stop_id,
-          Municipality,
-          bq_mean,
-          bq_median,
-          mean_departures,
-          freq_class_mean,
-          median_departures,
-          freq_class_median,
-          min_departures,
-          max_departures,
-          stop_type_mean,
-          stop_type_median,
-          sum_abs_diff,
-          mean_abs_diff,
-          pct_variation,
-          min_quality,
-          max_quality,
-          quality_range,
-          n_changes,
-          days_observed,
-          modal_quality,
-          pct_days_modal_quality,
-          MunicipalityCode)
-
-#Write to geopackage. 
-st_write(st_as_sf(departure_counts_daily), "geodata/Bedienungsqualität.gpkg", paste("daily", feed_date, method, min(date_select), max(date_select), sep = "_"), append = FALSE)
-
-st_write(variability_daily %>%
-           filter(!is.na(geom)), here("geodata/Bedienungsqualität.gpkg"),
-         paste("var_daily", feed_date, method, min(date_select), max(date_select), sep = "_"), append = FALSE)
-
-rm(departure_counts_daily, variability_daily)
 gc()
 
 #Also calculate hourly counts for additional analysis or later use.
@@ -372,3 +265,114 @@ write_fst(stops_fst, paste("output/hourly", feed_date, method, min(date_select),
 
 rm(departure_counts_hourly)
 gc()
+
+#OLD---- Daily Calculations - left here as proof of work/for eventual later use.
+# departure_counts_daily <- filtered_stop_times_dates %>%
+#   filter(
+#     departure_time >= hms("08:00:00"),
+#     departure_time < hms("18:00:00")
+#   ) %>%
+#   group_by(date, grouping_id) %>%
+#   summarise(
+#     departures = n(),
+#     stop_type = min(route_rank, na.rm = TRUE),
+#     .groups = "drop"
+#   ) %>%
+#   tidyr::complete(
+#     date,
+#     grouping_id,
+#     fill = list(departures = 0)
+#   ) %>%
+#   mutate(
+#     departures_per_hour = departures / 10,
+#     stop_type = ifelse(departures == 0, 0, stop_type)
+#   ) %>%
+#   left_join(zhv, by = join_by(grouping_id == DHID)) %>%
+#   mutate(freq_class = findInterval(
+#     departures_per_hour,
+#     vec = c(0, 2, 4, 6, 12, 24),
+#     rightmost.closed = FALSE
+#   )
+#   ) %>%
+#   left_join(quality_lookup, by = join_by(stop_type, freq_class)) %>%
+#   select(1,3,2,Name,4,5,22,23,21) %>%
+#   mutate(weekday = weekdays.Date(date)) %>%
+#   rename("stop_id" = grouping_id)
+# 
+# variability_daily <- st_drop_geometry(departure_counts_daily) %>%
+#   arrange(stop_id, date) %>%
+#   group_by(stop_id, Name) %>%
+#   mutate(
+#     diff = abs(departures_per_hour - lag(departures_per_hour))
+#   ) %>%
+#   summarise(
+#     mean_departures = mean(departures_per_hour, na.rm = TRUE),
+#     median_departures = median(departures_per_hour, na.rm = TRUE),
+#     min_departures = min(departures_per_hour, na.rm = TRUE),
+#     max_departures = max(departures_per_hour, na.rm = TRUE),
+#     stop_type_mean = max(stop_type),
+#     stop_type_median = floor(median(stop_type)),
+#     sum_abs_diff = sum(diff, na.rm = TRUE),
+#     mean_abs_diff = mean(diff, na.rm = TRUE),
+#     pct_variation = 100 * mean_abs_diff / mean_departures,
+#     min_quality = min(Bedienungsqualität, na.rm = TRUE),
+#     max_quality = max(Bedienungsqualität, na.rm = TRUE),
+#     quality_range = max_quality - min_quality,
+#     n_changes = sum(
+#       Bedienungsqualität != lag(Bedienungsqualität),
+#       na.rm = TRUE
+#     ),
+#     days_observed = n(),
+#     modal_quality = as.numeric(
+#       names(which.max(table(Bedienungsqualität)))
+#     ),
+#     pct_days_modal_quality =
+#       100 * max(table(Bedienungsqualität)) / n(),
+#     .groups = "drop"
+#   ) %>%  mutate(freq_class_mean = findInterval(
+#     mean_departures,
+#     vec = c(0, 2, 4, 6, 12, 24),
+#     rightmost.closed = FALSE)
+#   ) %>%  mutate(freq_class_median = findInterval(
+#     median_departures,
+#     vec = c(0, 2, 4, 6, 12, 24),
+#     rightmost.closed = FALSE)
+#   )%>%
+#   left_join(quality_lookup, by = join_by("stop_type_mean" == "stop_type", "freq_class_mean" == "freq_class")) %>%
+#     rename("bq_mean" = Bedienungsqualität) %>%
+#     left_join(quality_lookup, by = join_by("stop_type_median" == "stop_type", "freq_class_median" == "freq_class")) %>%
+#     rename("bq_median" = Bedienungsqualität) %>%
+#   left_join(zhv %>% select(DHID, Name, MunicipalityCode, Municipality, geom), by = join_by("stop_id" == "DHID" , Name)) %>%
+#   relocate(Name,
+#           stop_id,
+#           Municipality,
+#           bq_mean,
+#           bq_median,
+#           mean_departures,
+#           freq_class_mean,
+#           median_departures,
+#           freq_class_median,
+#           min_departures,
+#           max_departures,
+#           stop_type_mean,
+#           stop_type_median,
+#           sum_abs_diff,
+#           mean_abs_diff,
+#           pct_variation,
+#           min_quality,
+#           max_quality,
+#           quality_range,
+#           n_changes,
+#           days_observed,
+#           modal_quality,
+#           pct_days_modal_quality,
+#           MunicipalityCode)
+# 
+# #Write to geopackage. 
+# st_write(st_as_sf(departure_counts_daily), "geodata/Bedienungsqualität.gpkg", paste("daily", feed_date, method, min(date_select), max(date_select), sep = "_"), append = FALSE)
+# 
+# st_write(variability_daily %>%
+#            filter(!is.na(geom)), here("geodata/Bedienungsqualität.gpkg"),
+#          paste("var_daily", feed_date, method, min(date_select), max(date_select), sep = "_"), append = FALSE)
+# 
+# rm(departure_counts_daily, variability_daily)

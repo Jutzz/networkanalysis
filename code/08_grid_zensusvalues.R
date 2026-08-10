@@ -2,6 +2,7 @@ library(sf)
 library(tidyverse)
 library(tidygeocoder)
 
+gem <- st_read("geodata/dvg1nw.gpkg", "gemeinden_regbez_25km")
 laea_grid <- st_read("geodata/grids.gpkg", "100mregbez25kmbuffer")
 zensus_csv <- read_csv2("geodata/base_data/Zensus2022_Bevoelkerungszahl_100m-Gitter.csv")
 
@@ -40,6 +41,31 @@ dwellings <- zensus_grid_populated %>%
   summarise(
     total_pop = sum(Einwohner, na.rm = TRUE),
     n_cells   = n(),
+    .groups   = "drop"
+  ) %>%
+  st_as_sf()
+
+tocatch_gem <- st_drop_geometry(zensus_grid_populated) %>%
+  left_join(st_drop_geometry(dwellings)) %>%
+  rename("cluster_pop" = total_pop) %>%
+  mutate(tocatch = ifelse(cluster_pop >= 200, TRUE, FALSE)) %>%
+  group_by(ags) %>%
+  summarise(total_pop = sum(Einwohner),
+            nocatch_pop = sum(Einwohner[!tocatch]),
+            nocatch_pct = nocatch_pop/total_pop,
+            .groups = "drop") %>%
+  filter(str_detect(ags, "^053")) %>%
+  left_join(gem, by = join_by("ags" == "KN")) %>%
+  select(GN, total_pop, nocatch_pct, geom) %>%
+  st_as_sf()
+
+st_write(tocatch_gem, "geodata/dwellings.gpkg", "percent_nocatch_200")
+
+dwellings_union <- zensus_grid_populated %>%
+  group_by(cluster_id) %>%
+  summarise(
+    total_pop = sum(Einwohner, na.rm = TRUE),
+    n_cells   = n(),
     geom  = st_union(geom),   # merge cells into one polygon per cluster
     .groups   = "drop"
   ) %>%
@@ -64,5 +90,5 @@ coded$cluster_name = if (!is.na(coded$village)) {coded$village} else if (!is.na(
 
 st_write(st_as_sf(dwellings), "geodata/dwellings.gpkg", layer = "dwellings", append = FALSE)
 
-reverse_geocode(dwell_centroid[1,], lat = lat, long = long, method = "osm", api_url = "http://localhost:8081/reverse"
+#reverse_geocode(dwell_centroid[1,], lat = lat, long = long, method = "osm", api_url = "http://localhost:8081/reverse")
 
