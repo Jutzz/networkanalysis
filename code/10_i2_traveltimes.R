@@ -31,6 +31,8 @@ zensus_grid <- st_read(here("geodata/zensus.gpkg"), "regbez_zensus_populated") %
   select(id, ags, Einwohner)
 #mutate(id = GITTER_ID_100m)
 
+stops_table <- read_fst(paste("output/totalmean", feed_date, method, min(date_select), max(date_select), ".fst", sep = "_"))
+
 stops_table <- st_read(here("geodata/Bedienungsqualität.gpkg"), paste(feed_date, method, min(date_select), max(date_select), sep = "_")) %>%
   mutate(stop_type = case_when(
     stop_type_median == 1 ~ "train",

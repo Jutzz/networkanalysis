@@ -1,3 +1,4 @@
+#TODO: Check for missing origin/destinations - Islands? Reproducing Higgins issues.
 options(java.parameters = "-Xmx20G")
 library(r5r)
 library(fst)

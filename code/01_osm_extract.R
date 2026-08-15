@@ -7,6 +7,10 @@ library(here)
 library(lubridate)
 options(timeout = 1000)
 
+
+regbez10km <- st_read("geodata/regbez10kmbuffer.geojson")
+regbez25km <- st_read("geodata/regbez25kmbuffer.geojson")
+
 gem_regbez <- st_read("geodata/dvg1nw.gpkg", "gemeinden_regbez_kln") %>%
   select(KN, zentralitaet)  %>%
   st_drop_geometry()
@@ -19,7 +23,11 @@ vg_250 <- st_read("geodata/base_data/DE_VG250.gpkg", query =
   mutate(regbez = ifelse(str_detect(KN, "^053"), TRUE, FALSE)) %>%
   left_join(gem_regbez)
 
+vg_250_regbez <- vg_250 %>%
+  filter(str_detect(KN, "^053"))
+
 st_write(vg_250, "geodata/dvg1nw.gpkg", "gemeinden_regbez_25km", append = FALSE)
+st_write(vg_250_regbez, "geodata/dvg1nw.gpkg", "gemeinden_regbez_vg250", append = FALSE)
 
 dldate <- format(Sys.Date(), format = "%Y%m%d")
 dldate_zhv <- format(Sys.Date(), format = "%Y-%m-%d")
@@ -27,8 +35,6 @@ dldate_zhv <- format(Sys.Date(), format = "%Y-%m-%d")
 osm_req <- request("https://download.geofabrik.de/europe/germany/nordrhein-westfalen-latest.osm.pbf")
 osmresp <- req_perform(osm_req, path = paste0("osmdata/nordrhein-westfalen-", dldate, ".osm.pbf"))
 
-regbez10km <- st_read("geodata/regbez10kmbuffer.geojson")
-regbez25km <- st_read("geodata/regbez25kmbuffer.geojson")
 #Extract Regierungsbezirk plus buffer. Osmium needs to be locally available.Using 25 km for Indikator 03 (50 km Radius catchment)
 rosmium::extract(input_path = paste0("osmdata/nordrhein-westfalen-", dldate, ".osm.pbf"), extent = regbez10km, output_path = paste0("osmdata/regbez10km-", dldate, ".osm.pbf"), overwrite = TRUE)
 rosmium::extract(input_path = paste0("osmdata/nordrhein-westfalen-", dldate, ".osm.pbf"), extent = regbez25km, output_path = paste0("osmdata/regbez25km-", dldate, ".osm.pbf"), overwrite = TRUE)

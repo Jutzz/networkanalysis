@@ -106,6 +106,12 @@ stops2 <- stops %>%
       TRUE ~ stop_id
     )
   )
+
+#Get last stop sequence of every trip to remove last stops (--> not a departure)
+last_stoptime_lookup <- gtfs_feed$stop_times %>%
+  group_by(trip_id) %>%
+  summarise(last_stop_n = max(stop_sequence)) %>%
+  ungroup()
 #Get dates of representative norm- and weekdays from checking in find_valid_dates.R
 nonholiday_weekdays_fullservice <- read_lines("code/temp/nonholiday_weekdays_cutoff.txt")
 nonholiday_normdays_fullservice <- read_lines("code/temp/nonholiday_normdays_cutoff.txt")
@@ -126,7 +132,9 @@ filtered_trips_dates <- gtfs_feed$trips %>%
   dplyr::select(trip_id, date, route_type)
 
 filtered_stop_times_dates <- gtfs_feed$stop_times %>%
-  filter(pickup_type == 0) %>%
+  left_join(last_stoptime_lookup, by ="trip_id") %>%
+  filter(stop_sequence != last_stop_n,
+        pickup_type == 0) %>%
   select(trip_id, stop_id, departure_time, arrival_time) %>%
   filter(trip_id %in% filtered_trips_dates$trip_id) %>%
   left_join(filtered_trips_dates %>%
@@ -143,9 +151,7 @@ gc()
 #Assign stop type and Bedienungsqualität based on Steckbrief table.
 #Join with zhv as modified in osm_extract.R for geodata.
 
-gc()
-
-#Also calculate hourly counts for additional analysis or later use.
+#Count departures per hour for each hour.
 departure_counts_hourly <- filtered_stop_times_dates %>%
   filter(
     departure_time >= hms("08:00:00"),
@@ -166,6 +172,7 @@ departure_counts_hourly <- filtered_stop_times_dates %>%
   mutate(
     departures_per_hour = departures
   ) %>%
+  replace_na(list(stop_type = 0)) %>%
   left_join(zhv, by = join_by(grouping_id == DHID)) %>%
   mutate(freq_class = findInterval(
     departures_per_hour,

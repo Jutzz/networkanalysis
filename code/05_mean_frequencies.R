@@ -7,6 +7,18 @@ library(data.table)
 library(fst)
 library(sf)
 library(here)
+library(extrafont)
+
+palette_gyr <- c(
+  "1" = "#169542",
+  "2" = "#8acc62",
+  "3" = "#dbf09e",
+  "4" = "#fedf9a",  
+  "5" = "#f59053",  
+  "6" = "#d6191c",
+  "7" = "#3f3f3f"
+)
+
 #Read helper functions
 files.sources = list.files("code/helper/", full.names = TRUE)
 sapply(files.sources, source)
@@ -65,6 +77,31 @@ stops_core <- lazy_dt(read_fst(paste(
   ".fst", sep = "_")
   ))
 
+stop_core_dow <- stops_core %>%
+  mutate(dow = weekdays(date),
+         week = isoweek(date)
+  ) %>%
+  as.data.frame()
+  
+counts <- stops_core %>%
+  group_by(date, hour, Bedienungsqualität) %>%
+  summarise(count = n()) %>%
+  mutate(timestamp = ymd_hms(paste(date, hms::hms(hours = hour)), tz = "Europe/Berlin")) %>%
+  ungroup() %>%
+  as.data.frame()
+
+p <- ggplot(counts, aes(x = as.factor(timestamp), y = count, fill = as.factor(Bedienungsqualität))) +
+  geom_col(position = "stack") +
+  labs(
+    title = "Anzahl der Halte pro Stunde und Bedienungsqualitätsklasse",
+    x = "Stunde des Tages",
+    y = "Anzahl der Halte",
+    fill = "Bedienungsqualität"
+  ) +
+  theme_minimal() +
+  scale_fill_manual(values = palette_gyr)
+#Tagesmittel----
+#Durchschnitt der Stunden je Tag. type_range ist der Abstand zwischen der besten und der schlechtesten Stunde.
 stops_dailymean <- stops_core %>%
   select(!Bedienungsqualität) %>%
   replace_na(list(stop_type = 4)) %>%
@@ -72,9 +109,10 @@ stops_dailymean <- stops_core %>%
   summarise(mean_day = mean(departures_per_hour),
             type_range = diff(range(stop_type)),
             types = paste(sort(unique(stop_type)), collapse = ","),
-            stop_type = min(stop_type),
+            stop_type = min(stop_type[stop_type != 0]),
             .groups = "drop"
             )%>%
+  mutate(stop_type = ifelse(mean_day == 0, 0, stop_type)) %>%
   as.data.frame() %>%
   left_join(zhv, by = join_by(stop_id == DHID)) %>%
   mutate(freq_class = findInterval(
@@ -86,6 +124,95 @@ stops_dailymean <- stops_core %>%
   left_join(quality_lookup, by = join_by(stop_type, freq_class)) %>%
   select(Name, stop_id, Municipality, date, Bedienungsqualität, mean_day, stop_type, type_range, types, MunicipalityCode, geom)
 
+daily_fst <- stops_dailymean %>%
+  select(date, stop_id, stop_type, mean_day, Bedienungsqualität, MunicipalityCode, Municipality)
+
+write_fst(daily_fst, paste("output/daily", feed_date, method, min(date_select), max(date_select), ".fst", sep = "_"))
+
+
+#Stundenmittel----
+#Durchschnitt der Stunden.
+stops_hourmean <- stops_core %>%
+  select(!Bedienungsqualität) %>%
+  replace_na(list(stop_type = 4)) %>%
+  group_by(stop_id, hour) %>%
+  summarise(mean_hour = mean(departures_per_hour),
+            type_range = diff(range(stop_type)),
+            types = paste(sort(unique(stop_type)), collapse = ","),
+            stop_type = min(stop_type[stop_type != 0]),
+            .groups = "drop"
+  )%>%
+  mutate(stop_type = ifelse(mean_hour == 0, 0, stop_type)) %>%
+  as.data.frame() %>%
+  left_join(zhv, by = join_by(stop_id == DHID)) %>%
+  mutate(freq_class = findInterval(
+    mean_hour,
+    vec = c(0, 2, 4, 6, 12, 24),
+    rightmost.closed = FALSE 
+  )
+  ) %>%
+  left_join(quality_lookup, by = join_by(stop_type, freq_class)) %>%
+  select(Name, stop_id, Municipality, MunicipalityCode, Bedienungsqualität, hour, mean_hour, stop_type, type_range, types, MunicipalityCode, geom)
+
+hourmean_fst <- stops_hourmean %>%
+  select(hour, stop_id, stop_type, mean_hour, Bedienungsqualität, MunicipalityCode, Municipality)
+
+write_fst(hourmean_fst, paste("output/hourmean", feed_date, method, min(date_select), max(date_select), ".fst", sep = "_"))
+
+#Wochentag----
+#Durchschnitt je Wochentag. BQ je Wochentag. type_range ist der Abstand zwischen der besten und der schlechtesten Stunde.
+stops_dowmean <- stops_core %>%
+  replace_na(list(stop_type = 4)) %>%
+  mutate(dow = weekdays(date)) %>%
+  group_by(stop_id, dow) %>%
+  summarise(mean_dow = mean(departures_per_hour),
+            type_range = diff(range(stop_type)),
+            types = paste(sort(unique(stop_type)), collapse = ","),
+            stop_type = min(stop_type)) %>%
+  ungroup() %>%
+  as.data.frame() %>%
+  left_join(zhv, by = join_by(stop_id == DHID)) %>%
+  mutate(freq_class = findInterval(
+    mean_dow,
+    vec = c(0, 2, 4, 6, 12, 24),
+    rightmost.closed = FALSE
+  )
+  ) %>%
+  left_join(quality_lookup, by = join_by(stop_type, freq_class)) %>%
+  select(Name, stop_id, Municipality, MunicipalityCode, dow, Bedienungsqualität, mean_dow, stop_type, type_range, types, MunicipalityCode, geom)
+
+dow_fst <- stops_dowmean %>%
+  select(dow, stop_id, stop_type, mean_dow, Bedienungsqualität, MunicipalityCode, Municipality)
+
+write_fst(dow_fst, paste("output/dow", feed_date, method, min(date_select), max(date_select), ".fst", sep = "_"))
+#Total----
+stops_totalmean <- stops_core %>%
+  group_by(stop_id) %>%
+  summarise(mean_total= mean(departures_per_hour),
+            n_types = length(unique(stop_type)),
+            types = paste(sort(unique(stop_type)), collapse = ","),
+            stop_type = min(stop_type[stop_type != 0])) %>%
+  mutate(stop_type = ifelse(mean_total == 0, 0, stop_type)) %>%
+  ungroup %>%
+  as.data.frame() %>%
+  left_join(zhv, by = join_by(stop_id == DHID)) %>%
+  mutate(freq_class = findInterval(
+    mean_total,
+    vec = c(0, 2, 4, 6, 12, 24),
+    rightmost.closed = FALSE
+  )
+  ) %>%
+  left_join(quality_lookup, by = join_by(stop_type, freq_class)) %>%
+  select(Name, stop_id, Municipality, Bedienungsqualität, mean_total, stop_type, MunicipalityCode, geom)
+
+total_fst <- stops_totalmean %>%
+  select(stop_id, stop_type, mean_total, Bedienungsqualität)
+
+write_fst(total_fst, paste("output/totalmean", feed_date, method, min(date_select), max(date_select), ".fst", sep = "_"))
+
+#Variabilitätsstatistiken----
+#minimale und maximale Tages-BQ, n_changes ist die Anzahl der Variationen der
+#Bedienungsqualität über alle Tage hinweg, ohne Variation innerhalb eines Tages.
 variability_daily <- st_drop_geometry(stops_dailymean) %>%
   arrange(stop_id, date) %>%
   group_by(stop_id, Name) %>%
@@ -155,27 +282,6 @@ variability_daily <- st_drop_geometry(stops_dailymean) %>%
            pct_days_modal_quality,
            MunicipalityCode)  
 
-
-stops_dowmean <- stops_core %>%
-  replace_na(list(stop_type = 4)) %>%
-  mutate(dow = weekdays(date)) %>%
-  group_by(stop_id, dow) %>%
-  summarise(mean_dow = mean(departures_per_hour),
-            type_range = diff(range(stop_type)),
-            types = paste(sort(unique(stop_type)), collapse = ","),
-            stop_type = min(stop_type)) %>%
-  ungroup() %>%
-  as.data.frame() %>%
-  left_join(zhv, by = join_by(stop_id == DHID)) %>%
-  mutate(freq_class = findInterval(
-    mean_dow,
-    vec = c(0, 2, 4, 6, 12, 24),
-    rightmost.closed = FALSE
-  )
-  ) %>%
-  left_join(quality_lookup, by = join_by(stop_type, freq_class)) %>%
-  select(Name, stop_id, Municipality, dow, Bedienungsqualität, mean_dow, stop_type, type_range, types, MunicipalityCode, geom)
-
 variability_dow <- st_drop_geometry(stops_dowmean) %>%
   arrange(stop_id, dow) %>%
   group_by(stop_id, Name) %>%
@@ -243,23 +349,4 @@ variability_dow <- st_drop_geometry(stops_dowmean) %>%
            days_observed,
            modal_quality,
            pct_days_modal_quality,
-           MunicipalityCode) 
-
-
-stops_totalmean <- stops_core %>%
-  group_by(stop_id) %>%
-  summarise(mean_total= mean(departures_per_hour),
-            n_types = length(unique(stop_type)),
-            types = paste(sort(unique(stop_type)), collapse = ","),
-            stop_type = min(stop_type)) %>%
-  ungroup %>%
-  as.data.frame() %>%
-  left_join(zhv, by = join_by(stop_id == DHID)) %>%
-  mutate(freq_class = findInterval(
-    mean_total,
-    vec = c(0, 2, 4, 6, 12, 24),
-    rightmost.closed = FALSE
-  )
-  ) %>%
-  left_join(quality_lookup, by = join_by(stop_type, freq_class)) %>%
-  select(Name, stop_id, Municipality, Bedienungsqualität, mean_total, stop_type, MunicipalityCode, geom)
+           MunicipalityCode)
