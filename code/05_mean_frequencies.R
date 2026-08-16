@@ -210,6 +210,8 @@ total_fst <- stops_totalmean %>%
 
 write_fst(total_fst, paste("output/totalmean", feed_date, method, min(date_select), max(date_select), ".fst", sep = "_"))
 
+st_write(stops_totalmean, dsn = "geodata/Bedienungsqualität.gpkg", paste("totalmean", feed_date, method, min(date_select), max(date_select), ".fst", sep = "_"))
+
 #Variabilitätsstatistiken----
 #minimale und maximale Tages-BQ, n_changes ist die Anzahl der Variationen der
 #Bedienungsqualität über alle Tage hinweg, ohne Variation innerhalb eines Tages.

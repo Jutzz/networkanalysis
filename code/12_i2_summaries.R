@@ -21,15 +21,18 @@ library(sf)
 library(ggplot2)
 library(plotly)
 
-group <- "daily"
+group <- "total" #hourly,daily,meanhour or total
 
 #Read helper functions
 files.sources = list.files("code/helper/", full.names = TRUE)
 sapply(files.sources, source)
 feed_date <- "20260518"
 
-method <- "weekday"
-method_bq <- "median"
+method <- "hourmean"
+
+zensus_grid <- st_read(here("geodata/zensus.gpkg"), "regbez_zensus_populated") %>%
+  st_as_sf() %>%
+  select(id, ags, Einwohner)
 
 #Get dates of representative norm- and weekdays from checking in find_valid_dates.R
 nonholiday_weekdays_fullservice <- read_lines("code/temp/nonholiday_weekdays_cutoff.txt")
@@ -61,6 +64,7 @@ summary <- ds %>%
   summarise(
     mean_eq = mean(Erschließungsqualität, na.rm = TRUE),
     median_eq = median(Erschließungsqualität, na.rm = TRUE),
+    p50_eq = quantile(Erschließungsqualität, probs = 0.5, type = 1),
     modal_eq = mode_value(Erschließungsqualität),
     best_eq = min(Erschließungsqualität),
     worst_eq = max(Erschließungsqualität),
@@ -89,14 +93,14 @@ summary_grid <- summary %>%
   )
 
 stats_by_gem <- summary_grid %>%
-  group_by(ags, modal_eq) %>%
+  group_by(ags, p50_eq) %>%
   summarise(population = sum(Einwohner, na.rm = TRUE),
             .groups = "drop") %>%
   group_by(ags) %>%
   mutate(total_population = sum(population),
          percentage = round((population / total_population) * 100, 2)) %>%
   ungroup() %>%
-  rename("Erschließungsqualität" = modal_eq)
+  rename("Erschließungsqualität" = p50_eq)
 
 dominant_accessibility <- as.data.frame(stats_by_gem) %>%
   group_by(ags) %>%
@@ -131,94 +135,3 @@ st_write(
   ),
   append = FALSE
 )
-
-
-
-
-
-
-
-
-
-changing_ids <- ds %>%
-  group_by(id) %>%
-  summarise(
-    n_eq = n_distinct(Erschließungsqualität),
-    n_stops = n_distinct(to_id),
-    .groups = "drop"
-  ) %>%
-  filter(n_eq > 1) %>%
-  collect()
-
-changes_grid <- zensus_grid %>%
-  left_join(changing_ids)
-
-st_write(changes_grid, "output/indikator_02.gpkg", "changes_hours")
-
-#Get individual slices for detailed analysis----
-eq_profile <- function(id, group = c("hour","meanhour","day")) {
-  parquet_dir <- if (group == "hour") {
-    "output/hourly_eq/full/results_full_hour.parquet"
-  } else if (group == "day") {
-    "output/daily_eq/full/results_full_day.parquet"
-  } else {
-    "output/hourmean_eq/full/results_full_hourmean.parquet"
-  } 
-  ds <- open_dataset(parquet_dir)
-  
-  ds <- ds %>%
-    filter(id == !!id) %>%
-    select(any_of(c("date", "hour")),
-           Erschließungsqualität,
-           to_id,
-           departures_per_hour,
-           travel_time_p01) %>%
-    collect() %>%
-    replace_na(list(Erschließungsqualität = 8))
-    
-  
-  if ("date" %in% names(ds) & "hour" %in% names(ds)) {
-    ds$timestamp <- as.POSIXct(ds$date) + (ds$hour * 3600)
-  } else if ("date" %in% names(ds)) {
-    ds$timestamp <- as.POSIXct(ds$date)
-  } else if ("hour" %in% names(ds)) {
-    ds$timestamp <- hms::hms(hours = ds$hour)
-  } else {
-    ds$timestamp <- NA
-  }
- return(ds)
-}
-
-eq_slice <- function(date,
-                     hour = NULL,
-                     parquet_dir = "output/hourly_eq/full/results_full_hour.parquet") {
-  query <- open_dataset(parquet_dir) %>%
-    filter(date == !!date)
-  
-  if (!is.null(hour)) {
-    query <- query %>%
-      filter(hour == !!hour)
-  }
-  
-  collect(query) %>%
-    mutate(datetime = as.POSIXct(date) + hour * 3600)
-}
-
-d <- eq_slice(date = "2026-05-05", hour = NULL) %>%
-  left_join(zensus_grid)
-
-st_write(d,
-         "code/temp/i2test.gpkg",
-         layer = "i2slice_20260505",
-         append = FALSE)
-
-
-
-profile <- eq_profile("100mN30644E40713", group = "hourmean")
-
-p <- ggplot(profile, aes(x = timestamp, y = )) +
-  #geom_path(group = "departures_per_hour") +
-  geom_point(aes(color = as.factor(travel_time_p01)))
-
-p
-ggplotly(p)

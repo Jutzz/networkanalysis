@@ -1,4 +1,3 @@
-#TODO: Calculate daily (weekdaily?) and total timespan values from hourly dataset
 #Setup----
 library(tidyverse)
 library(sf)
@@ -146,7 +145,6 @@ rm(gtfs_feed)
 rm(filtered_trips_dates)
 gc()
 
-#Calculation of daily values moved to next script based on hourly values.
 #Count departures between 08:00 and 18:00 for all week-/normdays, calculate mean.
 #Assign stop type and Bedienungsqualität based on Steckbrief table.
 #Join with zhv as modified in osm_extract.R for geodata.
@@ -161,18 +159,18 @@ departure_counts_hourly <- filtered_stop_times_dates %>%
   group_by(date, hour, grouping_id) %>%
   reframe(
     departures = n(),
-    stop_type = min(route_rank, na.rm = TRUE)
+    stop_type = min(route_rank, na.rm = TRUE) #Set stop_type to rank of best mode
   ) %>%
   tidyr::complete(
     date,
     grouping_id,
     hour,
-    fill = list(departures = 0)
+    fill = list(departures = 0) #Add a row for hours without departures
   ) %>%
   mutate(
     departures_per_hour = departures
   ) %>%
-  replace_na(list(stop_type = 0)) %>%
+  replace_na(list(stop_type = 0)) %>% #Set stop_type to 0 for rows with no departures
   left_join(zhv, by = join_by(grouping_id == DHID)) %>%
   mutate(freq_class = findInterval(
     departures_per_hour,

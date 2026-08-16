@@ -31,16 +31,7 @@ zensus_grid <- st_read(here("geodata/zensus.gpkg"), "regbez_zensus_populated") %
   select(id, ags, Einwohner)
 #mutate(id = GITTER_ID_100m)
 
-stops_table <- read_fst(paste("output/totalmean", feed_date, method, min(date_select), max(date_select), ".fst", sep = "_"))
-
-stops_table <- st_read(here("geodata/Bedienungsqualität.gpkg"), paste(feed_date, method, min(date_select), max(date_select), sep = "_")) %>%
-  mutate(stop_type = case_when(
-    stop_type_median == 1 ~ "train",
-    stop_type_median == 2 ~ "tram",
-    stop_type_median == 3 ~ "bus",
-    stop_type_median == 4 ~ "other",
-    TRUE ~ NA_character_ # Handles any other values
-  ))
+stops_table <- st_read(dsn = "geodata/Bedienungsqualität.gpkg", paste("totalmean", feed_date, method, min(date_select), max(date_select), ".fst", sep = "_"))
 
 #Erstellen von r5-lesbaren Start- und Zielorten. Nur bewohnte Gitterzellen als Startorte.
 area <- st_read("geodata/dvg1nw.gpkg", "gemeinden_regbez_kln")
@@ -50,13 +41,13 @@ poi_type <- "stops"
 
 polygrid100 <- zensus_grid %>%
   filter(Einwohner > 0) %>%
-  st_filter(st_buffer(st_transform(area, crs = st_crs(zensus_grid)), 10000), .predicate = st_intersects)
+  st_filter(st_buffer(st_transform(area, crs = st_crs(zensus_grid)), 1000), .predicate = st_intersects)
 
 zensus_grid_df <- pointgrid_fun(polygrid100, id_col = "id") %>%
   filter(!is.na(id))
 
 stops <- st_as_sf(stops_table, coords = c("Längengrad", "Breitengrad"), crs = 4326) %>%
-  st_filter(st_buffer(st_transform(area, crs = st_crs(stops_table)), 10000), .predicate = st_intersects)
+  st_filter(st_buffer(st_transform(area, crs = st_crs(stops_table)), 1000), .predicate = st_intersects)
 
 pois_df <- pois_fun(pois = get(poi_type), id_col = "stop_id") %>%
   filter(!is.nan(lat))

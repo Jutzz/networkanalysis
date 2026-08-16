@@ -34,31 +34,13 @@ area <- st_read("geodata/dvg1nw.gpkg", "regbez25kmbuffer")
 #TODO: Make usable for any area: import full zensus and stops data, filter by generic area (limited stops and dests)
 mapping_matrix <- read_csv2(here("code/erschließung_mat_long_numeric.csv"))
 
-stops_table <- st_read(
-  here("geodata/Bedienungsqualität.gpkg"),
-  paste("var_daily",feed_date, method, min(date_select), max(date_select), sep = "_")
-) %>%
-  mutate(
-    stop_type = case_when(
-      stop_type_median == 1 ~ "train",
-      stop_type_median == 2 ~ "tram",
-      stop_type_median == 3 ~ "bus",
-      stop_type_median == 4 ~ "other",
-      TRUE ~ NA_character_ # Handles any other values
-    )
-  ) %>%
-  filter(!is.na(bq_median))
-
-stops_id <- st_drop_geometry(stops_table) %>%
-  mutate(id = as.character(stop_id))
-
 zensus_grid <- st_read(here("geodata/zensus.gpkg"), "regbez_zensus_populated") %>%
   st_as_sf() %>%
   select(id, ags, Einwohner)
 
 polygrid100 <- zensus_grid %>%
   filter(Einwohner > 0) %>%
-  st_filter(st_buffer(st_transform(area, crs = st_crs(zensus_grid)), 10000), .predicate = st_intersects)
+  st_filter(st_buffer(st_transform(area, crs = st_crs(zensus_grid)), 1000), .predicate = st_intersects)
 
 ttm <- read.csv2("output/walk_20min_zensus_stops.csv") %>%
   select(from_id, to_id, travel_time_p01)
@@ -305,7 +287,7 @@ final <- data.table::rbindlist(lapply(files, fst::read_fst))
 
 fst::write_fst(final, "output/hourly_eq/full/results_full_hour.fst")
 
-#----Meanhourly
+#----Meanhourly----
 table_name <- paste("hourmean",
                     feed_date,
                     method,
@@ -391,7 +373,7 @@ final <- data.table::rbindlist(lapply(files, fst::read_fst))
 fst::write_fst(final, "output/daily_eq/full/results_full_day.fst")
 
 #-----Total----
-table_name <- paste("total",
+table_name <- paste("totalmean",
                     feed_date,
                     method,
                     min(date_select),
@@ -430,10 +412,5 @@ final <- data.table::rbindlist(lapply(files, fst::read_fst))
 
 fst::write_fst(final, "output/total_eq/full/results_full_total.fst")
 
-bq_profile <- function(id){
-  profile <- stops_core %>%
-    filter(stop_id == !!id)
-}
 
-id <- bq_profile("de:05358:3409")
 

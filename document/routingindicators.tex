@@ -9,6 +9,8 @@
 \usepackage{graphicx}
 \usepackage{hyperref}
 \usepackage{svg}
+\usepackage{booktabs}
+\usepackage{array}
 \usepackage{listings}
 \svgsetup{
 	inkscapelatex=false
@@ -49,7 +51,7 @@
 
 \bibliography{test,BA}
 
-\newcommand{\haThema}{RoutingbasierteErreichbarkeitsindikatoren für die Nahverkehrsplanung im Rheinland}
+\newcommand{\haThema}{Routingbasierte Erreichbarkeitsindikatoren für die Nahverkehrsplanung im Rheinland}
 \newcommand{\haAutor}{Paul Jannis Weiland}
 \newcommand{\haAutorAdresse}{Plankgasse 58}
 \newcommand{\haAutorPLZ}{50668}
@@ -103,9 +105,11 @@
 	%\begin{document}
 	\section{Einleitung}
 	- Der Nahverkehr: Soziale und ökonomische Rolle, kurze Geschichte
+	\enquote{Was ist Verkehr? Was ist Verkehrswende? Warum sollte man das wollen?}
 	- Indikatoren: Wofür sind sie gut, und was müssen sie können?
 	Hier steht normaler Text ohne jede Besonderheit, sozusagen der Fließtext.\\
 	\texttt{Wie sieht dieser Text aus, er soll eine Art Codeausschnitt darstellen?}
+	Die Nahverkehrsplanung liegt in Verantwortung von Aufgabenträgern, die von der Landesregierung bestimmt werden. Die Aufgabenträgerschaft für den straßengebundenen Verkehr (auch ÖSPV) liegt in NRW bei \enquote{Kreise[n] und kreisfreien Städte[n], sowie [\textellipsis] mittleren und großen kreisangehörigen Städten die ein eigenes ÖPNV-Unternehmen betreiben oder an einem solchen wesentlich beteiligt sind} \parencite[§3]{ÖPNVGNRW}, der schienengebundene Verkehr (auch SPNV) wird durch die Zweckverbände in drei Kooperationsräumen organisiert und geplant \parencite[§5 Abs. 1]{ÖPNVGNRW} (Stand August 2026, ab Januar 2027 eine landesweite Anstalt, vgl. \textcite[§6 insbes. Abs. 6]{ÖPNVGNRW}).
 	\section{Literatur}
 	\subsection{Indikatoren leicht gemacht und Schlussbericht des FuE-Projektes}
 	Auf Grundlage der Verordnung EU (2024/1697)\parencite{RegulationEU20242024}, ist jeder \enquote{städtischen Knoten}\footnote{Bevölkerung $\geq$ \num{100000} oder, falls eine NUTS-2-Region keine solche Stadt aufweist, der Hauptknoten der Region.} dazu aufgefordert, einen nachhaltigen urbanen Mobilitätsplan (\enquote{\textbf{S}ustainable \textbf{U}rban \textbf{M}obility \textbf{P}lan}, \textit{SUMP}). aufzustellen \parencite[Art. 41 Abs. 1 b) i)]{RegulationEU20242024}. Zu einem solchen Plan sollen Indikatoren entwickelt werden, anhand derer \enquote{Nachhaltigkeit, Sicherheit und Zugänglichkeit} der städtischen Mobilität abgebildet werden können.
@@ -117,14 +121,12 @@
 
 	Diese Indikatoren werden in den Kapiteln \ref{sec:indicErschließung} und \ref{sec:indicCentralPlace} näher beschrieben und für das in \ref{sec:Untersuchungsgebiet} vorgestellte Gebiet berechnet. Um die Ergebnisse und die Indikatoren selbst anschließend diskutieren zu können, soll hier betrachtet werden, mit welchen Zielen die Indikatoren entworfen wurden, und welche Anforderungen die Steckbriefe und der Schlussbericht sich stellen. 
 	
-	Während im Kontext der SUMPs und in den finalen Steckbriefen nur von Indikatoren die Rede ist, diskutiert der Schlussbericht die Umsetzbarkeit der Indikatoren als Standards beziehungsweise Mindeststandards. Als Setzen eines (Mindest-)Standards wird verstanden, das an die Erfüllung eines Sollwerts des Indikators bestimmte Anreize, bzw. Sanktionen an die Nichterfüllung geknüpft sind, wobei die Verbindlichkeit stark variieren kann \parencite[19]{kcwgmbhMethodikUndEmpfehlungen2024}.	Zunächst stellt der Schlussbericht fest, dass es zum Zeitpunkt des Verfassens \enquote{keine bundeseinheitlichen ÖPNV-Angebotsstandards [gibt]}. Folgend prüft er, inwieweit die Organisation des ÖPNV und seiner Planung die Möglichkeit vorsieht, solche Standards zu etablieren. Planung und Durchführung des ÖPNV sind Aufgabe der Länder \parencite[vgl.][§3]{RegGRegionalisierungsgesetz}, allerdings sieht der Bericht durchaus Möglichkeiten auf übergeordneten legislativen Ebenen, Rahmenbedingungen und Anreize zu setzen, über welche die Umsetzung von Qualitätsstandards möglich wäre, durch die uneinheitliche Organisation über die Länder hinweg und teils ungeklärte rechtliche Fragestellungen stellt dies aber eine nicht unwesentliche Herausforderung dar \parencite[Abschnitt 2.2]{kcwgmbhMethodikUndEmpfehlungen2024}. Parallel werden konzeptionelle Herausforderungen bei der Erstellung von (bindenden) Standards identifiziert.\footnote{Vgl. Abschnitt \ref{sec:AccessKritik}}
+	Während im Kontext der SUMPs und in den finalen Steckbriefen nur von Indikatoren die Rede ist, diskutiert der Schlussbericht die Umsetzbarkeit der Indikatoren als Standards beziehungsweise Mindeststandards. 	\textcite{kirchhoffOPNVPlanungFurLandliche2010} erachten solche Sollwerte als zentrales Kennzeichen eines Wandels von einer Anpassungsplanung des ÖPNV in Deutschland zu einer zielbezogenen Planung. Um die Ziele, die im Nahverkehrsplan festgelegt sind erfüllen zu können, seien diese mit konkreten \enquote{Zielkritierien und Zielindikatoren} \parencite[14]{kirchhoffOPNVPlanungFurLandliche2010} zu versehen. Dabei sind Interessen und Leistungsfähigkeit der Nutzenden, der Aufgabenträger und der Verkehrsunternehmen zu berücksichtigen. Sind an die Erfüllung eines Sollwerts des Indikators bestimmte Anreize, bzw. Sanktionen an die Nichterfüllung geknüpft, spricht der Schlussbericht von einem \textit{Standard}, wobei die Verbindlichkeit stark variieren kann \parencite[19]{kcwgmbhMethodikUndEmpfehlungen2024}.	Zunächst stellt der Schlussbericht fest, dass es zum Zeitpunkt des Verfassens \enquote{keine bundeseinheitlichen ÖPNV-Angebotsstandards [gibt]}. Auch \textcite{kirchhoffOPNVPlanungFurLandliche2010} kritisieren, dass die Nahverkehrsplanung sich zu häufig auf Zustandsbeschreibungen beschränke, ohne daran eine Bewertung zum Erreichen der Ziele vorzunehmen. 
+	Planung und Durchführung des ÖPNV sind Aufgabe der Länder \parencite[vgl.][§3]{RegGRegionalisierungsgesetz}, allerdings sieht der Bericht durchaus Möglichkeiten auf übergeordneten legislativen Ebenen, Rahmenbedingungen und Anreize zu setzen, über welche die Umsetzung von Qualitätsstandards möglich wäre, durch die uneinheitliche Organisation über die Länder hinweg und teils ungeklärte rechtliche Fragestellungen stellt dies aber eine nicht unwesentliche Herausforderung dar \parencite[Abschnitt 2.2]{kcwgmbhMethodikUndEmpfehlungen2024}. Parallel werden konzeptionelle Herausforderungen bei der Erstellung von (bindenden) Standards identifiziert.\footnote{Vgl. Abschnitt \ref{sec:AccessKritik}}
 	
 	Der Schlussbericht unterscheidet zwischen \enquote{Teilhabestandards} und \enquote{Attraktivitätsstandards}. Erstere sollen ein \enquote{akzeptables Mindestmaß an alltagstauglicher Mobilität} anpeilen, letztere haben einen ÖPNV zum Ziel, der mit dem motorisierten Individualverkehr konkurrieren kann, in einem Maße, dass beispielsweise Klimaziele erreicht werden können. Zudem müssten Standards, wenn sie als rechtlich bindend und mit Anreizen bzw. Sanktionen verknüpft werden sollen, den rechtlichen Rahmenbedingungen, den finanziellen und planerischen Kapazitäten und den Rüstzeiten von größeren ÖPNV-(Infrastruktur-)Maßnahmen insbesondere im SPNV angemessen sein \parencite[vgl.][Abschnitt 4.2]{kcwgmbhMethodikUndEmpfehlungen2024}. Um sich diesen Voraussetzungen anzunähern wurden die Indikatoren zusammen mit Fachkundigen, Verbänden und Aufgabenträgern aus ganz Deutschland entwickelt, gültige Nahverkehrspläne stichprobenartig analysiert und in einem Durchlauf für ganz Deutschland getestet. Aus diesen Ergebnissen und in Zusammenarbeit mit einem wissenschaftlichen Beirat wurden Vorschläge für Soll-Werte erarbeitet \parencite[Kapitel 5]{kcwgmbhMethodikUndEmpfehlungen2024}.
 	
 	Die Publikation \enquote{Indikatoren leicht gemacht} \parencite{bmdvIndikatorenLeichtGemacht2025} ermittelt zehn Leitziele für urbane Mobilität, die in 26 Handlungsziele mit entsprechenden Indikatoren für deren Erfüllung aufgeteilt werden. Die Handlungsziele zu den in dieser Arbeit betrachteten Indikatoren sind \enquote{Verfügbarkeit des öffentlichen Verkehrs verbessern} und \enquote{Verbesserung der regionalen Verkehrsanbindung mit dem Umweltverbund}, beide unter dem Leitziel 1: \enquote{Mobilität und Teilhabe sichern}\parencite[14]{bmdvIndikatorenLeichtGemacht2025}. Die Publikation versteht die im FuE-Projekt entwickelten Indikatoren also primär als Teilhabestandard. Auf dieser Grundlage werden die Steckbriefe in Abschnitt \ref{sec:indicators} interpretiert und modifizert.
-	
-	\textcite{kirchhoffOPNVPlanungFurLandliche2010}
-	\todo[inline]{Grundgedanken von Kirchhoff zur Nutzung von Indikatoren/Zielen/Zielsetzung/Struktur NVP}
 	
 	\subsection{Access}
 	Die im FuE-Projekt der RWTH Aachen und der KCW GmbH entwickelten und durch das Bundesverkehrsminsterium (in modifizierter Form) übernommenen Indikatoren gründen lassen sich in den theoretischen Bereich der Accessibility\footnote{Je nach Einsatz und Kontext ließe sich der Begriff als \textit{Erreichbarkeit}, \textit{Verfügbarkeit} oder \textit{Zugänglichkeit} ins Deutsche übertragen. Da diese Begriffe stellenweise als Eingrenzung bestimmter Methoden genutzt werden, und mit Blick auf die mehrheitlich in englischer Sprache vorliegende Literatur wird in dieser Arbeit der englische Begriff \textit{Accessibility} bzw. \textit{Access} genutzt.} Studies einordnen. Als Ausgangspunkt dieses Ansatzes wird häufig die Verknüpfung zwischen Landnutzung und den Fahrtzeiten zwischen Wohn-, Arbeits- und Markt-/Konsumorten durch \textcite{hansenHowAccessibilityShapes1959} angeführt, so u.a. bei \textcites[145]{koenigIndicatorsUrbanAccessibility1980}[194]{kwanSpaceTimeIntegralMeasures1998}[18]{harrisAccessibilityConceptsApplications2001}[46]{levinsonTransportAccessManual2020}. \textcite{hansenHowAccessibilityShapes1959} definiert Access im Allgemeinen als \enquote{measurement of the spatial distribution of activities about a point, adjusted for the ability and the desire of people or firms to overcome spatial separation} \pnotecite[73][, Hervorhebung im Original]{hansenHowAccessibilityShapes1959}, konkreter bezeichnet er Accessibility als \enquote{potential of opportunities for interaction}. Ein Maß der Accessibility in diesem Sinne sagt also nicht notwendigerweise wahrscheinliche  oder tatsächliche Bewegungen hervor, sondern allein das Ausmaß der Möglichkeit einer Bewegung. Alle Maße, die hier beschrieben werden, beruhen auf einer großen Anzahl von Annahmen über menschliches Verhalten und räumliche Strukturen. \textcite{potPrinciplesPlacebasedAccessibility2026} führen aus, dass Planung auf Grundlage von Accessibility sich nicht auf die Messgrößen allein verlassen sollte. Auch der Schlussbericht macht deutlich, das mit der Festlegung von Messgrößen Risiken verbunden sind: \enquote{Mit der Standardisierung tritt die \textellipsis Erfüllung des Standards an die Stelle des eigentlichen Ziels. Risiken \textellipsis entstehen, wenn der Standard das eigentliche Ziel nur unzureichend abbildet}\parencite[32]{kcwgmbhMethodikUndEmpfehlungen2024}. Insbesondere bei der Anwendung von \enquote{Blaupausen} wie dem Konzept der 15-Minuten-Stadt sehen \textcite[3]{potPrinciplesPlacebasedAccessibility2026} Risiken
@@ -265,9 +267,6 @@
 	
 	 \textcite{higginsCalculatingPlacebasedTransit2022} vergleicht verschiedene Anwendungen zur Berechnung von Reisezeitmatrizen: ArcGIS Network Analyst, \textit{EMME} (bei \textcite{higginsCalculatingPlacebasedTransit2022} zitiert als \textcite{EMMEinro2019} (nicht mehr abrufbar), inzwischen Teil von \textit{Bentley OpenPaths}, \textcite{BentleyOpenPathsSoftware2024}), Implementierungen von \textit{OpenTripPlanner} für \texttt{R} und \texttt{Python} und R$^5$ via \texttt{r5r}.  Dabei ermöglicht die Parallelisierung von \texttt{r5r} \parencite[5]{dellingRoundBasedPublicTransit2012} die kürzeste Bearbeitungsdauer \parencite[vgl.][107, Tabelle 3]{higginsCalculatingPlacebasedTransit2022}. Die im Schlussbericht für Fußwege verwendete \textit{RoutingPlus-API} steht ausschließlich für Bundesbehörden zur Verfügung \parencite{BKGRoutingPlusDienst2026}. Für das ÖPNV-Routing nutzt der Schlussbericht \texttt{tidytransit} \parencite{polettiTidytransitReadValidate2025}. Dieses Paket bietet weniger Möglichkeiten zur Konfiguration der Reiseketten und betrachtet keine vollständigen Start-Ziel-Routen (alleinstehendes RAPTOR ohne Zu- und Abwege).  Die in dieser Arbeit erzeugten Reisezeitmatrizen liegen vergleichsweise am oberen Ende der Benchmarks bei \citeauthor{higginsCalculatingPlacebasedTransit2022}: $\approx$\num{150000} Zensuszellen zu $\approx$\num{20000} Halten für die Erschließungsqualität beziehungsweise zu $\approx$\num{150} zentralen Orten. Aufgrund der hohen Geschwindigkeit, der offenen Verfügbarkeit gegenüber ArcGIS und der Möglichkeit der integrierten Berechnung vollständiger Reiseketten wurde \texttt{r5r} als Routing-Werkzeug ausgewählt. Damit werden wiederholte Reisezeitanalysen für verschiedene Zeitpunkte im Tages-/Wochenverlauf in realistischen Zeiten umsetzbar.
 	
-	\subsection{Verkehrswende/Verkehrsgerechtigkeit}
-	\todo[inline]{Als Einführung inklusive \enquote{Was ist Verkehr? Was ist Verkehrswende? Warum sollte man das wollen?}?}
-	%evtl Access und Indikatoren in eins.
 	\section{Methodik}
 	\todo[inline]{Einführung/Ablauf Methodik}
 	\subsection{Vorstellung des Untersuchungsgebietes}
@@ -475,14 +474,33 @@
 	\texttt{trips}, \texttt{routes}, \texttt{stops} und \texttt{stop\_times} werden anhand der aktiven \texttt{services}, bzw. \texttt{dates\_services}(s.o.) so kombiniert, das ein vollständiger Fahrplan jeder Nahverkehrsabfahrt zwischen 08:00 und 18:00 (08:00 $\leq$ \texttt{departure\_time} $<$ 18:00) an jedem Halt im Untersuchungszeitraum (Wochentage oder Normalwerktage) entsteht. Nur Abfahrten mit \texttt{pickup\_type = 0} werden berücksichtigt.\footnote{Andere Werte beschreiben jeweils Halte, an denen nur ausgestiegen werden kann oder die vorher arrangiert werden müssen (\parencite{mobilitydataGeneralTransitFeed2026}).} %AST/ALT
 	Einige Einträge in \texttt{stops} sind nicht mit einer \texttt{stop\_id} im DHID-Format hinterlegt, haben aber unter ihrem \texttt{stop\_name} einen Eintrag im zentralen Haltestellenverzeichnis \parencite{wviprof.dr.wermuthZhvwvigmbhde2026}. Für das Zusammenfassen der Halte einer \texttt{parent\_station} wird deshalb eine einheitliche \texttt{grouping\_id} erzeugt, die, je nach Datenlage, aus der \texttt{parent\_station}, sofern sie im DHID/IFOPT-Format vorliegt aus den ersten drei Bestandteilen der \texttt{stop\_id} (\texttt{stop\_id = de:05315:11801:7:71} $\rightarrow$ \texttt{grouping\_id = de:05315:11801}) oder aus der unter dem jeweiligen \texttt{stop\_name} im ZHV hinterlegten DHID erzeugt wird.
 		
-	Die Abfahrten werden pro Stunde nach übergeordnetem Halt gruppiert, gezählt und der Haltestellentyp entsprechend Tabelle \ref{tab:haltestellentypen} anhand des höchstrangigen Verkehrsmittels bestimmt. Die letzte \texttt{stop\_time} eines \texttt{trips} markiert den Endhalt, ab dem keine weiteren Ziele erreicht werden könnten. Diese werden daher anhand der \texttt{stop\_sequence} identifiziert und nicht mitgezählt. Liegen für eine Stunde keine Fahrten vor wird eine entsprechende Zeile mit \texttt{departures = 0} hinzugefügt. Aus den resultierenden Abfahrten pro Stunde und dem Haltestellentypen ergibt sich schließlich die Bedienungsqualität nach Tabelle \ref{tab:haltestellentypen}. Um das Ergebnis kartographisch darzustellen wird es entlang der \texttt{stop\_id} mit den Koordinaten aus dem zentralen Haltestellenverzeichnis, wie es in \texttt{01\_osm\_extract.R} %name ändern
+	Die Abfahrten werden pro Stunde nach übergeordnetem Halt gruppiert, gezählt und der Haltestellentyp entsprechend Tabelle \ref{tab:haltestellentypen} anhand des höchstrangigen Verkehrsmittels bestimmt. Die letzte \texttt{stop\_time} eines \texttt{trips} markiert den Endhalt, ab dem keine weiteren Ziele erreicht werden könnten. Diese werden daher anhand der \texttt{stop\_sequence} identifiziert und nicht mitgezählt. Liegen für eine Stunde keine Fahrten vor wird eine entsprechende Zeile mit \texttt{departures = 0} hinzugefügt. Aus den resultierenden Abfahrten pro Stunde und dem Haltestellentypen ergibt sich schließlich die Bedienungsqualität nach Tabelle \ref{tab:haltestellentypen}. Um das Ergebnis kartographisch darzustellen wird es entlang der \texttt{stop\_id} mit den Koordinaten aus dem zentralen Haltestellenverzeichnis, wie es in \texttt{01\_osm\_extract.R} \todo{Skriptname}
 	präpariert wurde, verknüpft. 
 	Die resultierende Tabelle ist als \texttt{hourly\_20260518\_weekday\_2026-05-04\_2026-06-26} im Anhang zu finden.
 	
-	Auf dieser Grundlage werden je Halt Mittelwert, Minimum und Maximum der durchschnittlichen Abfahrten pro Stunde, die mittlere und Summe der Differenz zwischen den Tagen (absolute Werte), prozentuale Variation, minimale und maximale resultierende Bedienungsqualität und die Anzahl der Wechsel der Bedienungsqualität ermittelt. Die resultierende Tabelle ist als \texttt{variablity\_daily\_20260518\_weekday\_2026-05-04\_2026-06-26} im Anhang zu finden. Die Ergebnisse werden unter \ref{sec:resultsbedienung} betrachtet und diskutiert.
-	\todo{Skriptnummer einfügen}
+%	Auf dieser Grundlage werden je Halt Mittelwert, Minimum und Maximum der durchschnittlichen Abfahrten pro Stunde, die mittlere und Summe der Differenz zwischen den Tagen (absolute Werte), prozentuale Variation, minimale und maximale resultierende Bedienungsqualität und die Anzahl der Wechsel der Bedienungsqualität ermittelt. Die resultierende Tabelle ist als \texttt{variablity\_daily\_20260518\_weekday\_2026-05-04\_2026-06-26} im Anhang zu finden. Die Ergebnisse werden unter \ref{sec:resultsbedienung} betrachtet und diskutiert.
+%	\todo{Skriptnummer einfügen}
 	
-	In \todo[inline]{skriptnummer} werden daraus zusätzlich tägliche Mittelwerte, stündliche Mittelwerte über alle Tage, wochentägliche und Mittelwerte über den gesamten Zeitraum gebildet. Der Haltestellentyp orientiert sich dabei jeweils an dem höchstrangigen Verkehrsmittel im entsprechenden Zeitraum. \todo[inline]{Beispielhafte Abbildungen für Varianz Tag/Stunde, Profil einer hochvariablen Zensuszelle}
+	In \todo[inline]{skriptnummer} werden daraus zusätzlich tägliche Mittelwerte, stündliche Mittelwerte über alle Tage, wochentägliche und Mittelwerte über den gesamten Zeitraum gebildet. Der Haltestellentyp orientiert sich dabei jeweils an dem höchstrangigen Verkehrsmittel im entsprechenden Zeitraum. Die einzelnen Ergebnisse sind im Anhang im Ordner \texttt{output} abgelegt, vgl. Tabelle \ref{tab:filesbqappendix}
+	\begin{table}
+	\centering
+	\begin{tabular}{|l|r|}
+		\hline
+		\textbf{Datei} & \textbf{Inhalt} \\
+		\hline
+		hourly\_\textellipsis\_.fst & Bedienungsqualität je einzelner Stunde (360) \\
+		\hline
+		daily\_\textellipsis\_.fst & Bedienungsqualität je Tag (36) \\
+		\hline
+		meanhourly\_\textellipsis\_.fst & Bedienungsqualität je Stundenintervall (10) \\
+		\hline
+		dow\_\textellipsis\_.fst & Bedienungsqualität je Wochentag (5) \\
+		\hline
+		meantotal\_\textellipsis\_.fst & Bedienungsqualität gesamter Zeitraum \\
+		\hline
+	\end{tabular}
+	\label{tab:filesbqappendix}
+	\end{table}
 	
 	\paragraph{Erschließungsqualität}
 	Für die Berechnung der Erschließungsqualität wird zunächst für jede Zensuszelle mit der \texttt{r5r}-Funktion \texttt{travel\_time\_matrix()} ermittelt, welche Halte in maximal 20 Minuten Gehzeit erreicht werden können (\texttt{09\_i2\_traveltimes.R}). Das MTUP ist an dieser Stelle nicht relevant, da die Gehzeit zu jeder Tageszeit gleich ist. Danach wird das Optimum aus Gehzeit und Bedienungsqualität ermittelt, also die maximale Erschließungsqualität, die vom Startort (in der gesetzten Stunde) erreicht werden kann. Dabei ist zu beachten, das es Fälle geben kann, bei denen dies weder die Haltestelle mit dem kürzesten Zuweg noch jene mit der besten Bedienungsqualität ist. Den eigentlichen Indikator stellen pro Gemeinde die Bevölkerungsanteile je Qualitätsstufe dar (A-F, bzw. nicht erschlossen/keine Haltestelle in < 20 min erreicht).
@@ -495,7 +513,6 @@
 
 	\subsubsection{Anbindungsindikator - Erreichbarkeit zentraler Orte}
 	\label{sec:indicCentralPlace}
-	\todo[inline]{Temporale Ebene: r5r rechnet automatisch 1 abfahrt pro minute (oder mehr) und bildet perzentile. Zu Algorithmen oder Methodik unten? Trotzdem signifikante, da räumlich inhomogene Variation abzubilden, sowohl zwischen Tagen als auch über Tage hinweg.}
 	Der zweite Indikator aus dem Forschungsprojekt, der als dritter Steckbrief \enquote{Erreichbarkeit zentraler Orte} vom BMDV veröffentlicht wurde \parencite[28-30]{bmdvIndikatorenLeichtGemacht2025}, benötigt ebenso die Fahrplandaten im GTFS-Format, das Bevölkerungsgitter aus den Daten des Zensus und das Wegenetz des Untersuchungsgebietes. Berechnet wird für jeden Startort die Reisezeit zu zentralen Orten mit höherrangigen Zentrumsfunktionen. Der Indikator ergibt sich aus dem Anteil der Bevölkerung einer Kommune, der diese Strecke nicht in einer festgelegten Zeit zurücklegen kann. Der Steckbrief stellt die Werte in Tabelle \ref{tab:Indikator3Reisezeiten} als Orientierung zur Verfügung, lässt die tatsächliche Festlegung aber offen.
 	
 	\paragraph{Festlegung zentraler Orte} Die grundsätzliche Zuweisung einer Gemeinde zu einer zentralörtlichen Stufe wird in Nordrhein-Westfalen im Rahmen des Landesentwicklungsplans festgelegt \parencite[181-191]{MWIKENRWLandesentwicklungsplanNordrheinWestfalen2024}. Dabei wird immer das gesamte Gebiet der Gemeinde kategorisiert. Der Schlussbericht zum FuE-Projekt greift diese Problematik auf \parencite[64, 73]{kcwgmbhMethodikUndEmpfehlungen2024}, unter anderem betonen auch \textcite[140f]{Flex2016} und \textcite[90]{Terfrüchte2016} in ihren Analysen der Neuaufstellung des nordrhein-westfälischen Zentrale-Orte-Konzepts, das diese Praxis nicht vollständig geeignet ist, um die Theorie der Zentralen Orte operationalisierbar zu machen, da es sowohl Gemeinden gibt, die durch kommunale Neugliederungen polyzentrisch aufgebaut sind \parencite[insbesondere Grund- und Mittelzentren, vgl. auch][16]{blotevogelZentraleOrteZur1996}, als auch solche, die als Oberzentrum zwar großflächig dicht besiedelt sind, deren tatsächliche Zentrumsfunktionen sich aber nur in einem kleinen Teil materialisieren. Im Untersuchungsgebiet dieser Arbeit wird dies beispielhaft ersichtlich an der Stadt Köln und Mittelzentren wie Monschau oder Mechernich. Köln ist mit etwas über \SI{400}{\kilo\metre\squared} die flächenmäßig größte Gemeinde NRWs, nicht jeder Punkt dieser Gemeinde erfüllt die zentralörtlichen Funktionen gleichermaßen. Je nach Bedarf (Kultur, Bildung, Gesundheit, Verwaltung, Waren) können verschiedene Punkte als zentralörtliches Ziel gewertet werden. \textcite{Flex2016} macht zudem darauf aufmerksam, das für verschiedene Kategorien zentralörtlicher Funktionen theoretisch verschiedene Analysen angesetzt werden müssen: So ist beispielsweise bei der Lebensmittelversorgung eine hohe Freiheit bei der Wahl des Ziels gegeben, Amtsgänge müssen jedoch zwingend in der eigenen Kommune erledigt werden. \parencite[149]{Flex2016} Im Schlussbericht werden \enquote{Teilzentren} als \enquote{Konglomerat von Points-of-Interest (POI)} ermittelt \parencite[74]{kcwgmbhMethodikUndEmpfehlungen2024}, die Methode zur Clusterung ist allerdings nicht näher beschrieben.
@@ -608,14 +625,66 @@ Die gestaffelte Festlegung von Bedienungsqualitäten kann dazu führen, dass das
 	\caption{Anteil der Haltestellen je Bedienungsqualität in Heimbach pro Tag (Tagesmittel) und Stunde (Mittel aller Tage)}
 	\includesvg[width=1\linewidth]{figures/heimbach_day_hour.svg}
 	\label{fig:HeimbachTagStunde}
-\end{figure}	
-Die Ermittlung der Erschließungsqualität pro Stunde auf Grundlage der tatsächlichen Abfahrten in dieser Stunde ermöglicht es, eine Erschließungsqualität über den gesamten Zeitraum zu ermitteln, welche die tatsächlichen Bedienungsmuster berücksichtigt, indem verschiedene statistische Parameter zur Variation der Erschließungsqualität ermittelt werden können, und ein Profil wie in Abbildung \todo{Abbildung einfügen} für den jeweiligen Standort erzeugt werden kann.
+\end{figure}
 %Beispiel: Hürth Efferen: Ende der Umleitung der Linie 712 \parencite{stadthuerthVollsperrungRitterstrasseHuerthEfferen}
 %Simmerath Lemmersdorf Radarstation: Wochentagsvariabler Fahrplan \parencite{avvFahrplanLinie86}
 %Gini
 \subsubsection{Zentrale Orte}
 \todo{Wie viele zentrale Orte wurden identifiziert, wie viele polyzentrische Orte gibt es?}
 	\subsection{Indikatoren}
+	 \subsubsection{Erschließungsqualität}
+	 Die Ermittlung der Erschließungsqualität pro Stunde auf Grundlage der tatsächlichen Abfahrten in dieser Stunde ermöglicht es, eine Erschließungsqualität über den gesamten Zeitraum zu ermitteln, welche die tatsächlichen Bedienungsmuster berücksichtigt, indem verschiedene statistische Parameter zur Variation der Erschließungsqualität ermittelt werden können, und ein Profil wie in Abbildung \todo{Abbildung einfügen} für den jeweiligen Standort erzeugt werden kann.
+	 Im Anhang sind unter \texttt{results/Indikator\_02.gpkg} Gitter mit Werten der Erschließungsqualität auf Grundlage stündlicher (n = 360), täglicher (n = 36), durchschnittlicher stündlicher Werte (n=10) und des gesamten Zeitraums hinterlegt. Diese enthalten jeweils Mittelwert, Median und Modalwert der Erschließungsqualität sowie beste, schlechteste, Abstand und einzelne Ausprägungen der Erschließungsqualität. Ebenso sind aggregierte Werte je Gemeinde hinterlegt, siehe Tabelle \ref{tab:layerseqappendix}
+
+\begin{table}
+	\centering
+	\begin{tabular}{@{}l>{\raggedright\arraybackslash}p{0.68\textwidth}@{}}
+		\toprule
+		\textbf{Ebene} & \textbf{Inhalt} \\
+		\midrule
+		
+		i2aggregated\_hourly\textellipsis
+		& Bevölkerungsanteil je Erschließungsqualitätsklasse je Gemeinde
+		mit Grundlage des stündlichen Medians der Bedienungsqualität \\
+		
+		i2aggregated\_daily\textellipsis
+		& Bevölkerungsanteil je Erschließungsqualitätsklasse je Gemeinde
+		mit Grundlage des täglichen Medians der Bedienungsqualität \\
+		
+		i2aggregated\_hourmean\textellipsis
+		& Bevölkerungsanteil je Erschließungsqualitätsklasse je Gemeinde
+		mit Grundlage des mittleren stündlichen Medians der Bedienungsqualität \\
+		
+		i2aggregated\_total\textellipsis
+		& Bevölkerungsanteil je Erschließungsqualitätsklasse je Gemeinde
+		mit Grundlage des Medians der Bedienungsqualität über den gesamten Zeitraum \\
+		
+		\midrule
+		\specialrule{1.2pt}{2pt}{2pt} % stärkere Trennung zwischen Gemeinde und Gitter
+		
+		i2grid\_hourly\textellipsis
+		& Erschließungsqualitätsgitter mit Grundlage des stündlichen Medians
+		der Bedienungsqualität \\
+		
+		i2grid\_daily\textellipsis
+		& Erschließungsqualitätsgitter mit Grundlage des täglichen Medians
+		der Bedienungsqualität \\
+		
+		i2grid\_hourmean\textellipsis
+		& Erschließungsqualitätsgitter mit Grundlage des mittleren stündlichen
+		Medians der Bedienungsqualität \\
+		
+		i2grid\_total\textellipsis
+		& Erschließungsqualitätsgitter mit Grundlage des Medians der
+		Bedienungsqualität über den gesamten Zeitraum \\
+		
+		\bottomrule
+	\end{tabular}
+	\caption{Beschreibung der verwendeten Layer}
+	\label{tab:layerseqappendix}
+\end{table}
+	 Für die weitere Betrachtung auf Zellebene wird der Median der Erschließungsqualität über alle betrachteten Stunden hinweg als Grundlage genutzt. 
+	\todo[inline]{Räumliche Muster (grob), Abweichungen von Sollwert je Gemeinde}
 	\subsection{Weiße Flecken}
 	\todo[inline]{Arbeitstitel: Auswertungsmethode noch offen, Korrelationen mit Zensusdaten, temporale Variabilität, Grundlage VDV-Schrift: Zu erschließend sind zusammenhängende Siedlungen von mindestens 200 Einwohnern. Diese werden aus dem Zensusgitter ermittelt.} Verdächtig: Freialdenhoven, Heimbach, Langenbroich (Kreuzau), Poll (nörvenich), Kelz (Vettweiß), Euskirchen Kirchheim Süd, Berescheid, Kerperscheid,Scheuren,Wintzen(alle Schleiden), Hastenrath (Gangelt), Schleiden Ütterath (Heinsberg), Schalbruch (Selfkant), Bellingroth Kaltenbach (Engelskirchen), Hückeswagen,Marienheide,(OBK insgesamt), Much, Neunkirchen-Seelscheid, 
 	\section{Diskussion und Einschränkungen} \label{sec:Diskussion}
