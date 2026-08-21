@@ -68,29 +68,29 @@ quality_lookup <- tribble(
   4, 6, 7
 )
 
-stops_core <- lazy_dt(read_fst(paste(
-  "output/hourly",
-  feed_date,
-  method,
-  min(date_select),
-  max(date_select),
-  ".fst", sep = "_")
-  ))
-
-stop_core_dow <- stops_core %>%
-  mutate(dow = weekdays(date),
-         week = isoweek(date)
-  ) %>%
-  as.data.frame()
-  
 counts <- stops_core %>%
-  group_by(date, hour, Bedienungsqualität) %>%
+  group_by(hour, Bedienungsqualität) %>%
   summarise(count = n()) %>%
-  mutate(timestamp = ymd_hms(paste(date, hms::hms(hours = hour)), tz = "Europe/Berlin")) %>%
+  #mutate(timestamp = ymd_hms(paste(date, hms::hms(hours = hour)), tz = "Europe/Berlin")) %>%
   ungroup() %>%
   as.data.frame()
 
-p <- ggplot(counts, aes(x = as.factor(timestamp), y = count, fill = as.factor(Bedienungsqualität))) +
+
+
+
+median_stops <- stops_core %>%
+  replace_na(list(Bedienungsqualität = 8)) %>%
+  group_by(stop_id) %>%
+  summarise(p50_bq = quantile(probs = 0.5, Bedienungsqualität, type = 1)) %>%
+  as.data.frame() %>%
+  left_join(zhv %>%
+              select(DHID, Name, MunicipalityCode), by = join_by("stop_id" == "DHID")) %>%
+  filter(str_detect(MunicipalityCode, "^053")) %>%
+  left_join(st_drop_geometry(gemeinden) %>%
+              select(KN, Kreis), by = join_by("MunicipalityCode" == "KN"))
+
+
+p <- ggplot(counts, aes(x = hour, y = count/36, fill = as.factor(Bedienungsqualität))) +
   geom_col(position = "stack") +
   labs(
     title = "Anzahl der Halte pro Stunde und Bedienungsqualitätsklasse",
@@ -100,8 +100,10 @@ p <- ggplot(counts, aes(x = as.factor(timestamp), y = count, fill = as.factor(Be
   ) +
   theme_minimal() +
   scale_fill_manual(values = palette_gyr)
+
+p
 #Tagesmittel----
-#Durchschnitt der Stunden je Tag. type_range ist der Abstand zwischen der besten und der schlechtesten Stunde.
+#Abfahrtendurchschnitt der Stunden je Tag. type_range ist der Abstand zwischen der besten und der schlechtesten Stunde.
 stops_dailymean <- stops_core %>%
   select(!Bedienungsqualität) %>%
   replace_na(list(stop_type = 4)) %>%
@@ -131,7 +133,7 @@ write_fst(daily_fst, paste("output/daily", feed_date, method, min(date_select), 
 
 
 #Stundenmittel----
-#Durchschnitt der Stunden.
+#Abfahrtendurchschnitt der Stunden.
 stops_hourmean <- stops_core %>%
   select(!Bedienungsqualität) %>%
   replace_na(list(stop_type = 4)) %>%
@@ -160,7 +162,7 @@ hourmean_fst <- stops_hourmean %>%
 write_fst(hourmean_fst, paste("output/hourmean", feed_date, method, min(date_select), max(date_select), ".fst", sep = "_"))
 
 #Wochentag----
-#Durchschnitt je Wochentag. BQ je Wochentag. type_range ist der Abstand zwischen der besten und der schlechtesten Stunde.
+#Abfahrtendurchschnitt je Wochentag. BQ je Wochentag. type_range ist der Abstand zwischen der besten und der schlechtesten Stunde.
 stops_dowmean <- stops_core %>%
   replace_na(list(stop_type = 4)) %>%
   mutate(dow = weekdays(date)) %>%

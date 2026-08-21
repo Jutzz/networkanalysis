@@ -2,6 +2,7 @@
 feed_date <- "20260518"
 zhv_date <- "20260521"
 area_name <- "regbez"
+method <- "weekday"
 
 #Setup----
 options(java.parameters = "-Xmx20G")
@@ -10,6 +11,7 @@ library(tidytransit)
 library(gtfstools)
 library(tidyverse)
 library(plotly)
+library(dtplyr)
 library(timeDate)
 library(here)
 library(plotly)
@@ -409,8 +411,6 @@ ggplot(availability, aes(x = date, y = pct_active)) +
 ggsave("document/figures/active_services_year_rollavg_2026-05-18.svg", get_last_plot(), )
 
 
-method <- "weekday"
-
 ifelse(method == "weekday",
        date_select <- nonholiday_weekdays_fullservice,
        date_select <- nonholiday_normdays_fullservice)
@@ -573,151 +573,3 @@ for (sid in changing_stops) {
 }
 
 
-stops_core <- lazy_dt(read_fst(paste(
-  "output/hourly",
-  feed_date,
-  method,
-  min(date_select),
-  max(date_select),
-  ".fst", sep = "_")
-))
-
-stops_dailymean <- read_fst(paste("output/daily", feed_date, method, min(date_select), max(date_select), ".fst", sep = "_"))
-
-counts <- stops_dailymean %>%
-  replace_na(list(Bedienungsqualität = 8)) %>%
-  filter(str_detect(MunicipalityCode, "^053")) %>%
-  group_by(date, Bedienungsqualität, Municipality) %>%
-  summarise(count = n()) %>%
-  ungroup()
-
-total_counts <- counts %>%
-  group_by(date, Municipality) %>%
-  summarise(total_count = sum(count), .groups = "drop") %>%
-  ungroup()
-
-counts_day <- counts %>%
-  left_join(total_counts, by = c("date", "Municipality")) %>%
-  mutate(percentage = (count / total_count) * 100) %>%
-  select(date, Bedienungsqualität, Municipality, count, percentage)
-
-p <- ggplot(counts_day, aes(x = factor(date), y = percentage, fill = as.factor(Bedienungsqualität))) +
-  geom_col(position = "stack") +
-  labs(
-    title = "Anzahl der Halte pro Tag und Bedienungsqualitätsklasse",
-    x = "Tag",
-    y = "Anteil der Halte in %",
-    fill = "Bedienungsqualität"
-  ) +
-  facet_wrap(facets = "Municipality") +
-  scale_fill_manual(values = palette_gyr) +
-  theme(text = element_text(family = windowsFont("Source Sans 3"))) +
-  scale_x_discrete(guide=guide_axis(angle = 90))
-
-p
-ggsave(plot = p, path = "document/figures/", filename = "stops_per_gem_perc_bq_day.svg", scale = 2)
-
-for(muni in unique(counts_day$Municipality)) {
-  p <- ggplot(counts %>%
-                filter(Municipality == muni), aes(x = factor(date), y = percentage, fill = as.factor(Bedienungsqualität))) +
-    geom_col(position = "stack") +
-    labs(
-      title = paste("Anteil Halte pro Tag und Bedienungsqualitätsklasse", muni, sep = "\n"),
-      x = "Tag",
-      y = "Anteil Halte (%)",
-      fill = "Bedienungsqualität"
-    ) +
-    scale_fill_manual(values = palette_gyr) +
-    theme(text = element_text(family = windowsFont("Source Sans 3"))) +
-    scale_x_discrete(guide=guide_axis(angle = 90))
-  
-  ggsave(ggsave(plot = p, path = "appendix/figures/percbq/", filename = paste0(muni,"_perc_bq_day.svg")))
-}
-
-muni <- "Heimbach"
-
-
-stops_hourmean <- read_fst(paste("output/hourmean", feed_date, method, min(date_select), max(date_select), ".fst", sep = "_"))
-
-counts <- stops_hourmean %>%
-  replace_na(list(Bedienungsqualität = 8)) %>%
-  filter(str_detect(MunicipalityCode, "^053")) %>%
-  group_by(hour, Bedienungsqualität, Municipality) %>%
-  summarise(count = n()) %>%
-  ungroup()
-
-total_counts <- counts %>%
-  group_by(hour, Municipality) %>%
-  summarise(total_count = sum(count), .groups = "drop") %>%
-  ungroup()
-
-counts_hourmean <- counts %>%
-  left_join(total_counts, by = c("hour", "Municipality")) %>%
-  mutate(percentage = (count / total_count) * 100) %>%
-  select(hour, Bedienungsqualität, Municipality, count, percentage)
-
-p <- ggplot(counts_hourmean, aes(x = factor(hour), y = percentage, fill = as.factor(Bedienungsqualität))) +
-  geom_col(position = "stack") +
-  labs(
-    title = "Anteil Halte pro Stunde und Bedienungsqualitätsklasse",
-    x = "Stunde des Tages",
-    y = "Anteil Halte (%)",
-    fill = "Bedienungsqualität"
-  ) +
-  facet_wrap(facets = "Municipality") +
-  scale_fill_manual(values = palette_gyr) +
-  theme(text = element_text(family = windowsFont("Source Sans 3")))
-
-
-p
-ggsave(plot = p, path = "document/figures/", filename = "stops_per_gem_perc_bq_hour.svg", scale = 2)
-
-for(muni in unique(counts_hourmean$Municipality)) {
-  p <- ggplot(counts_hourmean %>%
-                filter(Municipality == muni), aes(x = factor(hour), y = percentage, fill = as.factor(Bedienungsqualität))) +
-    geom_col(position = "stack") +
-    labs(
-      title = paste("Anteil Halte pro Stunde und Bedienungsqualitätsklasse", muni, sep = "\n"),
-      x = "Stunde des Tages",
-      y = "Anteil Halte (%)",
-      fill = "Bedienungsqualität"
-    ) +
-    scale_fill_manual(values = palette_gyr) +
-    theme(text = element_text(family = windowsFont("Source Sans 3")))
-  
-  ggsave(ggsave(plot = p, path = "appendix/figures/percbq/hour", filename = paste0(muni,"_perc_bq_hour.svg")))
-}
-
-p <- ggplot(counts_day %>%
-              filter(Municipality == muni), aes(x = factor(date), y = percentage, fill = as.factor(Bedienungsqualität))) +
-  geom_col(position = "stack") +
-  labs(
-    x = "Tag",
-    y = "Anteil Halte (%)",
-    fill = "Bedienungsqualität"
-  ) +
-  scale_fill_manual(values = palette_gyr) +
-  theme(text = element_text(family = windowsFont("Source Sans 3")),
-        legend.position =  "none") +
-  scale_x_discrete(guide=guide_axis(angle = 90))
-  q <- ggplot(counts_hourmean %>%
-               filter(Municipality == muni), aes(x = factor(hour), y = percentage, fill = as.factor(Bedienungsqualität))) +
-   geom_col(position = "stack") +
-   labs(
-     x = "Stunde",
-     y = "Anteil Halte (%)",
-     fill = "Bedienungsqualität"
-   ) +
-   scale_fill_manual(values = palette_gyr) +
-   theme(text = element_text(family = windowsFont("Source Sans 3")),
-         axis.title.y = element_blank(),
-         axis.text.y = element_blank(),
-         legend.position = "bottom")
- 
- combined_plot <- (p + q) +
-   plot_layout(ncol = 2, guides = "collect" 
- ) +
-   plot_annotation(theme = theme(text = element_text(family = windowsFont("Source Sans 3")), legend.position = "bottom")
-   )
- combined_plot 
-ggsave(combined_plot, filename = "document/figures/heimbach_day_hour.svg", height = 5)               

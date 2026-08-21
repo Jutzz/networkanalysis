@@ -128,7 +128,7 @@ filtered_trips_dates <- gtfs_feed$trips %>%
   left_join(gtfs_feed$routes %>% select(route_id, route_type)) %>%
   inner_join(filtered_services, by = "service_id") %>%
   filter(!route_type %in% c("101", "102", "201", ""))  %>%
-  dplyr::select(trip_id, date, route_type)
+  dplyr::select(trip_id, date, route_type, route_id)
 
 filtered_stop_times_dates <- gtfs_feed$stop_times %>%
   left_join(last_stoptime_lookup, by ="trip_id") %>%
@@ -137,12 +137,16 @@ filtered_stop_times_dates <- gtfs_feed$stop_times %>%
   select(trip_id, stop_id, departure_time, arrival_time) %>%
   filter(trip_id %in% filtered_trips_dates$trip_id) %>%
   left_join(filtered_trips_dates %>%
-              select(trip_id, date, route_type), by = "trip_id") %>%
+              select(trip_id, date, route_type, route_id), by = "trip_id") %>%
   left_join(stops2, by = "stop_id")  %>%
   mutate(route_rank = route_rank_lookup[as.character(route_type)])
 
+filtered_stop_times_dates_small <- dtplyr::lazy_dt(filtered_stop_times_dates %>%
+  select(trip_id, route_id, grouping_id, route_rank, arrival_time, departure_time, date))
+
 rm(gtfs_feed)
 rm(filtered_trips_dates)
+rm(filtered_stop_times_dates)
 gc()
 
 #Count departures between 08:00 and 18:00 for all week-/normdays, calculate mean.
@@ -150,7 +154,7 @@ gc()
 #Join with zhv as modified in osm_extract.R for geodata.
 
 #Count departures per hour for each hour.
-departure_counts_hourly <- filtered_stop_times_dates %>%
+departure_counts_hourly <- filtered_stop_times_dates_small %>%
   filter(
     departure_time >= hms("08:00:00"),
     departure_time < hms("18:00:00")
@@ -159,13 +163,14 @@ departure_counts_hourly <- filtered_stop_times_dates %>%
   group_by(date, hour, grouping_id) %>%
   reframe(
     departures = n(),
-    stop_type = min(route_rank, na.rm = TRUE) #Set stop_type to rank of best mode
+    stop_type = min(route_rank, na.rm = TRUE), #Set stop_type to rank of best mode
+    n_routes = length(unique(route_id))
   ) %>%
   tidyr::complete(
     date,
     grouping_id,
     hour,
-    fill = list(departures = 0) #Add a row for hours without departures
+    fill = list(departures = 0, n_routes = 0) #Add a row for hours without departures
   ) %>%
   mutate(
     departures_per_hour = departures
@@ -179,7 +184,20 @@ departure_counts_hourly <- filtered_stop_times_dates %>%
   )
   ) %>%
   left_join(quality_lookup, by = join_by(stop_type, freq_class)) %>%
-  rename("stop_id" = grouping_id)
+  rename("stop_id" = grouping_id) %>%
+  select(
+    stop_id,
+    date,
+    hour,
+    departures,
+    freq_class,
+    Bedienungsqualität,
+    n_routes,
+    stop_type,
+    departures_per_hour,
+    MunicipalityCode,
+    geom
+  )
 
 variability_hourly <- st_drop_geometry(departure_counts_hourly) %>%
   arrange(stop_id, date, hour) %>%

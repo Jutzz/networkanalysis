@@ -2,18 +2,18 @@ library(here)
 library(dplyr)
 library(fst)
 library(arrow)
-write_parquet(
-  read_fst("output/hourly_eq/full/results_full_hour.fst"),
-  "output/hourly_eq/full/results_full_hour.parquet"
-)
-write_parquet(
-  read_fst("output/daily_eq/full/results_full_day.fst"),
-  "output/daily_eq/full/results_full_day.parquet"
-)
-write_parquet(
-  read_fst("output/hourmean_eq/full/results_full_hourmean.fst"),
-  "output/hourmean_eq/full/results_full_hourmean.parquet"
-)
+# write_parquet(
+#   read_fst("output/hourly_eq/full/results_full_hour.fst"),
+#   "output/hourly_eq/full/results_full_hour.parquet"
+# )
+# write_parquet(
+#   read_fst("output/daily_eq/full/results_full_day.fst"),
+#   "output/daily_eq/full/results_full_day.parquet"
+# )
+# write_parquet(
+#   read_fst("output/hourmean_eq/full/results_full_hourmean.fst"),
+#   "output/hourmean_eq/full/results_full_hourmean.parquet"
+# )
 library(dtplyr)
 library(tidyr)
 library(data.table)
@@ -21,14 +21,14 @@ library(sf)
 library(ggplot2)
 library(plotly)
 
-group <- "total" #hourly,daily,meanhour or total
+group <- "hourly" #hourly,daily,meanhour or total
 
 #Read helper functions
 files.sources = list.files("code/helper/", full.names = TRUE)
 sapply(files.sources, source)
 feed_date <- "20260518"
 
-method <- "hourmean"
+method <- "hourly"
 
 zensus_grid <- st_read(here("geodata/zensus.gpkg"), "regbez_zensus_populated") %>%
   st_as_sf() %>%
@@ -73,7 +73,11 @@ summary <- ds %>%
       Erschließungsqualität
     )), collapse = ","),
     n_eq = n_distinct(Erschließungsqualität, na.rm = TRUE),
-    n_stops = n_distinct(to_id, na.rm = TRUE)
+    n_stops = n_distinct(to_id, na.rm = TRUE),
+    n_changes = sum(
+      Erschließungsqualität != lag(Erschließungsqualität),
+      na.rm = TRUE
+    )
   ) %>%
   as.data.frame()
 
@@ -112,11 +116,25 @@ stats_by_gem_wide <- stats_by_gem %>%
   pivot_wider(
     id_cols = c("ags", "total_population"),
     names_from = Erschließungsqualität,
-    values_from = c("population", "percentage")
+    values_from = c("population", "percentage"),
+    names_expand = TRUE,
+    values_fill = 0, 
   ) %>%
   left_join(dominant_accessibility, by = "ags") %>%
   left_join(gemeinden, by = join_by("ags" == "KN")) %>%
   filter(!is.na(GN)) %>%
+  mutate(
+    index = (
+        percentage_1 * 1 +
+        percentage_2 * 2 +
+        percentage_3 * 3 +
+        percentage_4 * 4 +
+        percentage_5 * 5 +
+        percentage_6 * 6 +
+        percentage_7 * 7 +
+        percentage_8 * 8
+    ) / 100
+  ) %>%
   mutate(KNTRIM = substr(ags, 1, 5)) %>%
   left_join(st_drop_geometry(kreise) %>% select(GN, KNTRIM) %>% rename("Kreis" = GN)) %>%
   select(!KNTRIM) %>%
@@ -135,3 +153,12 @@ st_write(
   ),
   append = FALSE
 )
+
+stats_by_krs <- summary_grid %>%
+  filter(!is.na(ags)) %>%
+  mutate(KNTRIM = substr(ags, 1, 5)) %>%
+  left_join(st_drop_geometry(kreise) %>% select(GN, KNTRIM) %>% rename("Kreis" = GN))
+
+ggplot(stats_by_krs, aes(x = Kreis, y = )) +
+  geom_col() +
+  scale_y_reverse()

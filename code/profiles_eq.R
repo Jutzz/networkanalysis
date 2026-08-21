@@ -1,6 +1,7 @@
 library(here)
 library(dplyr)
 library(arrow)
+library(fst)
 library(readr)
 library(tidyr)
 library(sf)
@@ -127,20 +128,20 @@ st_write(d,
 
 
 
-profile <- eq_profile("100mN31086E40403", group = "hourmean")
+profile <- eq_profile("100mN31021E41295", group = "hourmean")
 
-p <- ggplot(profile, aes(x = timestamp, y = Erschließungsqualität)) +
+p <- ggplot(profile, aes(x = timestamp, y = departures_per_hour)) +
   geom_line() +
-  #geom_path(group = "Erschließungsqualität") +
-  geom_point(aes(color = as.factor(travel_time_p01))) +
-  scale_y_reverse()
+  #geom_path(group = "timestamp") +
+  geom_point(aes(color = as.factor(Erschließungsqualität))) 
+  #scale_y_reverse()
 
 p
 ggplotly(p)
 
-sprofile <- eq_profile_stop(stop_id = "de:05315:12411", group = "hour")
+sprofile <- eq_profile_stop(stop_id = "de:05374:43852", group = "hourmean")
 
-id <- bq_profile("de:05358:4897")
+id <- bq_profile("de:05374:43852")
 
 ggplot(id, aes(x = timestamp, y = departures_per_hour)) +
   geom_point()
@@ -165,8 +166,29 @@ ds_agg <- ds %>%
   filter(!is.na(ags)) %>%
   left_join(gemeinden, by = join_by("ags" == "KN"))
 
+ds_agg_krs <- ds %>%
+  left_join(zensus_grid %>% select(id, ags, Einwohner), by = "id") %>%
+  mutate(KNTRIM = substr(ags, 1, 5)) %>%
+  left_join(st_drop_geometry(kreise) %>% select(GN, KNTRIM) %>% rename("Kreis" = GN)) %>%
+  group_by(Kreis, Erschließungsqualität) %>%
+  summarise(
+    pop = sum(Einwohner),
+    .groups = "drop"
+  ) %>%
+  group_by(Kreis) %>%
+  mutate(
+    total_pop = sum(pop),
+    percentage = 100 * pop / total_pop
+  ) %>%
+  ungroup() %>%
+  as.data.frame() %>%
+  filter(!is.na(Kreis))
+
 ggplot(ds_agg, aes(x = as.factor(hour), y = percentage, fill = as.factor(Erschließungsqualität))) +
   geom_col() +
-  scale_fill_manual(values = palette_gyr8) +
-  facet_wrap("GN")
+  scale_fill_manual(values = palette_gyr8)
+
+ggplot(ds_agg_krs, aes(x = Kreis, y = percentage, fill = as.factor(Erschließungsqualität))) +
+  geom_col() +
+  scale_fill_manual(values = palette_gyr8) 
        
