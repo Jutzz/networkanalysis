@@ -1,4 +1,5 @@
 library(dplyr)
+library(tibble)
 library(rosmium)
 library(sf)
 library(readr)
@@ -12,6 +13,26 @@ options(timeout = 1000)
 
 regbez10km <- st_read("geodata/regbez10kmbuffer.geojson")
 regbez25km <- st_read("geodata/regbez25kmbuffer.geojson")
+
+kürzel <- c(
+  "Bonn" = "BN",
+  "Düren" = "DN",
+  "Euskirchen" = "EU",
+  "Heinsberg" = "HS",
+  "Köln" = "K",
+  "Leverkusen" = "LEV",
+  "Städteregion Aachen" = "AC",
+  "Oberbergischer Kreis" = "OBK",
+  "Rhein-Erft-Kreis" = "REK",
+  "Rhein-Sieg-Kreis" = "RSK",
+  "Rheinisch-Bergischer Kreis" = "RBK"
+)
+
+vg_250_krs <- st_read("geodata/base_data/DE_VG250.gpkg", query = 
+                        "SELECT GEN,AGS_0,geom FROM vg250_krs WHERE AGS LIKE '053%'") %>%
+  rename("GN" = GEN,
+         "KN" = AGS_0) %>%
+  left_join(enframe(kürzel, name = "GN", value = "kürzel"))
 
 regiostar <- read_xlsx("geodata/base_data/2024 RegioStaR-Referenzdateien_Mobilthek.xlsx", sheet = "ReferenzGebietsstand2024") %>%
   select(gem_24, RegioStaR17, RegioStaR7) %>%
@@ -34,25 +55,11 @@ vg_250_regbez <- vg_250 %>%
   filter(str_detect(KN, "^053")) %>%
   left_join(regiostar, join_by("KN" == "gem_24"))
 
-kürzel <- c(
-  "Bonn" = "BN",
-  "Düren" = "DN",
-  "Euskirchen" = "EU",
-  "Heinsberg" = "HS",
-  "Köln" = "K",
-  "Leverkusen" = "LEV",
-  "Städteregion Aachen" = "AC",
-  "Oberbergischer Kreis" = "OBK",
-  "Rhein-Erft-Kreis" = "REK",
-  "Rhein-Sieg-Kreis" = "RSK",
-  "Rheinisch-Bergischer Kreis" = "RBK"
-)
-
-vg_250_krs <- st_read("geodata/base_data/DE_VG250.gpkg", query = 
-                        "SELECT GEN,AGS_0,geom FROM vg250_krs WHERE AGS LIKE '053%'") %>%
-  rename("GN" = GEN,
-         "KN" = AGS_0) %>%
-  left_join(enframe(kürzel, name = "GN", value = "kürzel"))
+vg_250_regbez <- vg_250_regbez %>%
+  mutate(KRSKN = str_pad(substr(KN, 0,5), width = 8, side = "right", pad = "0")) %>%
+  left_join(st_drop_geometry(vg_250_krs %>%
+                               rename("Kreis" = GN)), by = join_by("KRSKN" == "KN")) %>%
+  select(!c("KRSKN", "kürzel"))
 
 st_write(vg_250, "geodata/dvg1nw.gpkg", "gemeinden_regbez_25km", append = FALSE)
 st_write(vg_250_regbez, "geodata/dvg1nw.gpkg", "gemeinden_regbez_vg250", append = FALSE)

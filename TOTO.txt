@@ -1,2 +1,3 @@
-TODO: Fix machen in 05_mean_frequencies: Hier wird kein Mittel aus den stündlichen BQ, sondern eine neue BQ aus den mittleren departures ermittelt!
-Für die Darstellung in den Ergebnissen braucht es die mittlere BQ über die Stunden! Habe ich die schon irgendwo???
+TODO: 
+04_stop_frequencies: Basis schaffen für alle Ergebnisse. mean_frequencies ist komplett zusätzlich.
+bq_summaries ersetzen durch neue figures, sauber.

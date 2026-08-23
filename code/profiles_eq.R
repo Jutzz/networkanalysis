@@ -7,7 +7,7 @@ library(tidyr)
 library(sf)
 library(ggplot2)
 
-gemeinden <- st_read("geodata/dvg1nw.gpkg", "gemeinden_regbez_vg250ss")
+gemeinden <- st_read("geodata/dvg1nw.gpkg", "gemeinden_regbez_vg250")
 kreise <- st_read("geodata/dvg1nw.gpkg", "dvg1krs_regbez")
 
 palette_gyr8 <- c(
@@ -141,7 +141,7 @@ ggplotly(p)
 
 sprofile <- eq_profile_stop(stop_id = "de:05374:43852", group = "hourmean")
 
-id <- bq_profile("de:05374:43852")
+id <- bq_profile("de:05378:32633")
 
 ggplot(id, aes(x = timestamp, y = departures_per_hour)) +
   geom_point()

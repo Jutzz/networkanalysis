@@ -401,7 +401,15 @@ st_write(core_stat_results, "geodata/zentrale_orte_areas.gpkg", "acc_scoring_cen
 st_write(core_stat_results, "geodata/poi.gpkg", "zentrale_orte", append = FALSE)
 st_write(core_stat, "geodata/zentrale_orte_areas.gpkg", "acc_scoring_centroids", append = FALSE)
 
-# OLD------
+zentrale_orte <- st_read("geodata/poi.gpkg", "zentrale_orte")
+
+zentrale_orte_gem <- zentrale_orte %>%
+  group_by(GN) %>%
+  summarize(count = n())
+
+count(zentrale_orte_gem[[count]])
+
+# OLD methods left here as proof of work.
 # From here: Other methods tried before using walking distance: Parent/Child, Pareto-Optimization
 # st_write(result, "geodata/zentrale_orte_areas.gpkg", "acc_scoring_greedy", append = FALSE)  
 # 

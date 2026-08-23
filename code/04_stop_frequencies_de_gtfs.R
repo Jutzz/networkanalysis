@@ -5,9 +5,8 @@ library(here)
 library(tidytransit)
 library(gtfstools)
 library(timeDate)
-library(httr2)
 library(jsonlite)
-library(zoo)
+library(dtplyr)
 library(fst)
 #Read helper functions
 files.sources = list.files("code/helper/", full.names = TRUE)
@@ -141,8 +140,8 @@ filtered_stop_times_dates <- gtfs_feed$stop_times %>%
   left_join(stops2, by = "stop_id")  %>%
   mutate(route_rank = route_rank_lookup[as.character(route_type)])
 
-filtered_stop_times_dates_small <- dtplyr::lazy_dt(filtered_stop_times_dates %>%
-  select(trip_id, route_id, grouping_id, route_rank, arrival_time, departure_time, date))
+filtered_stop_times_dates_small <- filtered_stop_times_dates %>%
+  select(trip_id, route_id, grouping_id, route_rank, arrival_time, departure_time, date)
 
 rm(gtfs_feed)
 rm(filtered_trips_dates)
@@ -189,7 +188,6 @@ departure_counts_hourly <- filtered_stop_times_dates_small %>%
     stop_id,
     date,
     hour,
-    departures,
     freq_class,
     Bedienungsqualität,
     n_routes,
@@ -199,92 +197,20 @@ departure_counts_hourly <- filtered_stop_times_dates_small %>%
     geom
   )
 
-variability_hourly <- st_drop_geometry(departure_counts_hourly) %>%
-  arrange(stop_id, date, hour) %>%
-  group_by(stop_id, Name) %>%
-  mutate(
-    diff = abs(departures_per_hour - lag(departures_per_hour))
-  ) %>%
-  summarise(
-    mean_departures = mean(departures_per_hour, na.rm = TRUE),
-    median_departures = median(departures_per_hour, na.rm = TRUE),
-    min_departures = min(departures_per_hour, na.rm = TRUE),
-    max_departures = max(departures_per_hour, na.rm = TRUE),
-    stop_type_mean = max(stop_type),
-    stop_type_median = floor(median(stop_type)),
-    sum_abs_diff = sum(diff, na.rm = TRUE),
-    mean_abs_diff = mean(diff, na.rm = TRUE),
-    pct_variation = 100 * mean_abs_diff / mean_departures,
-    min_quality = min(Bedienungsqualität, na.rm = TRUE),
-    max_quality = max(Bedienungsqualität, na.rm = TRUE),
-    quality_range = max_quality - min_quality,
-    n_changes = sum(
-      Bedienungsqualität != lag(Bedienungsqualität),
-      na.rm = TRUE
-    ),
-    hours_observed = n(),
-    modal_quality = as.numeric(
-      names(which.max(table(Bedienungsqualität)))
-    ),
-    pct_hours_modal_quality =
-      100 * max(table(Bedienungsqualität)) / n(),
-    .groups = "drop"
-  ) %>%  mutate(freq_class_mean = findInterval(
-    mean_departures,
-    vec = c(0, 2, 4, 6, 12, 24),
-    rightmost.closed = FALSE)
-  ) %>%  mutate(freq_class_median = findInterval(
-    median_departures,
-    vec = c(0, 2, 4, 6, 12, 24),
-    rightmost.closed = FALSE)
-  )%>%
-  left_join(quality_lookup, by = join_by("stop_type_mean" == "stop_type", "freq_class_mean" == "freq_class")) %>%
-  rename("bq_mean" = Bedienungsqualität) %>%
-  left_join(quality_lookup, by = join_by("stop_type_median" == "stop_type", "freq_class_median" == "freq_class")) %>%
-  rename("bq_median" = Bedienungsqualität) %>%
-  left_join(zhv %>% select(DHID, Name, MunicipalityCode, Municipality, geom), by = join_by("stop_id" == "DHID" , Name)) %>%
-  relocate(Name,
-           stop_id,
-           Municipality,
-           bq_mean,
-           bq_median,
-           mean_departures,
-           freq_class_mean,
-           median_departures,
-           freq_class_median,
-           min_departures,
-           max_departures,
-           stop_type_mean,
-           stop_type_median,
-           sum_abs_diff,
-           mean_abs_diff,
-           pct_variation,
-           min_quality,
-           max_quality,
-           quality_range,
-           n_changes,
-           hours_observed,
-           modal_quality,
-           pct_hours_modal_quality,
-           MunicipalityCode)  
-
-departure_counts_hourly <- st_as_sf(departure_counts_hourly) %>%
-  select(Name, stop_id, Municipality, date, hour, Bedienungsqualität, departures_per_hour, stop_type, MunicipalityCode, geom)
-
-st_write(departure_counts_hourly, "geodata/Bedienungsqualität.gpkg", paste("hourly", feed_date, method, min(date_select), max(date_select), sep = "_"), append = FALSE)
-#Write to geopackage. 
-st_write(variability_hourly %>%
-           filter(!is.na(geom)), here("geodata/Bedienungsqualität.gpkg"),
-          paste("var_hourly", feed_date, method, min(date_select), max(date_select), sep = "_"), append = FALSE)
-#Creating a minimal version to write as fst for usage in 10_i2_analysis.
-departure_counts_hourly <- st_read("geodata/Bedienungsqualität.gpkg", "hourly_20260518_weekday_20260504_20260626")
-
+#Write as fst for usage in 05_bq_summaries and 11_i2_analysis.
 stops_fst <- departure_counts_hourly %>%
   st_drop_geometry() %>%
-  select(date, hour, stop_id, stop_type, departures_per_hour, Bedienungsqualität) 
+  select(date, hour, stop_id, n_routes, stop_type, departures_per_hour, freq_class, Bedienungsqualität) 
 
 
 write_fst(stops_fst, paste("output/hourly", feed_date, method, min(date_select), max(date_select), ".fst", sep = "_"))
+
+
+departure_counts_hourly_geo <- st_as_sf(departure_counts_hourly) %>%
+  select(date, hour, stop_id, n_routes, stop_type, departures_per_hour, freq_class, Bedienungsqualität, geom) 
+
+#This takes very long and the layer is not that useful - only maybe for temporal animation?
+st_write(departure_counts_hourly_geo, "geodata/Bedienungsqualität.gpkg", paste("hourly", feed_date, method, min(date_select), max(date_select), sep = "_"), append = FALSE)
 
 rm(departure_counts_hourly)
 gc()
