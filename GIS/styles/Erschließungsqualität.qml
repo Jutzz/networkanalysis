@@ -1,5 +1,5 @@
 <!DOCTYPE qgis PUBLIC 'http://mrcc.com/qgis.dtd' 'SYSTEM'>
-<qgis autoRefreshMode="Disabled" autoRefreshTime="0" hasScaleBasedVisibilityFlag="0" layerType="Vector" maxScale="0" minScale="100000000" readOnly="0" simplifyAlgorithm="0" simplifyDrawingHints="1" simplifyDrawingTol="1" simplifyLocal="1" simplifyMaxScale="1" styleCategories="LayerConfiguration|Symbology|MapTips|AttributeTable|Rendering|CustomProperties|Temporal|Elevation|Notes" symbologyReferenceScale="-1" version="4.0.1-Norrköping">
+<qgis autoRefreshMode="Disabled" autoRefreshTime="0" hasScaleBasedVisibilityFlag="0" layerType="Vector" maxScale="0" minScale="100000000" readOnly="0" simplifyAlgorithm="0" simplifyDrawingHints="1" simplifyDrawingTol="1" simplifyLocal="1" simplifyMaxScale="1" styleCategories="LayerConfiguration|Symbology|MapTips|AttributeTable|Rendering|CustomProperties|Temporal|Elevation|Notes" symbologyReferenceScale="-1" version="4.0.3-Norrköping">
   <flags>
     <Identifiable>1</Identifiable>
     <Removable>1</Removable>
@@ -144,16 +144,16 @@
       </symbol>
     </profileMarkerSymbol>
   </elevation>
-  <renderer-v2 attr="Erschließungsqualität" enableorderby="0" forceraster="0" referencescale="-1" symbollevels="0" type="categorizedSymbol">
+  <renderer-v2 attr="p50_eq" enableorderby="0" forceraster="0" referencescale="-1" symbollevels="0" type="categorizedSymbol">
     <categories>
-      <category label="A (höchstrangiges Angebot)" render="true" symbol="0" type="string" uuid="{e52f0d0b-25b4-4633-bb39-125d5c1cdda5}" value="a"/>
-      <category label="B (hochrangiges Angebot)" render="true" symbol="1" type="string" uuid="{f21f9225-311a-4f11-a195-dd9b6b5a2b25}" value="b"/>
-      <category label="C (sehr dichtes Angebot)" render="true" symbol="2" type="string" uuid="{b771138a-6eb6-4ca1-bf2f-e9bea58a3e29}" value="c"/>
-      <category label="D (dichtes Angebot)" render="true" symbol="3" type="string" uuid="{761591c7-295d-4f5c-8834-0c70c450d7c1}" value="d"/>
-      <category label="E (erweitertes Basis-Angebot)" render="true" symbol="4" type="string" uuid="{2216fd63-9e0c-4a09-9557-7286c1fdfed5}" value="e"/>
-      <category label="F (Basisangebot)" render="true" symbol="5" type="string" uuid="{73884076-2932-45ea-948f-0821a375386f}" value="f"/>
-      <category label="G (nicht erschlossen)" render="true" symbol="6" type="string" uuid="{e648b056-5465-4d6b-baeb-b3979c2e04ce}" value="g"/>
-      <category label="Keine Haltestelle mit Bedienungsqualität >= VI in &lt;20 min. erreicht" render="true" symbol="7" type="string" uuid="{f11e2a46-9cef-4d71-bd5d-ff9913d23c7c}" value=""/>
+      <category label="A (höchstrangiges Angebot)" render="true" symbol="0" type="string" uuid="{e52f0d0b-25b4-4633-bb39-125d5c1cdda5}" value="1"/>
+      <category label="B (hochrangiges Angebot)" render="true" symbol="1" type="string" uuid="{f21f9225-311a-4f11-a195-dd9b6b5a2b25}" value="2"/>
+      <category label="C (sehr dichtes Angebot)" render="true" symbol="2" type="string" uuid="{b771138a-6eb6-4ca1-bf2f-e9bea58a3e29}" value="3"/>
+      <category label="D (dichtes Angebot)" render="true" symbol="3" type="string" uuid="{761591c7-295d-4f5c-8834-0c70c450d7c1}" value="4"/>
+      <category label="E (erweitertes Basis-Angebot)" render="true" symbol="4" type="string" uuid="{2216fd63-9e0c-4a09-9557-7286c1fdfed5}" value="5"/>
+      <category label="F (Basisangebot)" render="true" symbol="5" type="string" uuid="{73884076-2932-45ea-948f-0821a375386f}" value="6"/>
+      <category label="G (nicht erschlossen)" render="true" symbol="6" type="string" uuid="{e648b056-5465-4d6b-baeb-b3979c2e04ce}" value="7"/>
+      <category label="Keine Haltestelle mit Bedienungsqualität >= VI in &lt;20 min. erreicht" render="true" symbol="7" type="string" uuid="{f11e2a46-9cef-4d71-bd5d-ff9913d23c7c}" value="8"/>
     </categories>
     <symbols>
       <symbol alpha="1" clip_to_extent="1" force_rhr="0" frame_rate="10" is_animated="0" name="0" type="fill">
@@ -565,21 +565,16 @@
       <column hidden="0" name="id" type="field" width="-1"/>
       <column hidden="0" name="ags" type="field" width="-1"/>
       <column hidden="0" name="Einwohner" type="field" width="-1"/>
-      <column hidden="0" name="from_id" type="field" width="-1"/>
-      <column hidden="0" name="travel_time_p01" type="field" width="-1"/>
-      <column hidden="0" name="Erschließungsqualität" type="field" width="-1"/>
-      <column hidden="0" name="start_time" type="field" width="-1"/>
-      <column hidden="0" name="end_time" type="field" width="-1"/>
-      <column hidden="0" name="NVBW_HST_DHID" type="field" width="-1"/>
-      <column hidden="0" name="departures" type="field" width="-1"/>
-      <column hidden="0" name="highest_rank_route_type" type="field" width="-1"/>
-      <column hidden="0" name="departures_per_day" type="field" width="-1"/>
-      <column hidden="0" name="departures_per_hour" type="field" width="-1"/>
-      <column hidden="0" name="Name" type="field" width="-1"/>
-      <column hidden="0" name="MunicipalityCode" type="field" width="-1"/>
-      <column hidden="0" name="Municipality" type="field" width="-1"/>
-      <column hidden="0" name="stop_type" type="field" width="-1"/>
-      <column hidden="0" name="Bedienungsqualität" type="field" width="-1"/>
+      <column hidden="0" name="mean_eq" type="field" width="-1"/>
+      <column hidden="0" name="median_eq" type="field" width="-1"/>
+      <column hidden="0" name="p50_eq" type="field" width="-1"/>
+      <column hidden="0" name="modal_eq" type="field" width="-1"/>
+      <column hidden="0" name="best_eq" type="field" width="-1"/>
+      <column hidden="0" name="worst_eq" type="field" width="-1"/>
+      <column hidden="0" name="range_eq" type="field" width="-1"/>
+      <column hidden="0" name="dist_eq" type="field" width="-1"/>
+      <column hidden="0" name="n_eq" type="field" width="-1"/>
+      <column hidden="0" name="n_stops" type="field" width="-1"/>
       <column hidden="1" type="actions" width="-1"/>
     </columns>
   </attributetableconfig>

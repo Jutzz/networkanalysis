@@ -1,3 +1,4 @@
+#TODO: PArts of this potentially irrelevant, clean up i2 maps and plots.
 library(here)
 library(dplyr)
 library(arrow)
@@ -6,20 +7,10 @@ library(readr)
 library(tidyr)
 library(sf)
 library(ggplot2)
+source("code/dataenv.R")
 
 gemeinden <- st_read("geodata/dvg1nw.gpkg", "gemeinden_regbez_vg250")
 kreise <- st_read("geodata/dvg1nw.gpkg", "dvg1krs_regbez")
-
-palette_gyr8 <- c(
-  "1" = "#169542",
-  "2" = "#77c35c",
-  "3" = "#c4e687",
-  "4" = "#ffffc0",  
-  "5" = "#fec981",  
-  "6" = "#f07c4a",
-  "7" = "#d7191c",
-  "8" = "#3f3f3f"
-)
 
 zensus_grid <- st_read(here("geodata/zensus.gpkg"), "regbez_zensus_populated") %>%
   st_as_sf() %>%

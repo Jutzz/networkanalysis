@@ -1,6 +1,3 @@
-#TODO: Add (correct) timestamp to hourly files, add min/max values to summary
-#table, tables showing variability between hours, between days, between weeks.
-#Disaggregation by Municipality.
 library(dplyr)
 library(tidyr)
 library(readr)
@@ -11,11 +8,13 @@ library(fst)
 library(arrow)
 library(here)
 library(sf)
-
+#Only the hourly version of this is used in the results. The other ones could be
+#used to calculate EQs based on BQs of means of departures per hour.
 #Read helper functions
 files.sources = list.files("code/helper/", full.names = TRUE)
 sapply(files.sources, source)
-feed_date <- "20260518"
+
+source("code/dataenv.R")
 
 method <- "weekday"
 method_bq <- "median"

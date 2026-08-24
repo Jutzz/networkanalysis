@@ -1,5 +1,5 @@
 #This Script is for evaluating hourly Bedienungsqualität - not for calculatating
-#Bedienugnsqualität based on aggregated means of departures per hour!
+#Bedienungsqualität based on aggregated means of departures per hour!
 library(dplyr)
 library(dtplyr)
 library(tidyr)
@@ -12,20 +12,11 @@ library(fst)
 library(sf)
 library(here)
 library(extrafont)
+source("code/dataenv.R")
 
 #Set up base data
-palette_gyr7 <- c(
-  "1" = "#169542",
-  "2" = "#8acc62",
-  "3" = "#dbf09e",
-  "4" = "#fedf9a",
-  "5" = "#ef7b4a",
-  "6" = "#d7191c",
-  "7" = "#3f3f3f"
-)
+
 method <- "weekday"
-feed_date <- "20260518"
-zhv_date <- "20260521"
 
 #Get dates of representative norm- and weekdays from checking in find_valid_dates.R
 nonholiday_weekdays_fullservice <- read_lines("code/temp/nonholiday_weekdays_cutoff.txt")
