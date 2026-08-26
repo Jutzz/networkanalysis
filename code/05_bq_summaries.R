@@ -52,7 +52,7 @@ stops_core <- lazy_dt(read_fst(
 #TODO: Do this for daily variation and meanhour OF BEDIENUNGSQUALITÄT not departures.
 variability_hourly <- st_drop_geometry(stops_core) %>%
   group_by(stop_id) %>%
-  arrange(date, hour) %>%
+  arrange(date, hour, .by_group = TRUE) %>%
   mutate(diff = abs(Bedienungsqualität - lag(Bedienungsqualität))) %>%
   summarise(
     mean_departures = mean(departures_per_hour),
@@ -104,12 +104,28 @@ variability_hourly <- st_drop_geometry(stops_core) %>%
     pct_hours_modal_quality,
     MunicipalityCode,
     geom
-  ) %>%
-  filter(str_detect(MunicipalityCode, "^053"))
+  ) 
 
-
+#Write full set of stops for ttm-Calculation
 st_write(
   st_as_sf(variability_hourly),
+  "output/Bedienungsqualität.gpkg",
+  paste
+  (
+    "variability_hourly",
+    feed_date,
+    method,
+    min(date_select),
+    max(date_select),
+    sep = "_"
+  ),
+  append = FALSE
+)
+
+#Write filtered set of stops for maps
+st_write(
+  st_as_sf(variability_hourly %>%
+             filter(str_detect(MunicipalityCode, "^053"))),
   "results/Bedienungsqualität.gpkg",
   paste
   (
@@ -118,7 +134,6 @@ st_write(
     method,
     min(date_select),
     max(date_select),
-    ".fst",
     sep = "_"
   ),
   append = FALSE

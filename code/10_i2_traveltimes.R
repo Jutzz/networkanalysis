@@ -31,7 +31,7 @@ zensus_grid <- st_read(here("geodata/zensus.gpkg"), "regbez_zensus_populated") %
   select(id, ags, Einwohner)
 #mutate(id = GITTER_ID_100m)
 
-stops_table <- st_read(dsn = "geodata/Bedienungsqualität.gpkg", paste("totalmean", feed_date, method, min(date_select), max(date_select), ".fst", sep = "_"))
+stops_table <- st_read(dsn = "output/Bedienungsqualität.gpkg", paste("variability_hourly", feed_date, method, min(date_select), max(date_select), sep = "_"))
 
 #Erstellen von r5-lesbaren Start- und Zielorten. Nur bewohnte Gitterzellen als Startorte.
 area <- st_read("geodata/dvg1nw.gpkg", "gemeinden_regbez_kln")
@@ -92,80 +92,8 @@ max_trip_duration <- 20
 #interval).
 ttm <- Erreichbarkeit(origins = pois_df, destinations = zensus_grid_df)
 
+#Write for usage in i2_analysis
 write.csv2(ttm, file = "output/walk_20min_zensus_stops.csv")
-# 
+stop_r5() 
+gc()
 # ttm <- read_csv2("output/walk_20min_zensus_stops.csv")
-# #This is the part that actually changes Indikator 2 with differing strategies for stop frequency calculation. 
-# i2_mapping(ttm, mapping_matrix, departure, bq_col = bq_median)
-# 
-# #Write out a travel times table and an accessibility table to geopackages.
-# st_write(travel_times_grid, here("output/indikator_02.gpkg"), layer = paste0(method_bq, "_DEgtfs_zensus_", poi_type, "_walktime"), append = FALSE)
-# st_write(grid_with_times, here("results/indikator_02.gpkg"), layer = paste0(method_bq, "_i2_zensus_erschließungswerte_best_", area_name), append = FALSE)
-# 
-# 
-# 
-# 
-# 
-# #----Additional ttms for testing----
-# #stops <- st_as_sf(gtfs_feed$stops, coords = c("stop_lon", "stop_lat"), crs = st_crs(4326))
-# tts <- gtfs_feed %>% filter_feed_by_date("2026-04-07") %>%
-#   travel_times(stop_name = "Köln Hbf",
-#                time_range = c("14:00:00", "14:10:00"), stop_dist_check=FALSE, max_transfers = 3)
-# 
-# o <- pois_fun(stops %>%
-#                 filter(NVBW_HST_DHID == "de:05515:46845"))
-# d <- pois_fun(stops) %>%
-#   filter(lat != "NaN")
-# grid <- st_read("geodata/grids.gpkg", layer = )
-# r5tts <- travel_time_matrix(r5_network, origins = pois_df[18078,], destinations = zensus_grid_df, mode = c("TRANSIT", "WALK"), max_trip_duration = 60, max_rides = 5, departure_datetime = departure, verbose = TRUE)
-# 
-# tts2 <- tts %>%
-#   left_join(gtfs_feed$stops, by = join_by("to_stop_id" == "stop_id")) %>%
-#   st_as_sf(coords = c("stop_lon", "stop_lat"), crs = st_crs(4326)) %>%
-#   st_filter(st_transform(regbez, crs = st_crs(4326)), .predicate = st_intersects) %>%
-#   mutate(travel_time = travel_time/60) %>%
-#   filter(travel_time < 300)
-# 
-# r5tts2 <- r5tts %>%
-#   left_join(d, by = join_by("to_id" == "id"))
-# 
-# r5tts2 <- st_as_sf(r5tts2, coords = c("lon", "lat"), crs = st_crs(4326)) %>%
-#   st_filter(st_transform(regbez, crs = st_crs(4326)), .predicate = st_intersects)
-# 
-# st_write(r5tts2, "expandedttm_r5r2.geojson")
-# st_write(tts2, "ttm_tidytransit.geojson")
-# 
-# write_csv(r5tts, "../expanded_ttm_cgn.csv")
-# 
-# tr <- r5tts %>%
-#   mutate(trajectory = paste(from_id, to_id, sep = "_"))
-# 
-# summary_stats <- tr %>%
-#   group_by(to_id) %>%
-#   summarise(
-#     mean_tt = mean(total_time),
-#     sd_tt = sd(total_time),
-#     min_tt = min(total_time), 
-#     max_tt = max(total_time),
-#     p10 = quantile(total_time, 0.1),
-#     p50 = quantile(total_time, 0.5),
-#     p90 = quantile(total_time, 0.9),
-#     range_tt = max_tt - min_tt,
-#     cv = sd_tt / mean_tt
-#   )
-# 
-# r5tts2 <- summary_stats %>%
-#   left_join(d, by = join_by("to_id" == "id"))
-# 
-# 
-# iso <- isochrone(r5_network, origins = o, mode = "CAR", cutoffs = c(0,5,15,30,60,90,120), departure_datetime = as.POSIXct(paste0("2026-04-27", " 17:00:00")), polygon_output = TRUE,)
-# 
-# plot(iso)
-# 
-# st_write(iso, "iso_car.geojson")
-# 
-# r5tts2 <- zensus_grid %>%
-#   left_join(r5tts, by = join_by("id" == "to_id"))
-# 
-# st_write(r5tts2, "gridttm_r5r2.geojson")
-# 

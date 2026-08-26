@@ -31,7 +31,8 @@ ifelse(
 
 area <- st_read("geodata/dvg1nw.gpkg", "regbez25kmbuffer")
 #TODO: Make usable for any area: import full zensus and stops data, filter by generic area (limited stops and dests)
-mapping_matrix <- read_csv2(here("code/erschließung_mat_long_numeric.csv"))
+mapping_matrix <- read_csv2(here("code/erschließung_mat_long_numeric_stingy.csv"))
+
 
 zensus_grid <- st_read(here("geodata/zensus.gpkg"), "regbez_zensus_populated") %>%
   st_as_sf() %>%
@@ -50,11 +51,11 @@ erschließung_map <- function(grid) {
   grid %>%
     mutate(
       travel_time_cut = case_when(
-        travel_time_p01 <= 5 ~ 5,
-        travel_time_p01 <= 8 ~ 8,
+        travel_time_p01 <= 4 ~ 4,
+        travel_time_p01 <= 7 ~ 7,
         travel_time_p01 <= 11 ~ 11,
-        travel_time_p01 <= 15 ~ 15,
-        travel_time_p01 <= 19 ~ 19,
+        travel_time_p01 <= 14 ~ 14,
+        travel_time_p01 <= 18 ~ 18,
         TRUE ~ NA_real_
       )
     ) %>%

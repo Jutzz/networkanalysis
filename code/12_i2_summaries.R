@@ -23,6 +23,7 @@ library(sf)
 library(ggplot2)
 library(plotly)
 
+
 group <- "hourly" #hourly,daily,meanhour or total
 
 #Read helper functions
@@ -36,6 +37,10 @@ method <- "weekday"
 zensus_grid <- st_read(here("geodata/zensus.gpkg"), "regbez_zensus_populated") %>%
   st_as_sf() %>%
   select(id, ags, Einwohner)
+
+grid_ids_regbez <- st_drop_geometry(zensus_grid) %>%
+  filter(str_detect(ags, "^053")) %>%
+  pull(id)
 
 #Get dates of representative norm- and weekdays from checking in find_valid_dates.R
 nonholiday_weekdays_fullservice <- read_lines("code/temp/nonholiday_weekdays_cutoff.txt")
@@ -64,6 +69,7 @@ kreise <- st_read("geodata/dvg1nw.gpkg", "kreise_regbez_vg250")
 summary <- ds %>%
   replace_na(list(Erschließungsqualität = 9)) %>%
   group_by(id) %>%
+  arrange(date, hour) %>%
   summarise(
     mean_eq = mean(Erschließungsqualität),
     median_eq = median(Erschließungsqualität),
@@ -76,6 +82,8 @@ summary <- ds %>%
       Erschließungsqualität
     )), collapse = ","),
     n_eq = n_distinct(Erschließungsqualität, na.rm = TRUE),
+    mean_tt = mean(travel_time_p01, na.rm = TRUE),
+    mean_bq = mean(Bedienungsqualität, na.rm = TRUE),
     n_stops = n_distinct(to_id, na.rm = TRUE),
     n_changes = sum(
       Erschließungsqualität != lag(Erschließungsqualität),
@@ -87,76 +95,39 @@ summary <- ds %>%
 write_fst(summary, "results/i2_summary.fst")
 
 summary_by_hour <- ds %>%
-  replace_na(list(Erschließungsqualität = 8)) %>%
+  replace_na(list(Erschließungsqualität = 9)) %>%
   group_by(id, hour) %>%
   summarise(
-    mean_eq = mean(Erschließungsqualität, na.rm = TRUE),
-    median_eq = median(Erschließungsqualität, na.rm = TRUE),
-    p50_eq = quantile(Erschließungsqualität, probs = 0.5, type = 1),
-    modal_eq = mode_value(Erschließungsqualität),
-    best_eq = min(Erschließungsqualität),
-    worst_eq = max(Erschließungsqualität),
-    range_eq = diff(range(Erschließungsqualität)),
-    dist_eq = paste(sort(unique(
-      Erschließungsqualität
-    )), collapse = ","),
-    n_eq = n_distinct(Erschließungsqualität, na.rm = TRUE),
-    n_stops = n_distinct(to_id, na.rm = TRUE),
-    n_changes = sum(
-      Erschließungsqualität != lag(Erschließungsqualität),
-      na.rm = TRUE
-    )
-  ) %>%
+    p50_eq = quantile(Erschließungsqualität, probs = 0.5, type = 1)
+    ) %>%
   as.data.frame()
 
 write_fst(summary_by_hour, "results/i2_summary_by_hour.fst")
 
 summary_by_date <- ds %>%
-  replace_na(list(Erschließungsqualität = 8)) %>%
+  replace_na(list(Erschließungsqualität = 9)) %>%
   group_by(id, date) %>%
   summarise(
-    mean_eq = mean(Erschließungsqualität, na.rm = TRUE),
-    median_eq = median(Erschließungsqualität, na.rm = TRUE),
-    p50_eq = quantile(Erschließungsqualität, probs = 0.5, type = 1),
-    modal_eq = mode_value(Erschließungsqualität),
-    best_eq = min(Erschließungsqualität),
-    worst_eq = max(Erschließungsqualität),
-    range_eq = diff(range(Erschließungsqualität)),
-    dist_eq = paste(sort(unique(
-      Erschließungsqualität
-    )), collapse = ","),
-    n_eq = n_distinct(Erschließungsqualität, na.rm = TRUE),
-    n_stops = n_distinct(to_id, na.rm = TRUE),
-    n_changes = sum(
-      Erschließungsqualität != lag(Erschließungsqualität),
-      na.rm = TRUE
-    )
+    p50_eq = quantile(Erschließungsqualität, probs = 0.5, type = 1)
   ) %>%
   as.data.frame()
 
 write_fst(summary_by_date, "results/i2_summary_by_date.fst")
 
+# Calculate weekday once for each unique date
+date_lookup <- unique(date_select)
+weekday_lookup <- wday(date_lookup)
+
+# Match the weekday back to every row
+
+
 summary_by_weekday <- ds %>%
-  mutate(weekday = weekdays(as.Date(date))) %>%
-  replace_na(list(Erschließungsqualität = 8)) %>%
+  filter(id %in% grid_ids_regbez) %>%
+  mutate(weekday = weekday_lookup[match(date, date_lookup)]) %>%
+  replace_na(list(Erschließungsqualität = 9)) %>%
   group_by(id, weekday) %>%
   summarise(
-    mean_eq = mean(Erschließungsqualität, na.rm = TRUE),
-    median_eq = median(Erschließungsqualität, na.rm = TRUE),
-    p50_eq = quantile(Erschließungsqualität, probs = 0.5, type = 1),
-    modal_eq = mode_value(Erschließungsqualität),
-    best_eq = min(Erschließungsqualität),
-    worst_eq = max(Erschließungsqualität),
-    range_eq = diff(range(Erschließungsqualität)),
-    dist_eq = paste(sort(unique(
-      Erschließungsqualität
-    )), collapse = ","),
-    n_eq = n_distinct(Erschließungsqualität, na.rm = TRUE),
-    n_stops = n_distinct(to_id, na.rm = TRUE),
-    n_changes = sum(
-      Erschließungsqualität != lag(Erschließungsqualität),
-      na.rm = TRUE
-    )
+    p50_eq = quantile(Erschließungsqualität, probs = 0.5, type = 1)
   ) %>%
   as.data.frame()
   

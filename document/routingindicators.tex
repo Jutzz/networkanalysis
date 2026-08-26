@@ -293,8 +293,9 @@
 	Durch den Strukturwandel im rheinischen Braunkohlerevier und die im Investitionsgesetz Kohleregionen verankerten Mittel zur Förderung der Eisenbahn- und eisenbahnanliegenden Infrastruktur (Investitionsgesetz Kohleregionen 2023, §§ 22, 27, Anlage 4) ergibt sich zusätzlicher Handlungs- und Informationsbedarf, der eine Untersuchung des verkehrlichen Status Quo des Gebietes relevant macht. Die verwendeten Methoden sind, aufgrund der deutschlandweit verfügbaren Datenquellen, zwar auf ganz Deutschland anwendbar, werden aufgrund des angestrebten Detailgrades der Auswertung und der resultierenden Notwendigkeit, eventuelle Randbedingungen und Ungenauigkeiten manuell zu prüfen auf das beschriebene Gebiet heruntergebrochen.
 	\subsection{Datengrundlagen}
 	\label{sec:Datengrundlagen}
-	\subsubsection{OSM}
-	Was ist OSM? Wie werden die Daten gepflegt? Welche Nutzungsbeispiele gibt es noch?
+	\subsubsection{OpenStreetMap}
+	Für die Ermittlung von Fußwegdistanzen werden Daten von OpenStreetMap (OSM) genutzt. \texttt{r5r} arbeitet nativ mit OSM-Dateien im \texttt{.osm.pbf}-Format, die für verschiedene Ausschnitte beispielsweise durch \textcite{GeofabrikOSMExtracts} bereitgestellt werden. OSM ist ein kollaboratives Projekt mit dem Ziel, eine \enquote{free editable map database of the
+		world [\textellipsis]} aufzubauen, \enquote{so that people and end-users are not forced to buy	geodata [\textellipsis] and [\textellipsis] be subjected to restrictive	copyright and license commitments} \parencite[2]{jokararsanjaniOpenStreetMapGIScienceExperiences2015}. Die enthaltenen Daten sind \enquote{Volunteered Geographical Information} \parencite{goodchildCitizensSensorsWorld2007}, Nutzende können jedes Element der Datenbank uneingeschränkt bearbeiten. 
 	\subsubsection{Fahrplandaten}
 	In diesem Kapitel soll ein kurzer Überblick über verschiedene Fahrplandatenformate gegeben werden und im weiteren die Entwicklung, der Aufbau, die Verbreitung und die Funktion des GTFS-Standards beschrieben werden und einige Beispiele zur Anwendung aus der Literatur betrachtet werden.
 	\paragraph{Entwicklung digitaler Fahrplaninformationen}
@@ -464,7 +465,6 @@
 	präpariert wurde, verknüpft. 
 	Die resultierende Tabelle ist als \texttt{hourly\_20260518\_weekday\_2026-05-04\_2026-06-26} im Anhang zu finden.	Zur Auswertung werden zudem die stündlichen Werte nach Stunde und Tag aggregiert, siehe dazu \ref{sec:resultsbedienung}.\footnote{In \texttt{mean\_frequencies} wurden zusätzlich Bedienungsqualitäten auf Grundlage des täglichen Mittelwerts, des stündlichen Mittelwerts über alle Tage, wochentäglicher und Mittelwerte der Abfahrten pro Stunde ($\neq$ Mittel der Bedienungsqualität) über den gesamten Zeitraum gebildet. Der Haltestellentyp orientiert sich dabei jeweils an dem höchstrangigen Verkehrsmittel im entsprechenden Zeitraum. Die einzelnen Ergebnisse sind im Anhang im Ordner \texttt{output} abgelegt, siehe \todo[inline]{Anhangsverzeichnis}. Ebenso wie die Untersuchung des Einflusses einzelner Wochentage sollte der Einfluss der Ermittlung der Bedienungsqualität auf Grundlage verschiedener zeitlicher Rahmen separat untersucht werden.}
 	\paragraph{Erschließungsqualität}
-	Die Erschließungsqualität einer Zensuszelle ergibt sich aus Tabelle \ref{tab:erschließungsqualität}.
 	\begin{table}[htbp]
 		\centering
 		\fontsize{9}{10}\selectfont
@@ -475,7 +475,7 @@
 		\label{tab:erschließungsqualität}
 	\end{table}
 
-	Für die Berechnung der Erschließungsqualität wird zunächst für jede Zensuszelle mit der \texttt{r5r}-Funktion \texttt{travel\_time\_matrix()} ermittelt, welche Halte in maximal 20 Minuten Gehzeit erreicht werden können (\texttt{09\_i2\_traveltimes.R}). Die resultierende Reisezeitmatrix ist im Anhang unter \texttt{output\_walk\_20min\_zensus\_stops.csv} abgelegt. \texttt{from\_id} und \texttt{to\_id} entsprechen dabei der DHID der Haltestelle bzw. der INSPIRE-Code der entsprechenden Zensuszelle. Das MTUP ist an dieser Stelle nicht relevant, da die Gehzeit zu jeder Tageszeit gleich ist. Danach wird das Optimum aus Gehzeit und Bedienungsqualität ermittelt, also die maximale Erschließungsqualität, die vom Startort (in der gesetzten Stunde) erreicht werden kann. Dabei ist zu beachten, das es Fälle geben kann, bei denen dies weder die Haltestelle mit dem kürzesten Zuweg noch jene mit der besten Bedienungsqualität ist. Den eigentlichen Indikator stellen pro Gemeinde die Bevölkerungsanteile je Qualitätsstufe dar (A-F, bzw. nicht erschlossen/keine Haltestelle in < 20 min erreicht). In Kapitel \ref{sec:resultserschließung} werden die Ergebnisse zudem mit den vom Schlussbericht empfohlenen Richtwerten \parencite[124, Tabelle 5-3]{bmdvForschungsprojektIndikatorenNachhaltiger2023} abgeglichen.
+	Die Erschließungsqualität einer Zensuszelle ergibt sich aus Tabelle \ref{tab:erschließungsqualität}. Für die Berechnung wird zunächst für jede Zensuszelle mit der \texttt{r5r}-Funktion \texttt{travel\_time\_matrix()} ermittelt, welche Halte in maximal 20 Minuten Gehzeit erreicht werden können (\texttt{10\_i2\_traveltimes.R}). Die resultierende Reisezeitmatrix ist im Anhang unter \texttt{output\_walk\_20min\_zensus\_stops.csv} abgelegt. \texttt{from\_id} und \texttt{to\_id} entsprechen dabei der DHID der Haltestelle bzw. der INSPIRE-Code der entsprechenden Zensuszelle. \texttt{r5r} ermittelt Reisezeiten in vollen Minuten, während der Steckbrief Fußwegentfernungen voraussetzt. Die in Tabelle \ref{tab:erschließungsqualität} angegebenen Distanzen werden in maximale Gehzeiten von 4, 7, 11, 14 und 18 Minuten übertragen. Dabei entstehen geringe Abweichungen. Das MTUP ist an dieser Stelle nicht relevant, da die Gehzeit zu jeder Tageszeit gleich ist. Danach wird das Optimum aus Gehzeit und Bedienungsqualität ermittelt, also die maximale Erschließungsqualität, die vom Startort (in der gesetzten Stunde) erreicht werden kann. Dabei ist zu beachten, das es Fälle geben kann, bei denen dies weder die Haltestelle mit dem kürzesten Zuweg noch jene mit der besten Bedienungsqualität ist. Den eigentlichen Indikator laut Steckbrief stellen pro Gemeinde die Bevölkerungsanteile je Qualitätsstufe dar (A-G, bzw. weniger als zwei Abfahrten pro Stunde an den erreichten Haltestellen oder keine Haltestelle in < 18 min erreicht)\parencite[26]{bmdvIndikatorenLeichtGemacht2025}. In Kapitel \ref{sec:resultserschließung} werden die Ergebnisse zudem mit den vom Schlussbericht empfohlenen Richtwerten \parencite[124, Tabelle 5-3]{bmdvForschungsprojektIndikatorenNachhaltiger2023} abgeglichen.
 	Diese Analyse wird für jede Stunde jeden Wochentages wie in Abschnitt \ref{sec:scheduledates} festgelegt durchgeführt. Dabei kann sich die Zielhaltestelle zwischen zwei Stunden verändern, wenn die Bedienungsqualität eines Haltes sich so verändert, das der Weg zu einer anderen Haltestelle eine bessere Erschließungsqualität liefert.
 	\todo{Folgender Absatz zur Diskussion?}
 	
@@ -582,7 +582,7 @@
     \label{tab:Indikator3Reisezeiten}
 \end{table}
 \todo[inline]{Wie ist der Steckbrief zu lesen: Bewertung des einzelnen zentralen Ortes oder Teilhabeindikator? Wie wird berechnet?}
-
+	\paragraph{Erreichbarkeit}
 	Der Steckbrief zur Erreichbarkeit zentraler Orte \parencite[28-30]{bmdvIndikatorenLeichtGemacht2025} formuliert den Indikator als eine Art Attraktivitätsmaß des einzelnen zentralen Ortes. Zunächst ist über einen Umkreis oder ein Zentrale-Orte-Konzept zu definieren, welche Bevölkerung einem zentralen Ort zugeordnet ist. Im zweiten Schritt wird geprüft, welcher Anteil dieser Bevölkerung den untersuchten zentralen Ort innerhalb der in Tabelle \ref{tab:Indikator3Reisezeiten} festgelegten Reisezeiten erreicht. Der Schlussbericht weicht davon deutlich ab und formuliert einen Teilhabeindikator, bei dem von jedem Wohnort die Reisezeit zum nächsten Mittelzentrum ermittelt wird, mit einem Maximum von 45 Minuten. Da das Handlungsziel, unter dem der Indikator steht die \enquote{Verbesserung der regionalen Verkehrsanbindung mit dem Umweltverbund} \parencite[14]{bmdvIndikatorenLeichtGemacht2025} ist, wird hier eine Kombination beider Ansätze umgesetzt: Berechnet wird für jede Stunde zwischen 08:00 und 18:00 die kürzeste Reisezeit zu den jeweils höherrangigen zentralen Orten von jedem Wohnort. Diese werden dann auf Einhaltung der Sollwerte in Tabelle \ref{tab:Indikator3Reisezeiten} geprüft, und die Ergebnisse nach Gemeinde aggregiert. 
 	\FloatBarrier
 \section{Ergebnisse}
@@ -635,14 +635,25 @@ Insgesamt wurden mit der in Abschnitt \ref{par:determinecentralplaces} beschrieb
 	\subsection{Indikatoren}
 	 \subsubsection{Erschließungsqualität}
 	 \label{sec:resultserschließung}
-	 Analog zur Bedienungsqualität wurde die Erschließungsqualität für jede untersuchte Stunde einzeln ermittelt. 	So kann eine Erschließungsqualität über den gesamten Zeitraum zu ermittelt werden, welche die tatsächlichen Bedienungsmuster berücksichtigt, indem verschiedene statistische Parameter zur Variation der Erschließungsqualität ermittelt werden können, und ein Profil wie in Abbildung \todo{Abbildung einfügen} für den jeweiligen Standort erzeugt werden kann. Zusätzlich wurden nach Datum, Stunde und Wochentag aggregierte Werte erzeugt, die im Anhang als Geopackage-Layer abgelegt sind, siehe \todo[inline]{Anhangsverzeichnis}. Für die räumlich aggregierten Werte wird der Median (s.o.) der Erschließungsqualität über alle betrachteten Stunden hinweg als Grundlage genutzt. 
-	Allgemein wiederholen sich die zur Bedienungsqualität beschriebenen Muster. Abbildung \ref{fig:pop_eq_hour} zeigt die Erschließungsqualitäten aggregiert nach Kreis beziehungsweise nach Raumtyp.
-	 	\begin{figure}[!hb]
-	 	\centering
-	 	\caption[Einwohner je Erschließungsqualität]{Anteil der Bevölkerung nach Erschließungsqualität (Median der Stunden), aggregiert nach Kreis bzw. regionalstatistischem Raumtyp (RegioStaR7 \parencite{BMDVRegioStaR2026})}
-	 	\includesvg[width=\linewidth]{figures/pop_eq_hour_krsregio.svg}
-	 	\label{fig:pop_eq_hour}
-	 \end{figure}
+	 Analog zur Bedienungsqualität wurde die Erschließungsqualität für jede untersuchte Stunde einzeln ermittelt. So kann eine Erschließungsqualität über den gesamten Zeitraum zu ermittelt werden, welche die tatsächlichen Bedienungsmuster berücksichtigt, indem verschiedene statistische Parameter zur Variation der Erschließungsqualität ermittelt werden können. Zusätzlich wurden nach Datum, Stunde und Wochentag aggregierte Werte erzeugt, die im Anhang als Geopackage-Layer abgelegt sind, siehe \todo[inline]{Anhangsverzeichnis}. Für die räumlich aggregierten Werte wird das 50\%-Quantil der Erschließungsqualität über alle betrachteten Stunden hinweg als Grundlage genutzt. 
+	
+	\begin{figure}[!hb]
+		\centering
+		\caption[Einwohner je Erschließungsqualität]{Anteil der Bevölkerung nach Erschließungsqualität (Median der Stunden), aggregiert nach Kreis bzw. regionalstatistischem Raumtyp (RegioStaR7 \parencite{BMDVRegioStaR2026})}
+		\includesvg[width=\linewidth]{figures/pop_eq_hour_krsregio.svg}
+		\label{fig:pop_eq_hour}
+	\end{figure}
+	Allgemein wiederholen sich die zur Bedienungsqualität beschriebenen Muster. Abbildung \ref{fig:pop_eq_hour} zeigt die Erschließungsqualitäten aggregiert nach Kreis beziehungsweise nach Raumtyp. In Grau dargestellt ist der Bevölkerungsanteil, der zwar im fußläufigen Einzugsbereich einer Haltestelle wohnt, bei dem alle erreichten Haltestellen aber unterhalb der Bedienungsqualität VI liegen (im weiteren als EQ H benannt), in Blau der Bevölkerungsanteil, der keine Haltestelle in weniger als 18 Minuten beziehungsweise 1.250 Metern erreicht (EQ J).  Die höchsten Anteile der oberen Bedienungsqualitäten finden sich erwartungsgemäß in den Ballungsräumen der Raumtypen 71 und 72, hier sind über drei Viertel der Bevölkerung mindestens mit einer EQ C (= sehr dichtes Angebot) erschlossen, jeweils über 50\% mit mindestens EQ B (= hochrangiges Angebot) oder besser. Die Klein- und Mittelstädte (Typen 73 und 74) erschließen eine Mehrheit der Bevölkerung mit mindestens EQ D (= dichtes Angebot). Die größten Anteile des Basisangebots (EQ F) und schlechter zeigen sich in ländlichen Gemeinden des oberbergischen Kreises (Nümbrecht: 21,96\% EQ H,  Marienheide: 19,95\% EQ H und Wipperfürth: 12,96\% EQ H) und in Selfkant (Kreis Heinsberg, 11,42\% EQ H), die Mehrheit ist mit EQ E (= erweitertes Basisangebot) oder besser erschlossen. Die größten Anteile völlig unerschlossener Bevölkerung (EQ J) zeigen sich in den ländlicheren Gemeinden des östlichen Rhein-Sieg-Kreises (Much (22,24\%), Ruppichteroth (20.12\%) und Neunkirchen-Seelscheid (12,60\%)) sowie in Marienheide (13,98\%). Durch diese Abgrenzung kann unterschieden werden zwischen Orten, die über ein räumlich ausgedehntes Netz verfügen, das aber nur in Mehrstundentakten oder den Schulverkehr bedient wird, und Orten, in denen einzeln Wohnorte gar nicht angefahren werden. Bei 78 von 99 Gemeinden liegt der Anteil der vollständig unerschlossenen Bevölkerung unter einem Prozent, bei 93 von 99 unter fünf Prozent.
+	
+	Der Unterschied zwischen den kleinstädtisch-dörflichem Raum (74) und den zentralen Städten der ländlichen Regionen (75) ist stärker ausgeprägt als bei den Bedienungsqualitäten. Daran wird der Effekt der Ermittlung des Indikators auf Grundlage des Fußweges und der Bevölkerungszahlen deutlich: kürzere Fußwege zu Haltestellen gleicher Bedienungsqualität führen zu besserer Erschließungsqualität. Die Bevölkerung der Gemeinden des Typs 75 ist tendenziell stärker konzentriert ist als jene der Gemeinden des Typs 74, was zu kürzeren Zuwegen und damit zu besseren Erschließungsqualitäten führt. 
+
+	 Auf Gitterebene zeigen sich erwartungsgemäß zeitlich ebenso variable Werte wie bei der Bedienungsqualität, mit der zusätzlichen Variationsquelle des möglichen Wechsels der Haltestelle bester erreichbarer Bedienungsqualität. Im Anhang sind analog zu Abbildung \ref{fig:exEQatlas} für jede Gemeinde Detailansichten des 50\%-Quantils der Erschließungsqualität (oben links), der Spannweite der Erschließungsqualität (oben rechts), der Anzahl verschiedener Halte (unten links), die im Laufe des Untersuchungszeitraums die beste Erschließungsqualität bieten und die Anzahl der Wechsel der Erschließungsqualität (unten rechts) verzeichnet (\texttt{appendix/reports/EQ\_Atlas.pdf}).
+	 
+	\begin{figure}[!htbp]
+		\includegraphics[width=\linewidth]{figures/eqoverview_DN.pdf}
+		\caption{Übersicht zur Variation Erschließungsqualität in Düren}
+		\label{fig:exEQatlas}
+	\end{figure}
 	 
 	 \begin{figure}[!htbp]
 	 	\includesvg[width=\linewidth]{figures/eqgrößterAnteil.svg}
@@ -651,11 +662,7 @@ Insgesamt wurden mit der in Abschnitt \ref{par:determinecentralplaces} beschrieb
 	 \end{figure}
 	 Abbildung \ref{map:eqgrößterAnteil} zeigt für jede Gemeinde, welche Erschließungsqualitätsklasse den größten Anteil der Bevölkerung abdeckt. 
 
-	 
-
-	 
-
-	\todo[inline]{Räumliche Muster (grob), Abweichungen von Sollwert je Gemeinde}
+	Der Schlussbericht empfiehlt die Werte in Tabelle \ref{tab:sollEQ} als Soll-/Richtwerte für den Verfügbarkeitsindikator. Die Bevölkerungsanteile, welche im Steckbrief die Indikatorenwerte darstellen (vgl. Abbildungen \ref{fig:EQportEx} und \ref{fig:EQpiechart}) werden bis zu einem Minimum der EQ summiert und mit dem Richtwert verglichen. Von den 99 betrachteten Gemeinden liegen 14 unterhalb des Richtwertes, vier davon mit über zehn Prozent Abweichung (Nümbrecht, Marienheide, Hückeswagen und Wiehl). Ruppichteroth und Gummersbach liegen nur knapp unterhalb, Geilenkirchen, Bergisch Gladbach, Overath und Linnich nur knapp überhalb des Sollwertes ($\leq$1\% Abweichung). 
 	\subsection{Weiße Flecken}
 	\todo[inline]{Arbeitstitel: Auswertungsmethode noch offen, Korrelationen mit Zensusdaten, temporale Variabilität, Grundlage VDV-Schrift: Zu erschließend sind zusammenhängende Siedlungen von mindestens 200 Einwohnern. Diese werden aus dem Zensusgitter ermittelt. Beispielhafte Auswertung eines oder zwei Cluster: Linien, Profile, Optionen. Schluss: Indikator allein bietet noch keine finale Information - Weitere Bearbeitung und kontextbezogene Betrachtung notwendig, schon wegen temporaler Fragen.} Verdächtig: Freialdenhoven, Heimbach, Langenbroich (Kreuzau), Poll (nörvenich), Kelz (Vettweiß), Euskirchen Kirchheim Süd, Berescheid, Kerperscheid,Scheuren,Wintzen(alle Schleiden), Hastenrath (Gangelt), Schleiden Ütterath (Heinsberg), Schalbruch (Selfkant), Bellingroth Kaltenbach (Engelskirchen), Hückeswagen,Marienheide,(OBK insgesamt), Much, Neunkirchen-Seelscheid, 
 	\FloatBarrier
