@@ -60,7 +60,7 @@ Erreichbarkeit <- function(origins, destinations) {
     origins = origins,
     destinations = destinations,
     mode = modes,
-    walk_speed = 4,
+    walk_speed = 3,
     mode_egress = "WALK",
     max_walk_time = max_walk_time,
     departure_datetime = departure,
@@ -81,9 +81,9 @@ departure_date <- date_select[1]
 #Parameter für Erreichbarkeitsanalyse
 modes <- c("WALK")
 modes_filename <- paste(modes, collapse = "")
-max_walk_time <- 20
+max_walk_time <- 26
 departure <- as.POSIXct(paste0(departure_date, " 09:00:00"))
-max_trip_duration <- 20
+max_trip_duration <- 26
 
 #Travel Time Analysis
 #This only has to be done once; Walk Times to stops wont change over time

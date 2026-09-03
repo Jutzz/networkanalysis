@@ -56,3 +56,5 @@ r5core_fares/
 .DS_Store
 Thumbs.db
 geodata/dwellings.gpkg
+geodata/zentrale_orte_area.gpkg
+/r5core_2026-05-21_osmonly_nrw

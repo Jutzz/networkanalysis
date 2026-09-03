@@ -93,7 +93,7 @@ summary <- ds %>%
   as.data.frame()
 
 write_fst(summary, "results/i2_summary.fst")
-
+message("Total written.")
 summary_by_hour <- ds %>%
   replace_na(list(Erschließungsqualität = 9)) %>%
   group_by(id, hour) %>%
@@ -103,7 +103,7 @@ summary_by_hour <- ds %>%
   as.data.frame()
 
 write_fst(summary_by_hour, "results/i2_summary_by_hour.fst")
-
+message("By Hour written.")
 summary_by_date <- ds %>%
   replace_na(list(Erschließungsqualität = 9)) %>%
   group_by(id, date) %>%
@@ -113,7 +113,7 @@ summary_by_date <- ds %>%
   as.data.frame()
 
 write_fst(summary_by_date, "results/i2_summary_by_date.fst")
-
+message("By date written.")
 # Calculate weekday once for each unique date
 date_lookup <- unique(date_select)
 weekday_lookup <- wday(date_lookup)
@@ -132,3 +132,4 @@ summary_by_weekday <- ds %>%
   as.data.frame()
   
 write_fst(summary_by_weekday, "results/i2_summary_by_weekday.fst")
+message("By weekday written.")

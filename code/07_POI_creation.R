@@ -1,4 +1,5 @@
-library(plyr)
+#library(plyr)
+library(dplyr)
 library(tidyverse)
 library(sf)
 library(here)
@@ -7,6 +8,7 @@ library(terra)
 library(spatialEco)
 library(smoothr)
 library(nngeo)
+library(igraph)
 
 files.sources = list.files("code/helper/", full.names = TRUE)
 sapply(files.sources, source)
@@ -17,7 +19,8 @@ filter_na <- function(tbl, expr){
 
 osmdate <- "260521"
 
-gem <- st_read("geodata/dvg1nw.gpkg", "gemeinden_regbez_kln")
+gem <- st_read("geodata/dvg1nw.gpkg", "gemeinden_regbez_25km") %>%
+  filter(str_detect(KN, "^05"))
 
 #Turn osm points and polygons into geopackage according to osmconf_cpt.txt
 osmextract::oe_vectortranslate("osmdata/zentraler_ort_pois.pbf", layer = "points", never_skip_vectortranslate = TRUE, osmconf_ini = "code/osmconf_cpt.txt")
@@ -32,86 +35,86 @@ poi_poly <- st_centroid(st_transform(st_read("osmdata/zentraler_ort_pois.gpkg", 
     osm_id))
 
 # Selbstentworfener POI-Satz mit größerer Auswahl, allerdings keine große Veränderung zu POI nach Flex et al. 2016.
-poi <- bind_rows(poi_pt, poi_poly) %>%
-  mutate(
-    category = case_when(
-
-      # FOOD
-      amenity %in% c(
-        "restaurant","cafe","fast_food",
-        "bar","pub","biergarten"
-      ) ~ "Gastro",
-
-      shop %in% c(
-        "bakery","butcher","convenience",
-        "supermarket","greengrocer"
-      ) ~ "Food",
-
-      # SHOPPING
-      !is.na(shop) ~ "Shopping",
-
-      # CULTURE
-      amenity %in% c(
-        "theatre","cinema","arts_centre",
-        "library","archive","events_venue"
-      ) ~ "Culture",
-
-      tourism %in% c(
-        "museum","gallery"
-      ) ~ "Culture",
-
-      # SOCIAL
-
-      amenity %in% c(
-        "social_facility","community_centre","youth_room","youth_welfare_office"
-      ) ~ "Social",
-
-      # ADMINISTRATION
-      amenity %in% c(
-        "townhall","courthouse"
-      ) ~ "Administration",
-
-      office == "government" ~ "Administration",
-
-      # INFORMATION
-      amenity %in% c(
-        "bank","post_office","atm"
-      ) ~ "Information",
-
-      # CHILD + ELDERY
-      amenity %in% c(
-        "kindergarten", "childcare" ,"nursing_home"
-      ) ~ "Care",
-
-      # EDUCATION
-      amenity %in% c(
-        "school","college","university","prep_school"
-      ) ~ "Education",
-
-      # HEALTH
-      amenity %in% c(
-        "hospital","clinic","doctors",
-        "pharmacy","dentist"
-      ) ~ "Health",
-
-      # LEISURE
-      leisure %in% c("playground","dance","horse_riding","tanning_salon","fitness_centre","hackerspace","sports","sports_centre","pitch","fitness_station","sports_hall","spa","track","dog_park"
-                     ) ~ "Leisure",
-      amenity %in% c("dancing_school") ~ "Leisure",
-
-      !is.na(public_transport) ~ "Mobility",
-
-      TRUE ~ "Other"
-    )
-  ) %>%
-  replace_na(list(shop =  "no", amenity = "no", place = "no", boundary = "no", historic = "no", type = "no")) %>%
-  filter(shop != "vacant",
-         !amenity %in% c("recycling" ,"vending_machine", "parking_entrance", "parking_space", "parking","waste_basket", "waste_disposal", "fast_food", "restaurant", "hitching_post", "hunting_stand","grit_bin","game_feeding","fountain","charging_station","bicycle_parking","bicycle_rental","bench"),
-         type != "boundary",
-         !place %in% c("locality", "farm", "village", "hamlet"),
-         historic == "no",
-         is.na(natural),
-         is.na(highway))
+# poi <- bind_rows(poi_pt, poi_poly) %>%
+#   mutate(
+#     category = case_when(
+# 
+#       # FOOD
+#       amenity %in% c(
+#         "restaurant","cafe","fast_food",
+#         "bar","pub","biergarten"
+#       ) ~ "Gastro",
+# 
+#       shop %in% c(
+#         "bakery","butcher","convenience",
+#         "supermarket","greengrocer"
+#       ) ~ "Food",
+# 
+#       # SHOPPING
+#       !is.na(shop) ~ "Shopping",
+# 
+#       # CULTURE
+#       amenity %in% c(
+#         "theatre","cinema","arts_centre",
+#         "library","archive","events_venue"
+#       ) ~ "Culture",
+# 
+#       tourism %in% c(
+#         "museum","gallery"
+#       ) ~ "Culture",
+# 
+#       # SOCIAL
+# 
+#       amenity %in% c(
+#         "social_facility","community_centre","youth_room","youth_welfare_office"
+#       ) ~ "Social",
+# 
+#       # ADMINISTRATION
+#       amenity %in% c(
+#         "townhall","courthouse"
+#       ) ~ "Administration",
+# 
+#       office == "government" ~ "Administration",
+# 
+#       # INFORMATION
+#       amenity %in% c(
+#         "bank","post_office","atm"
+#       ) ~ "Information",
+# 
+#       # CHILD + ELDERY
+#       amenity %in% c(
+#         "kindergarten", "childcare" ,"nursing_home"
+#       ) ~ "Care",
+# 
+#       # EDUCATION
+#       amenity %in% c(
+#         "school","college","university","prep_school"
+#       ) ~ "Education",
+# 
+#       # HEALTH
+#       amenity %in% c(
+#         "hospital","clinic","doctors",
+#         "pharmacy","dentist"
+#       ) ~ "Health",
+# 
+#       # LEISURE
+#       leisure %in% c("playground","dance","horse_riding","tanning_salon","fitness_centre","hackerspace","sports","sports_centre","pitch","fitness_station","sports_hall","spa","track","dog_park"
+#                      ) ~ "Leisure",
+#       amenity %in% c("dancing_school") ~ "Leisure",
+# 
+#       !is.na(public_transport) ~ "Mobility",
+# 
+#       TRUE ~ "Other"
+#     )
+#   ) %>%
+#   replace_na(list(shop =  "no", amenity = "no", place = "no", boundary = "no", historic = "no", type = "no")) %>%
+#   filter(shop != "vacant",
+#          !amenity %in% c("recycling" ,"vending_machine", "parking_entrance", "parking_space", "parking","waste_basket", "waste_disposal", "fast_food", "restaurant", "hitching_post", "hunting_stand","grit_bin","game_feeding","fountain","charging_station","bicycle_parking","bicycle_rental","bench"),
+#          type != "boundary",
+#          !place %in% c("locality", "farm", "village", "hamlet"),
+#          historic == "no",
+#          is.na(natural),
+#          is.na(highway))
 
 poi_flex <- bind_rows(poi_pt, poi_poly) %>%
   filter(amenity == "pharmacy" | grepl("apotheke", name, ignore.case = TRUE)|
@@ -180,7 +183,7 @@ poi_flex_optional <- bind_rows(poi_pt, poi_poly) %>%
     railway %in% c("halt", "station") | public_transport %in% c("stop_position", "platform") | grepl("Haltepunkt|Bahnhof", name, ignore.case = TRUE) ~ "Public Transport Stop",
     .default = NA_character_ )
   ) %>%
-  select(1,2,category,geometry)
+  dplyr::select(1,2,category,geometry)
 
 #Sportplätze die weniger als 100 m auseinanderliegen werden zu einem POI
 #zusammengefasst, um zu verhindern, das eine einzige zentralörtliche Funktion
@@ -194,30 +197,35 @@ pitch <- poi_flex_optional %>%
   filter(category == "Sports Facility") %>%
   st_buffer(100)
 
-#Identify overlaps
-adj <- st_intersects(pitch)
+centers <- st_union(pitch) %>%
+  st_as_sf() %>%
+  st_cast("POLYGON") %>%
+  st_centroid() %>%
+  dplyr::rename("geometry" = x)
 
-#Group overlapping Buffers
-g <- graph_from_adj_list(adj, mode = "all")
-pitch$group <- components(g)$membership
-
-#Merge groups
-merged <- pitch %>%
-  group_by(group) %>%
-  summarise(
-    osm_id = paste(unique(osm_id), collapse = ";"),
-    do_union = TRUE,
-    category = "Sports Facility"
-  )
-
-#Get Centroids
-centers <- st_centroid(merged)
+# #Identify overlaps
+# adj <- st_intersects(pitch)
+# 
+# #Group overlapping Buffers
+# g <- graph_from_adj_list(adj, mode = "all")
+# pitch$group <- components(g)$membership
+# 
+# #Merge groups
+# merged <- pitch %>%
+#   group_by(group) %>%
+#   summarise(
+#     osm_id = paste(unique(osm_id), collapse = ";"),
+#     do_union = TRUE,
+#     category = "Sports Facility"
+#   )
+# 
+# #Get Centroids
+# centers <- st_centroid(merged)
 
 poi_flex_optional <- poi_flex_optional %>%
   filter(!category == "Sports Facility") %>%
-  bind_rows(centers) %>%
-  select(!group)
+  bind_rows(centers)
 
-st_write(poi %>% filter(category != "Other"), "geodata/pois.gpkg", paste0("zo_POI_large_", osmdate), append = FALSE)
+#st_write(poi %>% filter(category != "Other"), "geodata/pois.gpkg", paste0("zo_POI_large_", osmdate), append = FALSE)
 st_write(poi_flex, "geodata/pois.gpkg", paste0("zo_POI_flex_", osmdate), append = FALSE)
 st_write(poi_flex_optional, "geodata/pois.gpkg", paste0("zo_POI_flex_opt", osmdate), append = FALSE)

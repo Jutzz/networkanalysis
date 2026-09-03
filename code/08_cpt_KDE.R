@@ -1,5 +1,4 @@
 options(java.parameters = "-Xmx20G")
-library(plyr)
 library(tidyverse)
 library(sf)
 library(r5r)
@@ -11,6 +10,7 @@ library(smoothr)
 library(nngeo)
 library(units)
 library(vegan)
+library(future.apply)
 
 #Geldautomaten, die in Openstreetmap mit dem Tag atm=yes als Teil einer
 #Bankfiliale versehen sind, werden in die Zählung der POI/Funktionen separat mit
@@ -23,7 +23,8 @@ sapply(files.sources, source)
 
 osmdate <- "260521"
 
-gem <- st_transform(st_read("geodata/dvg1nw.gpkg", "gemeinden_regbez_kln"), crs = st_crs(3035))
+gem <- st_transform(st_read("geodata/dvg1nw.gpkg", "gemeinden_regbez_25km"), crs = st_crs(3035)) %>%
+  filter(str_detect(KN, "^05"))
 
 #Größerer POI-Satz bringt keine nennenswerten Verschiebungen, daher auskommentiert.
 # poi <- st_transform(st_read("geodata/pois.gpkg", paste0("zo_POI_large_", osmdate)), crs = st_crs(gem)) %>%
@@ -31,19 +32,21 @@ gem <- st_transform(st_read("geodata/dvg1nw.gpkg", "gemeinden_regbez_kln"), crs 
 
 poi_flex <- st_transform(st_read("geodata/pois.gpkg", paste0("zo_POI_flex_", osmdate)), crs = st_crs(gem)) %>%
   st_join(gem %>% select(KN, geom)) %>%
-  arrange(KN) %>%
-  select(osm_id, name, category, KN, amenity, atm)
+  dplyr::arrange(KN) %>%
+  select(osm_id, name, category, KN, amenity, atm) %>%
+  filter(!is.na(category))
 
 poi_flex_optional <- st_transform(st_read("geodata/pois.gpkg", paste0("zo_POI_flex_opt", osmdate)), crs = st_crs(gem)) %>%
   st_join(gem %>% select(KN, geom)) %>%
-  mutate(amenity = NA, atm = NA)
+  mutate(amenity = NA, atm = NA) %>%
+  mutate(osm_id = ifelse(is.na(osm_id), paste0("sf_", row_number()), osm_id)) %>%
+  replace_na(list(category = "Sports Facility"))
 
+poi_flex_full <- rbind(poi_flex, poi_flex_optional) %>%
+  filter(!is.na(KN))
 
-unique_kn <- unique(poi_flex$KN)
+unique_kn <- unique(poi_flex_full$KN)
 total <- length(unique_kn)
-
-poi_flex_full <- rbind(poi_flex, poi_flex_optional)
-
 #KDE for every muni, normalized and written as polygons (bands).
 #Flex POI set ----
 for (N in unique(poi_flex_full$KN)){
@@ -70,7 +73,7 @@ for (N in unique(poi_flex_full$KN)){
   
   bands <- as.polygons(d_class, dissolve = TRUE) %>%
     st_as_sf(crs = st_crs(3035)) %>%
-    rename("density" = lyr.1) %>%
+    dplyr::rename("density" = lyr.1) %>%
     filter(density >= 1) %>%
     mutate(KN = N) %>%
     smooth(method = "ksmooth", smoothness = 2) %>%
@@ -87,16 +90,32 @@ for (N in unique(poi_flex_full$KN)){
 #Turning bands into closed areas of equal minimal density
 bands_flex <- st_read("geodata/zentrale_orte_bands.gpkg", "bands_flex")
 
-areas_flex <- st_remove_holes(bands_flex) %>%
+remove_holes_chunked <- function(x, chunk_size = 500) {
+  n <- nrow(x)
+  chunks <- split(seq_len(n), ceiling(seq_len(n) / chunk_size))
+  n_chunks <- length(chunks)
+  
+  result <- lapply(seq_along(chunks), function(j) {
+    message(sprintf("Processing chunk %d of %d...", j, n_chunks))
+    st_remove_holes(x[chunks[[j]], ])
+  })
+  
+  do.call(rbind, result)
+}
+
+areas_flex_filled <- remove_holes_chunked(bands_flex, chunk_size = 100) 
+
+areas_flex <- areas_flex_filled %>%
   group_by(KN, density) %>%
-  mutate(
-    area_id = paste0(KN, "_", density, "_", row_number())
+  dplyr::mutate(
+    area_id = paste0(KN, "_", density, "_", dplyr::row_number())
   ) %>%
-  ungroup()
+  ungroup() %>%
+  st_transform(st_crs(poi_flex))
 
-st_write(areas_flex, "geodata/zentrale_orte_areas.gpkg", "areas_flex", append = FALSE)
+st_write(areas_flex, "geodata/zentrale_orte_area.gpkg", "areas_flex", append = FALSE)
 
-areas_flex <- st_read("geodata/zentrale_orte_areas.gpkg", "areas_flex")
+areas_flex <- st_read("geodata/zentrale_orte_area.gpkg", "areas_flex")
 
 #Separating ATMs from Banks for category counting
 atm <- poi_flex %>%
@@ -104,7 +123,7 @@ atm <- poi_flex %>%
   mutate(amenity = "atm") %>%
   mutate(category = "ATM")
 
-poi_flex <- rbind(poi_flex, atm)
+poi_flex <-rbind(poi_flex, atm)
 
 #What POI are in which areas? Base and optional
 # --- BASE POIs ---
@@ -126,7 +145,7 @@ poi_opt_join <- st_join(
 #Which categories are present in which area?
 presence_base <- poi_base_join %>%
   st_drop_geometry() %>%
-  count(area_id, category, name = "n_poi") %>%
+  dplyr::count(area_id, category, name = "n_poi") %>%
   pivot_wider(
     names_from = category,
     values_from = n_poi,
@@ -135,7 +154,7 @@ presence_base <- poi_base_join %>%
 
 presence_opt <- poi_opt_join %>%
   st_drop_geometry() %>%
-  count(area_id, category, name = "n_poi") %>%
+  dplyr::count(area_id, category, name = "n_poi") %>%
   pivot_wider(
     names_from = category,
     values_from = n_poi,
@@ -156,18 +175,18 @@ opt_cols  <- intersect(categories_optional, names(areas_flex_p))
 
 #How many categories are in each area?
 areas_flex_p <- areas_flex_p %>%
-  mutate(
+  dplyr::mutate(
     n_categories_base = rowSums(across(all_of(base_cols), ~ .x > 0)),
     n_categories_opt  = rowSums(across(all_of(opt_cols),  ~ .x > 0))
   )
 #How many POI in the area?
 poi_counts_base <- poi_base_join %>%
   st_drop_geometry() %>%
-  count(area_id, name = "n_poi_base")
+  dplyr::count(area_id, name = "n_poi_base")
 
 poi_counts_opt <- poi_opt_join %>%
   st_drop_geometry() %>%
-  count(area_id, name = "n_poi_opt")
+  dplyr::count(area_id, name = "n_poi_opt")
 
 areas_flex_p <- areas_flex_p %>%
   left_join(poi_counts_base, by = "area_id") %>%
@@ -190,7 +209,7 @@ category_cols = c(base_cols, opt_cols)
 #Write category count per area for visual control of later results and visualization.
 st_write(
   areas_flex_p,
-  "geodata/zentrale_orte_areas.gpkg",
+  "geodata/zentrale_orte_area.gpkg",
   "areas_flex_catcount",
   append = FALSE
 )
@@ -214,15 +233,15 @@ core <- areas_flex_p %>%
   filter(!has_child) %>%
   select(density, KN, area_id)
 
-st_write(core %>% st_centroid(), "geodata/zentrale_orte_areas.gpkg", "cores_nochild", append = FALSE)
+st_write(core %>% st_centroid(), "geodata/zentrale_orte_area.gpkg", "cores_nochild", append = FALSE)
 
 #Create r5 Network for walking time analysis, turn cores and POI into routable df with plain coordinates.
-r5_network <- setup_r5("r5core_2026-05-18/", overwrite = FALSE)
+r5_network <- setup_r5("r5core_2026-05-21_osmonly_nrw", overwrite = FALSE)
 
 poi_base_df <- pois_fun(poi_flex, id_col = "osm_id")
 poi_optional_df <- pois_fun(poi_flex_optional, id_col = "osm_id")
 
-core_df <- pois_fun(core %>% st_centroid(), id_col = "area_id")
+core_df <- pois_fun(core %>% st_centroid(), id_col = "area_id") 
 
 #Calculate traveltime matrices from cores to POI
 ttm <- travel_time_matrix(r5_network, origins = core_df, destinations = poi_base_df, mode = "WALK", max_trip_duration = 15L, percentiles = 1L, walk_speed = 4L)
@@ -397,21 +416,34 @@ core_stat_results <- core_stat %>%
   mutate(dist = score-score_max)
 
 
-st_write(core_stat_results, "geodata/zentrale_orte_areas.gpkg", "acc_scoring_centroids_filtered", append = FALSE)
+st_write(core_stat_results, "geodata/zentrale_orte_area.gpkg", "acc_scoring_centroids_filtered", append = FALSE)
 st_write(core_stat_results, "geodata/poi.gpkg", "zentrale_orte", append = FALSE)
-st_write(core_stat, "geodata/zentrale_orte_areas.gpkg", "acc_scoring_centroids", append = FALSE)
+st_write(core_stat, "geodata/zentrale_orte_area.gpkg", "acc_scoring_centroids", append = FALSE)
+
+rbz25 <- st_read("geodata/dvg1nw.gpkg", "regbez25kmbuffer")
+
+rlp_westerwald_wfs <- "https://rok25online.rlp.de/sgdn_client_suite/apps/service/wfs_getmap.php?mapfile=rrop_mw_2017&SERVICE=WFS&VERSION=1.0.0&REQUEST=GetCapabilities"
+
+mz1 <- st_read(rlp_westerwald_wfs, "mw_161208_42_mittelzent_monoz")
+mz2 <- st_read(rlp_westerwald_wfs, "mw_161208_41_mittelzent_freiwi_koop")
+mz3 <- st_read(rlp_westerwald_wfs, "mw_161208_40_mittelzent_verpfl_koop")
+gz1 <- st_read(rlp_westerwald_wfs, "mw_161208_39_grundzent_monoz")
+gz2 <- st_read(rlp_westerwald_wfs, "mw_161208_38_grundzent_verpfl_koop")
+
+z_rlp <- rbind(mz1, mz2, mz3, gz1,gz2) %>%
+  st_filter(rbz25, .predicate = st_intersects) %>%
+  dplyr::select(id, ortsname) %>%
+  rename("GN" = ortsname) %>%
+  mutate(zentralitaet = ifelse(id == "2", "Mittelzentrum", "Grundzentrum"))
+
+
+st_write(z_rlp, "geodata/poi.gpkg", "zentrale_orte_rlp")
 
 zentrale_orte <- st_read("geodata/poi.gpkg", "zentrale_orte")
 
-zentrale_orte_gem <- zentrale_orte %>%
-  group_by(GN) %>%
-  summarize(count = n())
-
-count(zentrale_orte_gem[[count]])
-
 # OLD methods left here as proof of work.
 # From here: Other methods tried before using walking distance: Parent/Child, Pareto-Optimization
-# st_write(result, "geodata/zentrale_orte_areas.gpkg", "acc_scoring_greedy", append = FALSE)  
+# st_write(result, "geodata/zentrale_orte_area.gpkg", "acc_scoring_greedy", append = FALSE)  
 # 
 # ggplot(core_stat, aes(x = zentralitaet, y = cat_total_reached)) + geom_boxplot()
 # #What areas are contained in what other areas?
@@ -441,7 +473,7 @@ count(zentrale_orte_gem[[count]])
 #   relocate(parent_KN, parent_id, core_id, parent_density, core_density, parent_shannon_norm, core_shannon_norm, parent_area, core_area, parent_n_categories_base, core_n_categories_base, parent_n_categories_opt, core_n_categories_opt, parent_n_categories_total, core_n_categories_total) #%>%
 #   filter(parent_density == density_parent)
 # 
-# st_write(core_parent, "geodata/zentrale_orte_areas.gpkg", "core_parent_nochild", append = FALSE)
+# st_write(core_parent, "geodata/zentrale_orte_area.gpkg", "core_parent_nochild", append = FALSE)
 # 
 # 
 # total_cat <- core_parent %>%
@@ -480,7 +512,7 @@ count(zentrale_orte_gem[[count]])
 #   mutate(distance = replace_na(distance, 0)) %>%
 #   ungroup()
 # 
-# #st_write(tcat_scores, "geodata/zentrale_orte_areas.gpkg", "highestdexceptforparentn_allcat_3", append = FALSE)
+# #st_write(tcat_scores, "geodata/zentrale_orte_area.gpkg", "highestdexceptforparentn_allcat_3", append = FALSE)
 # 
 # score_cutoff <- sd(tcat_scores$distance)
 # 
@@ -499,7 +531,7 @@ count(zentrale_orte_gem[[count]])
 #   left_join(st_drop_geometry(gem) %>% select(KN,GN), by = join_by("parent_KN" == "KN")) %>%
 #   st_centroid()
 # 
-# st_write(max_d, "geodata/zentrale_orte_areas.gpkg", "maxdmaxcat", append = FALSE)
+# st_write(max_d, "geodata/zentrale_orte_area.gpkg", "maxdmaxcat", append = FALSE)
   
 
 #Testing with bw = 500 if there is any difference
@@ -513,9 +545,9 @@ count(zentrale_orte_gem[[count]])
 #   ) %>%
 #   ungroup()
 # 
-# #st_write(areas_flex, "geodata/zentrale_orte_areas.gpkg", "areas_flex_500", append = FALSE)
+# #st_write(areas_flex, "geodata/zentrale_orte_area.gpkg", "areas_flex_500", append = FALSE)
 # 
-# areas_flex <- st_read("geodata/zentrale_orte_areas.gpkg", "areas_flex_500")
+# areas_flex <- st_read("geodata/zentrale_orte_area.gpkg", "areas_flex_500")
 # 
 # #What POI are in which areas? Base and optional
 # # --- BASE POIs ---
@@ -600,7 +632,7 @@ count(zentrale_orte_gem[[count]])
 # 
 # st_write(
 #   areas_flex_p,
-#   "geodata/zentrale_orte_areas.gpkg",
+#   "geodata/zentrale_orte_area.gpkg",
 #   "areas_flex_catcount_500",
 #   append = FALSE
 # )
@@ -648,7 +680,7 @@ count(zentrale_orte_gem[[count]])
 #   st_as_sf()
 # 
 # #Write to disk
-# st_write(best, "geodata/zentrale_orte_areas.gpkg", "highestdexceptforparentn_allcat_500", append = FALSE)
+# st_write(best, "geodata/zentrale_orte_area.gpkg", "highestdexceptforparentn_allcat_500", append = FALSE)
 ##Everything from here: Testing, document briefly how we got here.
 # poi_present_flex <- st_join(poi_flex %>% select(!KN), areas_flex, join = st_within) %>%
 #   filter(!is.na(area_id))
@@ -674,7 +706,7 @@ count(zentrale_orte_gem[[count]])
 #   st_drop_geometry(areas_flex_p)[, categories_base]
 # )
 # 
-# st_write(areas_flex_p, "geodata/zentrale_orte_areas.gpkg", "areas_flex_catcount")
+# st_write(areas_flex_p, "geodata/zentrale_orte_area.gpkg", "areas_flex_catcount")
 # 
 # pareto_flex <- areas_flex_p %>%
 #   filter(density >= 1) %>%
@@ -695,7 +727,7 @@ count(zentrale_orte_gem[[count]])
 #   }) %>%
 #   ungroup()
 # 
-# st_write(pareto_flex, "geodata/zentrale_orte_areas.gpkg", "pareto_flex_opt")
+# st_write(pareto_flex, "geodata/zentrale_orte_area.gpkg", "pareto_flex_opt")
 # 
 # 
 # d <- sf.kde(st_transform(x = poi_flex %>% filter(str_detect(KN, "053")), crs = st_crs(gem)),  res = 50, bw = 1000, ref = gem)

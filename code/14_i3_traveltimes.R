@@ -94,11 +94,24 @@ max_walk_time <- 19
 max_rides = 3
 max_trip_duration <- 61
 #Einlesen von Gitter, Gemeinden und POI
-zensus_grid <- st_read(here("geodata/zensus.gpkg"), "regbez_zensus_populated_25km") %>%
+zensus_grid <- st_read(here("geodata/zensus.gpkg"), "regbez_zensus_populated") %>%
   st_as_sf() %>%
   dplyr::select(id, ags, Einwohner)
-gemeinden <- st_read(dsn = here("geodata/dvg1nw.gpkg"), layer = "gemeinden_regbez_25km")
-zentraleOrte <- st_transform(st_read(here("geodata/poi.gpkg"), "zentrale_orte"), crs = st_crs(zensus_grid))
+gemeinden <- st_read(dsn = here("geodata/dvg1nw.gpkg"), layer = "gemeinden_regbez_vg250")
+zentraleOrte_nrw <- st_transform(st_read(here("geodata/poi.gpkg"), "zentrale_orte_oz_manual"), crs = st_crs(zensus_grid))  %>%
+  filter(str_detect(KN,  "^053") | add_outside) %>%
+  filter(!(str_detect(KN,  "^053") & zentralitaet == "Oberzentrum" & oz_manual == FALSE)) %>%
+  dplyr::select(area_id, GN, zentralitaet)
+
+zentraleOrte_rlp <- st_transform(st_read(here("geodata/poi.gpkg"), "zentrale_orte_rlp"), crs = st_crs(zensus_grid))  %>%
+  filter(add_outside) %>%
+  mutate(area_id = paste0(GN)) %>%
+  dplyr::select(area_id, GN, zentralitaet)
+
+zentraleOrte <- rbind(zentraleOrte_nrw, zentraleOrte_rlp)
+
+st_write(zentraleOrte, "geodata/poi.gpkg", "zentraleOrte_routingdestinations")
+
 zentraleOrteid <- st_drop_geometry(zentraleOrte) %>%
   mutate(id = area_id) %>%
   dplyr::select(id, area_id, GN)
@@ -110,7 +123,8 @@ r5_network <- build_network(here("r5core_2026-05-18_large/"), verbose = FALSE, o
 area_name <- "regbez_kln_zensus"
 poi_type <- "zentraleOrte"
 polygrid100 <- zensus_grid %>%
-  filter(Einwohner > 0)
+  filter(Einwohner > 0,
+         !is.na(ags)) 
 
 zensus_grid_df <- pointgrid_fun(polygrid100, "id")
 
@@ -120,12 +134,13 @@ pois_df <- pois_fun(pois = get(poi_type), id_col = "area_id")
 #ttm <- Erreichbarkeit_nofiltering(origins = pois_df, destinations = zensus_grid_df, departure = as.POSIXct("2026-05-12 12:00:00"))
 
 normdays <- read_lines("code/temp/nonholiday_normdays_cutoff.txt")
+weekdays <- read_lines("code/temp/nonholiday_weekdays_cutoff.txt")
 
-days <- normdays
+days <- weekdays
 #hours <- c(8,10,11,15)
 
 
-for(d in days[days > "2026-05-05"]){
+for(d in days){
   for (h in 8:17) {
     departure_dt <- as_datetime(d) + hours(h)
     

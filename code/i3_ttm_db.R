@@ -7,14 +7,14 @@ library(tidyverse)
 library(fst)
 library(data.table)
 library(duckdb)
-library(DBI)
-
+library(sf)
+library(dtplyr)
+fst_dir   <- "output/i3_ttm_hourly/"          # <- adjust to your actual folder
+fst_files <- list.files(fst_dir, pattern = "\\.fst$", full.names = TRUE)
 # ---- config -------------------------------------------------
 
 db_path   <- "output/db/i3ttm.duckdb"
 schema_sql <- "code/i3_ttms.sql"
-fst_dir   <- "output/i3_ttm_hourly/"          # <- adjust to your actual folder
-fst_files <- list.files(fst_dir, pattern = "\\.fst$", full.names = TRUE)
 
 stopifnot(length(fst_files) > 0)
 message(sprintf("Found %d .fst files", length(fst_files)))

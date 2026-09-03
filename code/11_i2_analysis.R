@@ -51,11 +51,11 @@ erschließung_map <- function(grid) {
   grid %>%
     mutate(
       travel_time_cut = case_when(
-        travel_time_p01 <= 4 ~ 4,
-        travel_time_p01 <= 7 ~ 7,
-        travel_time_p01 <= 11 ~ 11,
-        travel_time_p01 <= 14 ~ 14,
-        travel_time_p01 <= 18 ~ 18,
+        travel_time_p01 <= 6 ~ 6,
+        travel_time_p01 <= 10 ~ 10,
+        travel_time_p01 <= 15 ~ 15,
+        travel_time_p01 <= 20 ~ 20,
+        travel_time_p01 <= 25 ~ 25,
         TRUE ~ NA_real_
       )
     ) %>%

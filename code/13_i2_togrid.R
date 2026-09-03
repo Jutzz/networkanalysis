@@ -270,7 +270,7 @@ for(GN in unique(pop_hour_gem$GN)){
   plot <- ggplot(hours, aes(x = as.factor(hour), y = Anteil, fill = as.factor(p50_eq))) +
     geom_col() +
     labs(
-      title = paste0("Stündlich"),
+      title = paste0(GN),
       x = "Stunde",
       y = "Bevölkerung (%)",
       fill = "Erschließungsqualität"
@@ -295,6 +295,13 @@ for(GN in unique(pop_hour_gem$GN)){
   
   ggsave(plot,
          filename = paste0("appendix/figures/perceq/hourly/", GN, "_eq_per_hour.svg"),
+         units = "mm",
+         height = 210,
+         width = 210,
+         scale = 0.5)
+  
+  ggsave(plot,
+         filename = paste0("appendix/figures/perceq/hourly/foratlas/", GN, "_eq_per_hour.png"),
          units = "mm",
          height = 210,
          width = 210,

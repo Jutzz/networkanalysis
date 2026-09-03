@@ -75,6 +75,7 @@ osmresp <- req_perform(osm_req, path = paste0("osmdata/nordrhein-westfalen-", dl
 #Extract Regierungsbezirk plus buffer. Osmium needs to be locally available.Using 25 km for Indikator 03 (50 km Radius catchment)
 rosmium::extract(input_path = paste0("osmdata/nordrhein-westfalen-", dldate, ".osm.pbf"), extent = regbez10km, output_path = paste0("osmdata/regbez10km-", dldate, ".osm.pbf"), overwrite = TRUE)
 rosmium::extract(input_path = paste0("osmdata/nordrhein-westfalen-", dldate, ".osm.pbf"), extent = regbez25km, output_path = paste0("osmdata/regbez25km-", dldate, ".osm.pbf"), overwrite = TRUE)
+rosmium::extract(input_path = paste0("osmdata/nordrhein-westfalen-", dldate, ".osm.pbf"), extent = st_bbox(st_transform(vg_250, crs = st_crs(4326))), output_path = paste0("osmdata/dvgregbez25km-", dldate, ".osm.pbf"), overwrite = TRUE)
 
 zhv_req <- request("https://www.opendata-oepnv.de/fileadmin/datasets/delfi/20260521_zHV_gesamt.zip")
 zhvresp <- req_perform(zhv_req, path = paste0("geodata/zhv/", dldate, "_zHV_gesamt.zip"))
