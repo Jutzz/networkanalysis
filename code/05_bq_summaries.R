@@ -665,7 +665,7 @@ combined_plot
 
 ggsave(combined_plot, filename = "document/figures/heimbach_day_hour.svg", height = 5)
 
-#TAGESMITTEL----
+#TAGESMITTEL for comparison between methods and visualization.
 
 stops_day <- lazy_dt(read_fst(
   paste(

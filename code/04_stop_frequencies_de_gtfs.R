@@ -67,7 +67,7 @@ quality_lookup <- tribble(
   4, 5, 7,
   4, 6, 7
 )
-#Date Input----
+#Inputs----
 #Change feed date and area name to used feed version. (filename set in de_gtfs_cleaning).
 #Select "weekday" or "normday".
 feed_date <- "20260518"
@@ -75,8 +75,10 @@ zhv_date <- "20260521"
 area_name <- "regbez"
 method <- "weekday"
 
+##GTFS----
 #Read pre-filtered GTFS-Feed
 gtfs_feed <- tidytransit::read_gtfs(paste0("feeds/filtered/de_gtfs_", feed_date, "_", area_name,".zip"))
+##ZHV----
 zhv <- st_read(here("geodata/poi.gpkg"), paste0("zhv_", zhv_date))
 
 timestamp <- format(Sys.Date(), "%Y-%m-%d")
@@ -90,6 +92,8 @@ zhv_lookup  <- zhv %>%
 stops <- gtfs_feed$stops %>%
   left_join(zhv_lookup, by = c("stop_name" = "Name"))
 
+#Bedienungsqualität----
+##Combine child stops----
 #Create a cleaned stops table with a grouping_id which is:
 #The parent_station from the GTFS, if that isnt present the first three keys
 #from the stop_id (de:municipality_code:stop_code),
@@ -105,20 +109,23 @@ stops2 <- stops %>%
     )
   )
 
+##Endhalte----
 #Get last stop sequence of every trip to remove last stops (--> not a departure)
 last_stoptime_lookup <- gtfs_feed$stop_times %>%
   group_by(trip_id) %>%
   summarise(last_stop_n = max(stop_sequence)) %>%
   ungroup()
+
 #Get dates of representative norm- and weekdays from checking in find_valid_dates.R
 nonholiday_weekdays_fullservice <- read_lines("code/temp/nonholiday_weekdays_cutoff.txt")
 nonholiday_normdays_fullservice <- read_lines("code/temp/nonholiday_normdays_cutoff.txt")
+
 #Choose number of dates based on method set above.
 ifelse(method == "weekday",
        date_select <- nonholiday_weekdays_fullservice,
        date_select <- nonholiday_normdays_fullservice)
 
-#Build a full schedule (all stops on all days from gtfs_feed tables.)
+##Build a full schedule (all stops on all days from gtfs_feed tables.)----
 filtered_services <- gtfs_feed$.$dates_services %>%
   filter(date %in% date_select)
 
@@ -152,7 +159,7 @@ gc()
 #Assign stop type and Bedienungsqualität based on Steckbrief table.
 #Join with zhv as modified in osm_extract.R for geodata.
 
-#Count departures per hour for each hour.
+##Count departures per hour for each hour.----
 departure_counts_hourly <- filtered_stop_times_dates_small %>%
   filter(
     departure_time >= hms("08:00:00"),
@@ -197,6 +204,7 @@ departure_counts_hourly <- filtered_stop_times_dates_small %>%
     geom
   )
 
+#Write out----
 #Write as fst for usage in 05_bq_summaries and 11_i2_analysis.
 stops_fst <- departure_counts_hourly %>%
   st_drop_geometry() %>%

@@ -7,8 +7,9 @@ library(dtplyr)
 
 gemeinden <- st_read("geodata/dvg1nw.gpkg", "gemeinden_regbez_vg250")
 
-zentrale_orte <- st_read("geodata/poi.gpkg", "zentraleOrte_routingdestinations") %>%
+zentrale_orte <- st_read("geodata/poi.gpkg", "zentraleOrte_routingdestinations_zentrenkonzept") %>%
   rename("from_id" = area_id) %>%
+  mutate(ags = substr(from_id, 1,8)) %>%
   st_drop_geometry()
 
 zensus_grid <- st_read("geodata/zensus.gpkg", "regbez_zensus_populated")
@@ -17,7 +18,13 @@ zgrid_ags <- st_drop_geometry(zensus_grid) %>%
   dplyr::select(id, ags, Einwohner) %>%
   filter(!is.na(ags))
 
-fst_dir   <- "output/i3_ttm_hourly/"          # <- adjust to your actual folder
+grid_base <- zgrid_ags %>%
+  left_join(zentrale_orte %>% select(ags, GN, zentralitaet), join_by(ags)) %>%
+  rename("gem_orig" = GN,
+         "centrality_orig" = zentralitaet) %>%
+  mutate(cutoff_oz = ifelse(centrality_orig == "Grundzentrum", 60, 30))
+
+fst_dir   <- "output/i3_ttm_hourly/"
 fst_files <- list.files(fst_dir, pattern = "\\.fst$", full.names = TRUE)
 
 setDT(zentrale_orte)
@@ -32,29 +39,32 @@ for (i in seq_along(fst_files)) {
   
   processing_file <- fst_files[i]
   
+  filename <- basename(processing_file)
+  
   pdate <- as.Date(
-    str_extract(basename(processing_file), "\\d{4}-\\d{2}-\\d{2}")
+    str_extract(filename, "\\d{4}-\\d{2}-\\d{2}")
   )
   
   phour <- as.integer(
-    str_extract(basename(processing_file), "(?<=_)\\d{1,2}(?=\\.fst$)")
+    str_extract(filename, "(?<=_)\\d{1,2}(?=\\.fst$)")
   )
   
   tt <- read_fst(
     processing_file,
+    columns = c("from_id", "to_id", "travel_time_p01"),
     as.data.table = TRUE
   )
   
   tt <- zentrale_orte[
     tt,
     on = "from_id",
-    nomatch = 0
+    nomatch = 0L
   ]
   
   min_tt <- lazy_dt(tt) %>%
-    rename("dest_centrality" = zentralitaet) %>%
+    rename("centrality_dest" = zentralitaet) %>%
     filter(!is.na(travel_time_p01)) %>%
-    group_by(to_id, dest_centrality) %>%
+    group_by(to_id, centrality_dest) %>%
     filter(travel_time_p01 == min(travel_time_p01)) %>%
     ungroup() %>%
     as.data.frame() %>%
@@ -65,16 +75,16 @@ for (i in seq_along(fst_files)) {
     ) %>%
     dplyr::select(grid_id,
                   travel_time_p01,
-                  dest_centrality,
+                  centrality_dest,
                   central_place,
                   GN_dest
                   )
   
   min_tt_wide <- min_tt %>%
     pivot_wider(
-      names_from = dest_centrality,
+      names_from = centrality_dest,
       values_from = c(travel_time_p01, central_place, GN_dest),
-      names_glue = "{.value}_{dest_centrality}",
+      names_glue = "{.value}_{centrality_dest}",
       id_cols = grid_id,
       values_fn = list(
         travel_time_p01 = min,
@@ -98,21 +108,15 @@ for (i in seq_along(fst_files)) {
         na.rm = TRUE
       )
     ) %>%
-    select(grid_id, mind_gz, mind_mz, mind_oz)
+    dplyr::select(grid_id, mind_gz, mind_mz, mind_oz)
   
-  grid_tt <- zgrid_ags %>%
+  grid_tt <- grid_base %>%
     left_join(best_min, join_by(id == grid_id)) %>%
     mutate(
       date = pdate,
       hour = phour
     ) %>%
-    left_join(
-      st_drop_geometry(gemeinden) %>%
-        select(GN, KN, zentralitaet),
-      join_by(ags == KN)
-    ) %>%
     mutate(
-      cutoff_oz = if_else(zentralitaet == "Grundzentrum", 60, 30),
       capt_gz = mind_gz <= 30,
       capt_mz = mind_mz <= 30,
       capt_oz = mind_oz <= cutoff_oz,
@@ -136,7 +140,7 @@ for (i in seq_along(fst_files)) {
   message(i, "/", length(fst_files), ": ", basename(processing_file))
 }
 
-f <- read_fst("output/i3_shortest_hourly/2026-05-04_10.fst")# %>%
+f <- read_fst("output/i3_shortest_hourly/2026-05-04_10.fst") #%>%
   select(id, KN_orig, dest_centrality, central_place, GN_dest, travel_time_p01, date, hour, GN_orig, orig_centrality, cutoff) %>%
   relocate(id,
            GN_orig,
@@ -150,6 +154,8 @@ f <- read_fst("output/i3_shortest_hourly/2026-05-04_10.fst")# %>%
            hour)
 
 
+st_write(f %>% left_join(zensus_grid), "code/temp/i3test.gpkg", "i2f", append = FALSE)  
+  
 cat <- "oz"
 
 f <- read_fst("output/i3_shortest_hourly/2026-05-04_10.fst") %>%

@@ -110,7 +110,7 @@ zentraleOrte_rlp <- st_transform(st_read(here("geodata/poi.gpkg"), "zentrale_ort
 
 zentraleOrte <- rbind(zentraleOrte_nrw, zentraleOrte_rlp)
 
-st_write(zentraleOrte, "geodata/poi.gpkg", "zentraleOrte_routingdestinations")
+st_write(zentraleOrte, "geodata/poi.gpkg", "zentraleOrte_routingdestinations_zentrenkonzept", append = FALSE)
 
 zentraleOrteid <- st_drop_geometry(zentraleOrte) %>%
   mutate(id = area_id) %>%

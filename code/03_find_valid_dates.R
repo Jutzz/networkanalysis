@@ -160,7 +160,7 @@ ggplot(trips_per_weekday, aes(x = date, y = trips)) +
     alpha = 0.2
   ) +
   geom_point() +
-  #geom_line(aes(y=rolling_avg, color = "gleitender Mittelwert (7 Tage)"), linewidth = 2) +
+  geom_line(aes(y=rolling_avg, color = "gleitender Mittelwert (7 Tage)"), linewidth = 2) +
   labs(title = "Fahrten pro Tag im Jahresverlauf", subtitle = "auf Grundlage des DELFI-GTFS vom 18.05.2026 (nur Wochentage)", color = element_blank(), fill = NULL) +
   xlab("Datum") +
   ylab("Anzahl Fahrten") +
@@ -169,7 +169,7 @@ ggplot(trips_per_weekday, aes(x = date, y = trips)) +
   theme(legend.position = "bottom") +
   geom_label(data = plotholidays_labels, inherit.aes = FALSE,  aes(x = label_x, y = median(trips_per_weekday$trips), label = subdivision), vjust = 1.5, size = 3, family = windowsFonts("Source Sans 3 ExtraLight"))
 
-#What happens reproducibly: Does an agency_id feed part stop at some point? If so, what proportion of daily trips does it have?
+#Does an agency_id feed part stop at some point? If so, what proportion of daily trips does it have?
 #Can a threshold be set for that or is it necessarily a manual decision?
 
 nonholiday_weekdays_fullservice <- nonholiday_weekdays[nonholiday_weekdays < cutoff]

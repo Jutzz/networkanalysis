@@ -420,6 +420,8 @@ filtered_services <- gtfs_feed$.$dates_services %>%
 #Stop Frequency Variability Figures
 variability_daily  <- st_read("geodata/Bedienungsqualität.gpkg", paste("variablity_daily", feed_date, "weekday", min(date_select), max(date_select), sep = "_"))
 
+daily <- read_fst(paste("output/daily", feed_date, method, min(date_select), max(date_select), ".fst", sep = "_"))
+
 c0 <- variability_daily %>% filter(quality_range == 0)
 c1 <- variability_daily %>% filter(quality_range == 1)
 c2 <- variability_daily %>% filter(quality_range == 2)
