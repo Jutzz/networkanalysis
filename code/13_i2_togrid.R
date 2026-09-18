@@ -83,6 +83,8 @@ kreis_order <- stats_by_krs %>%
   arrange(weighted_eq) %>%
   pull(Kreis)
 
+write_lines(kreis_order, "code/kreis_order.txt")
+
 stats_by_krs <- stats_by_krs %>%
   mutate(Kreis = factor(Kreis, levels = kreis_order))
 

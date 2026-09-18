@@ -28,7 +28,7 @@ Erreichbarkeit <- function(origins, destinations, departure) {
     departure_datetime = departure,
     max_trip_duration = max_trip_duration,
     time_window = 60,  # Time window in minutes for departures
-    percentiles = c(1L, 25L, 50L, 75L, 99L ),
+    percentiles = c(1L, 99L),
     draws_per_minute = 1L,
     progress = TRUE
   )
@@ -68,7 +68,7 @@ Erreichbarkeit_nofiltering <- function(origins, destinations, departure) {
     departure_datetime = departure,
     max_trip_duration = max_trip_duration,
     time_window = 60,  # Time window in minutes for departures
-    percentiles = c(1L, 25L, 50L, 75L, 99L ),
+    percentiles = c(1L,99L ),
     draws_per_minute = 1L,
     progress = TRUE
   )
