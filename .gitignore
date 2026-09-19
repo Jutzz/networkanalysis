@@ -19,11 +19,16 @@
 
 
 # Large/raw datasets
-feeds/
-!feeds/*/.gitkeep 
-!feeds/.gitkeep 
 
-osmdata/
+feeds/raw/*
+feeds/filtered/*
+feeds/extract/*
+!feeds/.gitkeep
+!feeds/raw/.gitkeep
+!feeds/extract/.gitkeep
+!feeds/filtered/.gitkeep
+osmdata/*
+!osmdata/.gitkeep
 appendix/
 geodata/zhv/
 geodata/base_data/
@@ -40,8 +45,23 @@ Literatur/obs_vault/
 
 
 # Optional generated outputs
-output/
-results/
+output/*.*
+output/daily_eq/*
+output/daily_eq/full/*
+output/hourly_eq/*
+output/hourly_eq/full/*
+output/hourmean_eq/*
+output/hourmean_eq/full/*
+output/i3_shortest_hourly/*
+output/i3_shortest_hourly/full/*
+output/i3_ttm_hourly/*
+output/kderasters/*
+output/total_eq/*                                                                         
+output/total_eq/full/*
+!*/.gitkeep
+!*/*/.gitkeep
+results/*
+!results/.gitkeep
 r5core_current/
 r5core_2026-05-18/
 r5core_2026-05-18_large/
