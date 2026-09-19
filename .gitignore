@@ -20,6 +20,9 @@
 
 # Large/raw datasets
 feeds/
+!feeds/*/.gitkeep 
+!feeds/.gitkeep 
+
 osmdata/
 appendix/
 geodata/zhv/
