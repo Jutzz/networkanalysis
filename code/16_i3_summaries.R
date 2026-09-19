@@ -392,6 +392,7 @@ summary_hour <- capture %>%
   left_join(st_drop_geometry(gemeinden), join_by(ags ==  KN))
 
 write_fst(summary_hour %>% st_drop_geometry(), "results/i3_summary_by_hour.fst")
+summary_hour <- read_fst("results/i3_summary_by_hour.fst")
 
 summary_date <- capture %>%
   group_by(id,date) %>%
@@ -570,7 +571,10 @@ for(gem in unique(gem_hour_oz$GN)){
   ggsave(
     paste0(gem, "_i3_per_hour.svg"),
     combined_plot,
-    path = "appendix/figures/perci3/hourly/"
+    path = "appendix/figures/perci3/hourly/",
+    units = "mm",
+    width = 420,
+    height = 210
   )
 }
 

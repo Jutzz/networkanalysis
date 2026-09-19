@@ -1,4 +1,3 @@
-#TODO: Get mean_tt and mean_bq per Gem to see effect of bq vs eq
 library(here)
 library(dplyr)
 library(dtplyr)

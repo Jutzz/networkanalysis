@@ -478,7 +478,7 @@ counts_gdate <- list("Kreis" = counts_gdate_krs,
                      "Gemeinde" = counts_gdate_gem,
                      "RegioStaR7" = counts_gdate_regiostar)
 ##Plotten----
-plot_group <- "RegioStaR7"
+plot_group <- "Gemeinde"
 plotscount <- counts_gdate[[plot_group]]
 date_plot <- ggplot(plotscount, aes(
   x = as.factor(date),
@@ -522,8 +522,7 @@ ggsave(
   filename = paste0("appendix/figures/percbq/", plot_group, "_bq_per_date.svg"),
   units = "mm",
   height = 210,
-  width = 297
-)
+  width = 297)
 
 ##Single plot per Gemeinde ----
 for (GN in unique(stops_gdate$GN)) {

@@ -1,3 +1,0 @@
-TODO: 
-04_stop_frequencies: Basis schaffen für alle Ergebnisse. mean_frequencies ist komplett zusätzlich.
-bq_summaries ersetzen durch neue figures, sauber.

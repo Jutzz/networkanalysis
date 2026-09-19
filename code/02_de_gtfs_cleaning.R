@@ -5,8 +5,8 @@ library(readr)
 library(sf)
 library(here)
 
-#Change feed date to used feed version (filename).
-feed_date <- "20260518"
+#Change feed date to used feed version in dataenv.R (filename).
+source("code/dataenv.R")
 buffer_size  <- 25
 area_name <- paste0("regbez",buffer_size,"kmbuffer")
 

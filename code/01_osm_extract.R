@@ -77,8 +77,7 @@ rosmium::extract(input_path = paste0("osmdata/nordrhein-westfalen-", dldate, ".o
 rosmium::extract(input_path = paste0("osmdata/nordrhein-westfalen-", dldate, ".osm.pbf"), extent = regbez25km, output_path = paste0("osmdata/regbez25km-", dldate, ".osm.pbf"), overwrite = TRUE)
 rosmium::extract(input_path = paste0("osmdata/nordrhein-westfalen-", dldate, ".osm.pbf"), extent = st_bbox(st_transform(vg_250, crs = st_crs(4326))), output_path = paste0("osmdata/dvgregbez25km-", dldate, ".osm.pbf"), overwrite = TRUE)
 
-zhv_req <- request("https://www.opendata-oepnv.de/fileadmin/datasets/delfi/20260521_zHV_gesamt.zip")
-zhvresp <- req_perform(zhv_req, path = paste0("geodata/zhv/", dldate, "_zHV_gesamt.zip"))
+#ZHV needs to be manually downloaded after login at https://zhv.wvigmbh.de/Account/Login.aspx.
 
 unzip(zipfile = "geodata/zhv/zHV_aktuell_csv.2026-05-21.zip",exdir = paste0("geodata/zhv/", dldate, "_zHV_gesamt"))
 

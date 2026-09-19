@@ -30,9 +30,8 @@ ifelse(
 )
 
 area <- st_read("geodata/dvg1nw.gpkg", "regbez25kmbuffer")
-#TODO: Make usable for any area: import full zensus and stops data, filter by generic area (limited stops and dests)
-mapping_matrix <- read_csv2(here("code/erschließung_mat_long_numeric_stingy.csv"))
 
+mapping_matrix <- read_csv2(here("code/erschließung_mat_long_numeric_stingy.csv"))
 
 zensus_grid <- st_read(here("geodata/zensus.gpkg"), "regbez_zensus_populated") %>%
   st_as_sf() %>%
@@ -70,7 +69,6 @@ erschließung_map <- function(grid) {
 }
 
 #Join mit Stops, errechnen der Erschließungsqualität, Auswahl der Station mit der besten Erschließungsqualität je Zelle, schreiben
-##TODO: Clean up, develop strategy for filenames/metadata, make faster!
 # Allgemeine Funktion für die Erschließungsqualitätsanalyse
 i2_mapping <- function(ttm, matrix, departure, bq_col) {
   bq_lookup <- stops_table[["Bedienungsqualität"]]
