@@ -40,7 +40,8 @@ geodata/pois.gpkg
 geodata/zentrale_orte_bands.gpkg
 GIS/raster/
 geodata/gtfs_shapes.gpkg
-code/temp
+code/temp/*
+code/old_stuff/
 Literatur/obs_vault/
 
 
