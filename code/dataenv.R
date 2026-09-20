@@ -1,5 +1,5 @@
 feed_date <- "20260518"
-zhv_date <- "20260521"
+zhv_date <- "2026-05-21"
 
 palette_gyr7 <- c(
   "1" = "#169542",

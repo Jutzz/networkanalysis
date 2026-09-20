@@ -12,8 +12,7 @@ files.sources = list.files("code/helper/", full.names = TRUE)
 sapply(files.sources, source)
 
 #Change feed date and area name to used feed version (filename set in de_gtfs_cleaning).
-feed_date <- "20260518"
-zhv_date <- "20260521"
+source("code/dataenv.R")
 area_name <- "regbez"
 
 holidays_nrw <- function(year) {

@@ -86,14 +86,25 @@ osmresp <- req_perform(osm_req, path = paste0("osmdata/nordrhein-westfalen-", dl
 rosmium::extract(input_path = paste0("osmdata/nordrhein-westfalen-", dldate, ".osm.pbf"), extent = regbez10km, output_path = paste0("osmdata/regbez10km-", dldate, ".osm.pbf"), overwrite = TRUE)
 rosmium::extract(input_path = paste0("osmdata/nordrhein-westfalen-", dldate, ".osm.pbf"), extent = regbez25km, output_path = paste0("osmdata/regbez25km-", dldate, ".osm.pbf"), overwrite = TRUE)
 rosmium::extract(input_path = paste0("osmdata/nordrhein-westfalen-", dldate, ".osm.pbf"), extent = st_bbox(st_transform(vg_250, crs = st_crs(4326))), output_path = paste0("osmdata/dvgregbez25km-", dldate, ".osm.pbf"), overwrite = TRUE)
+#The extracts used in the thesis are available in the digital appendix (see README).
 
-#ZHV needs to be manually downloaded after login at https://zhv.wvigmbh.de/Account/Login.aspx.
+#ZHV needs to be manually downloaded after registration at https://zhv.wvigmbh.de/Account/Login.aspx.
+#The version used in the thesis is available in the digital appendix (see README) and can be placed in /geodata/zhv/.
+zhv_zip <- list.files(
+  "./geodata/zhv/",
+  pattern = "\\.zip$",
+  full.names = TRUE
+)
 
-unzip(zipfile = "geodata/zhv/zHV_aktuell_csv.2026-05-21.zip",exdir = paste0("geodata/zhv/", dldate, "_zHV_gesamt"))
+filename <- basename(zhv_zip)
 
-zhv <- read_csv2(paste0("geodata/zhv/",dldate,"_zHV_gesamt/zHV_aktuell_csv.",dldate_zhv,".csv"))
+zhv_date <- regmatches(filename, regexpr("\\d{4}-\\d{2}-\\d{2}", filename))
+
+unzip(zipfile = paste0("geodata/zhv/zHV_aktuell_csv.",zhv_date,".zip"),exdir = paste0("geodata/zhv/", zhv_date, "_zHV_gesamt"))
+
+zhv <- read_csv2(paste0("geodata/zhv/",zhv_date,"_zHV_gesamt/zHV_aktuell_csv.",zhv_date,".csv"))
 
 zhv_geo <- st_as_sf(zhv, coords = c("Longitude", "Latitude"), crs = st_crs(4326))
 
-st_write(zhv_geo, here("geodata/poi.gpkg"), paste0("zhv_",dldate), append = FALSE)
+st_write(zhv_geo, here("geodata/poi.gpkg"), paste0("zhv_",zhv_date), append = FALSE)
 
