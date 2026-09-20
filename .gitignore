@@ -16,7 +16,8 @@
 *.run.xml
 *.synctex.gz
 *.toc
-
+*.lof
+*.lot
 
 # Large/raw datasets
 
