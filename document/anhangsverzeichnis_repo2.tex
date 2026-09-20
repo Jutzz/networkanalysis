@@ -1,199 +1,312 @@
-% Automatisch erzeugt ausanhangsverzeichnis_repo_ano.csv
-% Anzahl Einträge: 66
+% Automatisch erzeugt aus anhangsverzeichnis_repo_ano.csv
+% Appendix: B
+% Titel: Repo
+% Anzahl Einträge: 61
 
 % Benötigte Pakete:
 % \usepackage{enumitem}
 % \usepackage{xurl}
 % \usepackage{microtype} % optional
 
-\begin{enumerate}[label=\arabic*., leftmargin=*, itemsep=0.5em, topsep=0.3em]
+
+\begin{enumerate}[label=B\arabic*, ref=B\arabic*, leftmargin=*, itemsep=0.5em, topsep=0.3em]
 \item \textbf{appendix} \textnormal{(\textit{Verzeichnis})}\\
 Leerer Ordner, nur zwecks Datenstruktur enthalten.
+\edef\appendixlabelkey{app:B\arabic{enumi}}
+\expandafter\label\expandafter{\appendixlabelkey}
 \item \textbf{code} \textnormal{(\textit{Verzeichnis})}\\
 Codes zur Vorverarbeitung der Basisdaten und Berechnung sowie Auswertung der Indikatoren
-\begin{enumerate}[label=\arabic{enumi}.\arabic*, leftmargin=*, itemsep=0.5em, topsep=0.3em]
+\edef\appendixlabelkey{app:B\arabic{enumi}}
+\expandafter\label\expandafter{\appendixlabelkey}
+\begin{enumerate}[label=B\arabic{enumi}-\arabic*, ref=B\arabic{enumi}-\arabic*, leftmargin=*, itemsep=0.5em, topsep=0.3em]
 \item \textbf{helper} \textnormal{(\textit{Verzeichnis})}\\
 Hilfsfunktionen
-\begin{enumerate}[label=\arabic{enumi}.\arabic{enumii}.\arabic*, leftmargin=*, itemsep=0.5em, topsep=0.3em]
+\edef\appendixlabelkey{app:B\arabic{enumi}-\arabic{enumii}}
+\expandafter\label\expandafter{\appendixlabelkey}
+\begin{enumerate}[label=B\arabic{enumi}-\arabic{enumii}-\arabic*, ref=B\arabic{enumi}-\arabic{enumii}-\arabic*, leftmargin=*, itemsep=0.5em, topsep=0.3em]
 \item \textbf{all\_clear.R} \textnormal{(\textit{R})}\\
 Stoppen von r5r und Garbage Collection\\
 \texttt{\small code/helper/all\_clear.R}
+\edef\appendixlabelkey{app:B\arabic{enumi}-\arabic{enumii}-\arabic{enumiii}}
+\expandafter\label\expandafter{\appendixlabelkey}
 \item \textbf{check\_gtfs\_discont.R} \textnormal{(\textit{R})}\\
 Prüfen eines GTFS-Feeds auf Diskontinuitäten\\
 \texttt{\small code/helper/check\_gtfs\_discont.R}
+\edef\appendixlabelkey{app:B\arabic{enumi}-\arabic{enumii}-\arabic{enumiii}}
+\expandafter\label\expandafter{\appendixlabelkey}
 \item \textbf{mode\_value.R} \textnormal{(\textit{R})}\\
 Berechnen des Modus einer Variable\\
 \texttt{\small code/helper/mode\_value.R}
+\edef\appendixlabelkey{app:B\arabic{enumi}-\arabic{enumii}-\arabic{enumiii}}
+\expandafter\label\expandafter{\appendixlabelkey}
 \item \textbf{pointgrid\_fun.R} \textnormal{(\textit{R})}\\
 Erstellung einer r5r-kompatiblen Tabelle aus einem Geogitter\\
 \texttt{\small code/helper/pointgrid\_fun.R}
+\edef\appendixlabelkey{app:B\arabic{enumi}-\arabic{enumii}-\arabic{enumiii}}
+\expandafter\label\expandafter{\appendixlabelkey}
 \item \textbf{pois\_fun.R} \textnormal{(\textit{R})}\\
 Erstellung von r5r-kompatiblen Tabellen für Start- und Zielpunkte\\
 \texttt{\small code/helper/pois\_fun.R}
+\edef\appendixlabelkey{app:B\arabic{enumi}-\arabic{enumii}-\arabic{enumiii}}
+\expandafter\label\expandafter{\appendixlabelkey}
 \item \textbf{polygrid\_fun.R} \textnormal{(\textit{R})}\\
 Erstellung eines Geogitters\\
 \texttt{\small code/helper/polygrid\_fun.R}
+\edef\appendixlabelkey{app:B\arabic{enumi}-\arabic{enumii}-\arabic{enumiii}}
+\expandafter\label\expandafter{\appendixlabelkey}
 \item \textbf{school\_holidays.R} \textnormal{(\textit{R})}\\
 Abfrage von Schulferien per API\\
 \texttt{\small code/helper/school\_holidays.R}
+\edef\appendixlabelkey{app:B\arabic{enumi}-\arabic{enumii}-\arabic{enumiii}}
+\expandafter\label\expandafter{\appendixlabelkey}
 \end{enumerate}
 \item \textbf{temp} \textnormal{(\textit{Verzeichnis})}\\
 Verzeichnis zur Ablage temporär erzeugter Dateien (bspw. Untersuchungstage als Output von 03\_find\_valid\_dates
+\edef\appendixlabelkey{app:B\arabic{enumi}-\arabic{enumii}}
+\expandafter\label\expandafter{\appendixlabelkey}
 \item \textbf{01\_osm\_extract.R} \textnormal{(\textit{R})}\\
 Erzeugen von Grundlagenlayern (Gemeinden, Kreise)
 OSM-Zuschnitt auf Untersuchungsgebiet
 Vorverarbeitung Zentrales Haltestellenverzeichnis\\
 \texttt{\small code/01\_osm\_extract.R}
+\edef\appendixlabelkey{app:B\arabic{enumi}-\arabic{enumii}}
+\expandafter\label\expandafter{\appendixlabelkey}
 \item \textbf{02\_de\_gtfs\_cleaning.R} \textnormal{(\textit{R})}\\
 Zuschnitt und Vorverarbeitung des DELFI-GTFS\\
 \texttt{\small code/02\_de\_gtfs\_cleaning.R}
+\edef\appendixlabelkey{app:B\arabic{enumi}-\arabic{enumii}}
+\expandafter\label\expandafter{\appendixlabelkey}
 \item \textbf{03\_find\_valid\_dates.R} \textnormal{(\textit{R})}\\
 Identifizieren von validen Analysetagen anhand von Ferien und Feiertagen sowie eventuell fehlenden Daten\\
 \texttt{\small code/03\_find\_valid\_dates.R}
+\edef\appendixlabelkey{app:B\arabic{enumi}-\arabic{enumii}}
+\expandafter\label\expandafter{\appendixlabelkey}
 \item \textbf{04\_stop\_frequencies\_de\_gtfs.R} \textnormal{(\textit{R})}\\
 Berechnung der stündlichen Bedienungsqualitätswerte\\
 \texttt{\small code/04\_stop\_frequencies\_de\_gtfs.R}
+\edef\appendixlabelkey{app:B\arabic{enumi}-\arabic{enumii}}
+\expandafter\label\expandafter{\appendixlabelkey}
 \item \textbf{05\_bq\_summaries.R} \textnormal{(\textit{R})}\\
 Zusammenfassen der BQ nach verschiedenen Zeitfenstern, Erstellung von Plots\\
 \texttt{\small code/05\_bq\_summaries.R}
+\edef\appendixlabelkey{app:B\arabic{enumi}-\arabic{enumii}}
+\expandafter\label\expandafter{\appendixlabelkey}
 \item \textbf{06\_grid\_creation.R} \textnormal{(\textit{R})}\\
 Erstellung eines EPSG:3035-Geogitters mit 100 m Kantenlänge und INSPIRE-konformen Gitter-Ids für das Untersuchungsgebiet\\
 \texttt{\small code/06\_grid\_creation.R}
+\edef\appendixlabelkey{app:B\arabic{enumi}-\arabic{enumii}}
+\expandafter\label\expandafter{\appendixlabelkey}
 \item \textbf{07\_POI\_creation.R} \textnormal{(\textit{R})}\\
 Extraktion und Kategorisierung von POI-Sätzen aus OSM-Daten für Kerndichtenschätzung in 08\_cpt\_KDE.R\\
 \texttt{\small code/07\_POI\_creation.R}
+\edef\appendixlabelkey{app:B\arabic{enumi}-\arabic{enumii}}
+\expandafter\label\expandafter{\appendixlabelkey}
 \item \textbf{08\_cpt\_KDE.R} \textnormal{(\textit{R})}\\
 Kerndichtenschätzung von POI je Gemeinde zur Ermittlung zentralörtlicher Cluster
 Bewertung der Cluster und Festlegung zentraler Orte\\
 \texttt{\small code/08\_cpt\_KDE.R}
+\edef\appendixlabelkey{app:B\arabic{enumi}-\arabic{enumii}}
+\expandafter\label\expandafter{\appendixlabelkey}
 \item \textbf{09\_grid\_zensusvalues.R} \textnormal{(\textit{R})}\\
 Verbinden des in 06\_grid\_creation erzeugten Gitters mit den Bevölkerungszahlen\\
 \texttt{\small code/09\_grid\_zensusvalues.R}
+\edef\appendixlabelkey{app:B\arabic{enumi}-\arabic{enumii}}
+\expandafter\label\expandafter{\appendixlabelkey}
 \item \textbf{10\_i2\_traveltimes.R} \textnormal{(\textit{R})}\\
 Berechnung von Gehzeiten (Zensuszellen zu Haltestellen)\\
 \texttt{\small code/10\_i2\_traveltimes.R}
+\edef\appendixlabelkey{app:B\arabic{enumi}-\arabic{enumii}}
+\expandafter\label\expandafter{\appendixlabelkey}
 \item \textbf{11\_i2\_analysis.R} \textnormal{(\textit{R})}\\
 Ermitteln der Erschließungsqualitäten aus Gehzeit und erreichter Bedienungsqualität\\
 \texttt{\small code/11\_i2\_analysis.R}
+\edef\appendixlabelkey{app:B\arabic{enumi}-\arabic{enumii}}
+\expandafter\label\expandafter{\appendixlabelkey}
 \item \textbf{12\_i2\_summaries.R} \textnormal{(\textit{R})}\\
 Aggregieren der EQ-Werte nach Stunde, Tag, Wochentag und Gesamt\\
 \texttt{\small code/12\_i2\_summaries.R}
+\edef\appendixlabelkey{app:B\arabic{enumi}-\arabic{enumii}}
+\expandafter\label\expandafter{\appendixlabelkey}
 \item \textbf{13\_i2\_togrid.R} \textnormal{(\textit{R})}\\
 Erzeugen von Kartenebenen für kartographische Darstellung der EQ, Plot-Darstellungen\\
 \texttt{\small code/13\_i2\_togrid.R}
+\edef\appendixlabelkey{app:B\arabic{enumi}-\arabic{enumii}}
+\expandafter\label\expandafter{\appendixlabelkey}
 \item \textbf{14\_i3\_traveltimes.R} \textnormal{(\textit{R})}\\
 Berechnung von ÖPNV-Wegzeiten (Zentrale Orte zu Zensuszellen)\\
 \texttt{\small code/14\_i3\_traveltimes.R}
+\edef\appendixlabelkey{app:B\arabic{enumi}-\arabic{enumii}}
+\expandafter\label\expandafter{\appendixlabelkey}
 \item \textbf{15\_i3\_shortest\_times.R} \textnormal{(\textit{R})}\\
 Identifizieren kürzester Wegzeiten, Berechnung des Anbindungsindikators je Stunde\\
 \texttt{\small code/15\_i3\_shortest\_times.R}
+\edef\appendixlabelkey{app:B\arabic{enumi}-\arabic{enumii}}
+\expandafter\label\expandafter{\appendixlabelkey}
 \item \textbf{16\_i3\_summaries.R} \textnormal{(\textit{R})}\\
 Aggregieren des Anbindungsindikators nach Tag und Stunde, erzeugen von Kartenebenen und Plots\\
 \texttt{\small code/16\_i3\_summaries.R}
+\edef\appendixlabelkey{app:B\arabic{enumi}-\arabic{enumii}}
+\expandafter\label\expandafter{\appendixlabelkey}
 \item \textbf{dataenv.R} \textnormal{(\textit{R})}\\
 Einträge des Fahrplandatums und ZHV-Datums zur Abfrage in diversen Skripten, Farbpaletten\\
 \texttt{\small code/dataenv.R}
+\edef\appendixlabelkey{app:B\arabic{enumi}-\arabic{enumii}}
+\expandafter\label\expandafter{\appendixlabelkey}
 \item \textbf{erschließung\_mat\_long\_numeric\_stingy.csv} \textnormal{(\textit{CSV})}\\
 Zuordnung von BQ/Gehzeit-Kombinationen zu Erschließungsqualitäten\\
 \texttt{\small code/erschließung\_mat\_long\_numeric\_stingy.csv}
+\edef\appendixlabelkey{app:B\arabic{enumi}-\arabic{enumii}}
+\expandafter\label\expandafter{\appendixlabelkey}
 \item \textbf{figures\_stop\_frequencies.R} \textnormal{(\textit{R})}\\
 Frühere Version von 04\_stop\_frequencies\_de\_gtfs, genutzt um Übersichtsgrafiken zur Bedienungsqualität zu erstellen.\\
 \texttt{\small code/figures\_stop\_frequencies.R}
+\edef\appendixlabelkey{app:B\arabic{enumi}-\arabic{enumii}}
+\expandafter\label\expandafter{\appendixlabelkey}
 \item \textbf{impedance\_functions.R} \textnormal{(\textit{R})}\\
 Erstellung der Grafik zu Impedanzfunktionen in Abschnitt 2.2.1\\
 \texttt{\small code/impedance\_functions.R}
+\edef\appendixlabelkey{app:B\arabic{enumi}-\arabic{enumii}}
+\expandafter\label\expandafter{\appendixlabelkey}
 \item \textbf{kde\_parallel.R} \textnormal{(\textit{R})}\\
 Alternative zu einem Teil von 08\_cpt\_KDE. Parallele Berechnung der KDE-Raster.\\
 \texttt{\small code/kde\_parallel.R}
+\edef\appendixlabelkey{app:B\arabic{enumi}-\arabic{enumii}}
+\expandafter\label\expandafter{\appendixlabelkey}
 \item \textbf{kreis\_order.txt} \textnormal{(\textit{Text})}\\
 Reihenfolge der Kreise nach gewichtetem Mittel der Erschließungsqualität. Output von 13\_i2\_togrid.\\
 \texttt{\small code/kreis\_order.txt}
+\edef\appendixlabelkey{app:B\arabic{enumi}-\arabic{enumii}}
+\expandafter\label\expandafter{\appendixlabelkey}
 \item \textbf{mean\_frequencies.R} \textnormal{(\textit{R})}\\
 Berechnung von Bedienungsqualitäten auf Grundlage täglicher, wochentäglicher und gesamter Mittel der Abfahrten pro Stunde.\\
 \texttt{\small code/mean\_frequencies.R}
+\edef\appendixlabelkey{app:B\arabic{enumi}-\arabic{enumii}}
+\expandafter\label\expandafter{\appendixlabelkey}
 \item \textbf{osmconf\_cpt.txt} \textnormal{(\textit{Text})}\\
 Konfiguration von osmextract zum Extrahieren von POI aus OSM-Daten.\\
 \texttt{\small code/osmconf\_cpt.txt}
+\edef\appendixlabelkey{app:B\arabic{enumi}-\arabic{enumii}}
+\expandafter\label\expandafter{\appendixlabelkey}
 \item \textbf{stop\_frequencies\_methods.R} \textnormal{(\textit{R})}\\
 Frühere Version von 04\_stop\_frequencies\_de\_gtfs, genutzt um Grafiken zur stichprobenartigen Überprüfung der Ergebnisse zu erstellen.
 Im weiteren Verlauf nicht aktualisiert, daher nicht funktionsfähig.\\
 \texttt{\small code/stop\_frequencies\_methods.R}
+\edef\appendixlabelkey{app:B\arabic{enumi}-\arabic{enumii}}
+\expandafter\label\expandafter{\appendixlabelkey}
 \item \textbf{tags\_filter.cmd} \textnormal{(\textit{CMD})}\\
 osmium-Ausdruck zum Vorfiltern des OSM-Datensatzes\\
 \texttt{\small code/tags\_filter.cmd}
+\edef\appendixlabelkey{app:B\arabic{enumi}-\arabic{enumii}}
+\expandafter\label\expandafter{\appendixlabelkey}
 \end{enumerate}
 \item \textbf{document} \textnormal{(\textit{Verzeichnis})}\\
 \LaTeX-Arbeitsverzeichnis
-\begin{enumerate}[label=\arabic{enumi}.\arabic*, leftmargin=*, itemsep=0.5em, topsep=0.3em]
+\edef\appendixlabelkey{app:B\arabic{enumi}}
+\expandafter\label\expandafter{\appendixlabelkey}
+\begin{enumerate}[label=B\arabic{enumi}-\arabic*, ref=B\arabic{enumi}-\arabic*, leftmargin=*, itemsep=0.5em, topsep=0.3em]
 \item \textbf{figures} \textnormal{(\textit{Verzeichnis})}\\
-Abbildungen im Dokument
-\item \textbf{tables} \textnormal{(\textit{Verzeichnis})}\\
-Tabellen im Dokument
-\item \textbf{routingindicators.pdf} \textnormal{(\textit{PDF})}\\
-Dieses Dokument\\
-\texttt{\small document/routingindicators.pdf}
-\item \textbf{routingindicators.tex} \textnormal{(\textit{LaTeX})}\\
-\TeX-Datei zu diesem Dokument\\
-\texttt{\small document/routingindicators.tex}
+Abbildungen in diesem Dokument
+\edef\appendixlabelkey{app:B\arabic{enumi}-\arabic{enumii}}
+\expandafter\label\expandafter{\appendixlabelkey}
 \end{enumerate}
 \item \textbf{feeds} \textnormal{(\textit{Verzeichnis})}\\
 Leerer Ordner, nur zwecks Datenstruktur enthalten.
+\edef\appendixlabelkey{app:B\arabic{enumi}}
+\expandafter\label\expandafter{\appendixlabelkey}
 \item \textbf{geodata} \textnormal{(\textit{Verzeichnis})}\\
 Geodaten
-\begin{enumerate}[label=\arabic{enumi}.\arabic*, leftmargin=*, itemsep=0.5em, topsep=0.3em]
+\edef\appendixlabelkey{app:B\arabic{enumi}}
+\expandafter\label\expandafter{\appendixlabelkey}
+\begin{enumerate}[label=B\arabic{enumi}-\arabic*, ref=B\arabic{enumi}-\arabic*, leftmargin=*, itemsep=0.5em, topsep=0.3em]
 \item \textbf{base\_data} \textnormal{(\textit{Verzeichnis})}\\
 Leerer Ordner, nur zwecks Datenstruktur enthalten.
+\edef\appendixlabelkey{app:B\arabic{enumi}-\arabic{enumii}}
+\expandafter\label\expandafter{\appendixlabelkey}
 \item \textbf{zhv} \textnormal{(\textit{Verzeichnis})}\\
 Leerer Ordner, nur zwecks Datenstruktur enthalten.
+\edef\appendixlabelkey{app:B\arabic{enumi}-\arabic{enumii}}
+\expandafter\label\expandafter{\appendixlabelkey}
 \item \textbf{dvg1nw.gpkg} \textnormal{(\textit{GeoPackage})}\\
 Verwaltungsgrenzen und Untersuchungsgebiet\\
 \texttt{\small geodata/dvg1nw.gpkg}
-\begin{enumerate}[label=\arabic{enumi}.\arabic{enumii}.\arabic*, leftmargin=*, itemsep=0.5em, topsep=0.3em]
+\edef\appendixlabelkey{app:B\arabic{enumi}-\arabic{enumii}}
+\expandafter\label\expandafter{\appendixlabelkey}
+\begin{enumerate}[label=B\arabic{enumi}-\arabic{enumii}-\arabic*, ref=B\arabic{enumi}-\arabic{enumii}-\arabic*, leftmargin=*, itemsep=0.5em, topsep=0.3em]
 \item \textbf{regbez10kmbuffer} \textnormal{(\textit{Layer})}\\
 Untersuchungsgebiet mit 10 km Puffer (VG250)
+\edef\appendixlabelkey{app:B\arabic{enumi}-\arabic{enumii}-\arabic{enumiii}}
+\expandafter\label\expandafter{\appendixlabelkey}
 \item \textbf{gemeinden\_regbez\_kln} \textnormal{(\textit{Layer})}\\
 Gemeindengrenzen des Untersuchungsgebietes (DVG1)
+\edef\appendixlabelkey{app:B\arabic{enumi}-\arabic{enumii}-\arabic{enumiii}}
+\expandafter\label\expandafter{\appendixlabelkey}
 \item \textbf{dvg1krs\_regbez} \textnormal{(\textit{Layer})}\\
 Kreisgrenzen des Untersuchungsgebietes (DVG1)
+\edef\appendixlabelkey{app:B\arabic{enumi}-\arabic{enumii}-\arabic{enumiii}}
+\expandafter\label\expandafter{\appendixlabelkey}
 \item \textbf{regbez25kmbuffer} \textnormal{(\textit{Layer})}\\
 Untersuchungsgebiet mit 25 km Puffer (VG250)
+\edef\appendixlabelkey{app:B\arabic{enumi}-\arabic{enumii}-\arabic{enumiii}}
+\expandafter\label\expandafter{\appendixlabelkey}
 \item \textbf{gemeinden\_regbez\_25km} \textnormal{(\textit{Layer})}\\
 Gemeindengrenzen des Untersuchungsgebietes mit 25 km Puffer (VG250)
+\edef\appendixlabelkey{app:B\arabic{enumi}-\arabic{enumii}-\arabic{enumiii}}
+\expandafter\label\expandafter{\appendixlabelkey}
 \item \textbf{gemeinden\_regbez\_vg250} \textnormal{(\textit{Layer})}\\
 Gemeindengrenzen des Untersuchungsgebietes (VG250)
+\edef\appendixlabelkey{app:B\arabic{enumi}-\arabic{enumii}-\arabic{enumiii}}
+\expandafter\label\expandafter{\appendixlabelkey}
 \item \textbf{kreise\_regbez\_vg250} \textnormal{(\textit{Layer})}\\
 Kreisgrenzen des Untersuchungsgebietes (VG250)
+\edef\appendixlabelkey{app:B\arabic{enumi}-\arabic{enumii}-\arabic{enumiii}}
+\expandafter\label\expandafter{\appendixlabelkey}
 \end{enumerate}
 \item \textbf{regbez10kmbuffer.geojson} \textnormal{(\textit{GeoJSON})}\\
 Untersuchungsgebiet mit 10 km Puffer (VG250)\\
 \texttt{\small geodata/regbez10kmbuffer.geojson}
+\edef\appendixlabelkey{app:B\arabic{enumi}-\arabic{enumii}}
+\expandafter\label\expandafter{\appendixlabelkey}
 \item \textbf{regbez25kmbuffer.geojson} \textnormal{(\textit{GeoJSON})}\\
 Untersuchungsgebiet mit 25 km Puffer (VG250)\\
 \texttt{\small geodata/regbez25kmbuffer.geojson}
+\edef\appendixlabelkey{app:B\arabic{enumi}-\arabic{enumii}}
+\expandafter\label\expandafter{\appendixlabelkey}
 \item \textbf{zensus.gpkg} \textnormal{(\textit{GeoPackage})}\\
 Zensusgitter (bewohnte Zellen)\\
 \texttt{\small geodata/zensus.gpkg}
-\begin{enumerate}[label=\arabic{enumi}.\arabic{enumii}.\arabic*, leftmargin=*, itemsep=0.5em, topsep=0.3em]
-\item \textbf{regbez\_zensus\_populated} \textnormal{(\textit{Layer})}
-\item \textbf{regbez\_zensus\_populated\_25km} \textnormal{(\textit{Layer})}
-\end{enumerate}
+\edef\appendixlabelkey{app:B\arabic{enumi}-\arabic{enumii}}
+\expandafter\label\expandafter{\appendixlabelkey}
 \end{enumerate}
 \item \textbf{GIS} \textnormal{(\textit{Verzeichnis})}\\
 QGIS-Projekt
-\begin{enumerate}[label=\arabic{enumi}.\arabic*, leftmargin=*, itemsep=0.5em, topsep=0.3em]
+\edef\appendixlabelkey{app:B\arabic{enumi}}
+\expandafter\label\expandafter{\appendixlabelkey}
+\begin{enumerate}[label=B\arabic{enumi}-\arabic*, ref=B\arabic{enumi}-\arabic*, leftmargin=*, itemsep=0.5em, topsep=0.3em]
 \item \textbf{styles} \textnormal{(\textit{Verzeichnis})}\\
 Projektstile
+\edef\appendixlabelkey{app:B\arabic{enumi}-\arabic{enumii}}
+\expandafter\label\expandafter{\appendixlabelkey}
 \end{enumerate}
 \item \textbf{osmdata} \textnormal{(\textit{Verzeichnis})}\\
 Leerer Ordner, nur zwecks Datenstruktur enthalten.
+\edef\appendixlabelkey{app:B\arabic{enumi}}
+\expandafter\label\expandafter{\appendixlabelkey}
 \item \textbf{output} \textnormal{(\textit{Verzeichnis})}\\
 Leerer Ordner, nur zwecks Datenstruktur enthalten.
+\edef\appendixlabelkey{app:B\arabic{enumi}}
+\expandafter\label\expandafter{\appendixlabelkey}
 \item \textbf{results} \textnormal{(\textit{Verzeichnis})}\\
 Leerer Ordner, nur zwecks Datenstruktur enthalten.
+\edef\appendixlabelkey{app:B\arabic{enumi}}
+\expandafter\label\expandafter{\appendixlabelkey}
 \item \textbf{networkanalysis.Rproj} \textnormal{(\textit{RPROJ})}\\
 R-Projektdatei, enthalten für korrekte Pfadinterpretation mit here\\
 \texttt{\small networkanalysis.Rproj}
+\edef\appendixlabelkey{app:B\arabic{enumi}}
+\expandafter\label\expandafter{\appendixlabelkey}
 \item \textbf{readme.txt} \textnormal{(\textit{Text})}\\
-README\\
+readme\\
 \texttt{\small readme.txt}
+\edef\appendixlabelkey{app:B\arabic{enumi}}
+\expandafter\label\expandafter{\appendixlabelkey}
 \end{enumerate}
