@@ -571,7 +571,7 @@ for(gem in unique(gem_hour_oz$GN)){
   ggsave(
     paste0(gem, "_i3_per_hour.svg"),
     combined_plot,
-    path = "appendix/figures/perci3/hourly/",
+    path = "appendix/figures/perci3/hourly_capt/",
     units = "mm",
     width = 420,
     height = 210
