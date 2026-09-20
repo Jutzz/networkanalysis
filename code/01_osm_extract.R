@@ -28,11 +28,21 @@ kürzel <- c(
   "Rheinisch-Bergischer Kreis" = "RBK"
 )
 
+#Download VG250
+vg250_req <- request("https://daten.gdz.bkg.bund.de/produkte/vg/vg250_ebenen_0101/aktuell/vg250_01-01.utm32s.gpkg.ebenen.zip")
+osmresp <- req_perform(vg250_req, path = paste0("geodata/base_data/DE_VG_250.zip"))
+unzip("geodata/base_data/DE_VG_250.zip", files = "vg250_ebenen_0101/DE_VG250.gpkg", exdir = "geodata/base_data/", junkpaths = TRUE)
+file.remove("geodata/base_data/DE_VG_250.zip")
+
 vg_250_krs <- st_read("geodata/base_data/DE_VG250.gpkg", query = 
                         "SELECT GEN,AGS_0,geom FROM vg250_krs WHERE AGS LIKE '053%'") %>%
   rename("GN" = GEN,
          "KN" = AGS_0) %>%
   left_join(enframe(kürzel, name = "GN", value = "kürzel"))
+
+#Download RegioStaR
+regiostar_req <- request("https://mobilithek.info/mdp-api/files/aux/689522949364838400/2024%20RegioStaR-Referenzdateien_Mobilthek.xlsx")
+regiostarresp <- req_perform(regiostar_req, path = "geodata/base_data/2024 RegioStaR-Referenzdateien_Mobilthek.xlsx")
 
 regiostar <- read_xlsx("geodata/base_data/2024 RegioStaR-Referenzdateien_Mobilthek.xlsx", sheet = "ReferenzGebietsstand2024") %>%
   select(gem_24, RegioStaR17, RegioStaR7) %>%
