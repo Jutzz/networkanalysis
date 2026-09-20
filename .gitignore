@@ -29,7 +29,8 @@ feeds/extract/*
 !feeds/filtered/.gitkeep
 osmdata/*
 !osmdata/.gitkeep
-appendix/
+/appendix/figures/*
+/appendix/reports/*
 geodata/zhv/*
 geodata/base_data/*
 geodata/poi.gpkg
