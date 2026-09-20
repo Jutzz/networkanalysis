@@ -30,8 +30,8 @@ feeds/extract/*
 osmdata/*
 !osmdata/.gitkeep
 appendix/
-geodata/zhv/
-geodata/base_data/
+geodata/zhv/*
+geodata/base_data/*
 geodata/poi.gpkg
 geodata/grids.gpkg
 geodata/Bedienungsqualität.gpkg
