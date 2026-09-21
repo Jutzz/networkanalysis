@@ -1,7 +1,7 @@
 % Automatisch erzeugt aus anhangsverzeichnis_mini_ano.csv
 % Appendix: A
-% Titel: Large datasets on Zenodo
-% Anzahl Einträge: 78
+% Titel: mini
+% Anzahl Einträge: 81
 
 % Benötigte Pakete:
 % \usepackage{enumitem}
@@ -11,7 +11,8 @@
 
 \begin{enumerate}[label=A\arabic*, ref=A\arabic*, leftmargin=*, itemsep=0.5em, topsep=0.3em]
 \item \textbf{input} \textnormal{(\textit{Verzeichnis})}\\
-Vorverarbeitete und zeitabhängige Inputs
+Vorverarbeitete und zeitabhängige Inputs\\
+\texttt{\small input/}
 \edef\appendixlabelkey{app:A\arabic{enumi}}
 \expandafter\label\expandafter{\appendixlabelkey}
 \begin{enumerate}[label=A\arabic{enumi}-\arabic*, ref=A\arabic{enumi}-\arabic*, leftmargin=*, itemsep=0.5em, topsep=0.3em]
@@ -55,13 +56,34 @@ Auszug des zentralen Haltestellenverzeichnis vom 21.05.2026\\
 \texttt{\small input/zHV\_aktuell\_csv.2026-05-21.zip}
 \edef\appendixlabelkey{app:A\arabic{enumi}-\arabic{enumii}}
 \expandafter\label\expandafter{\appendixlabelkey}
+\item \textbf{zo\_POI.gpkg} \textnormal{(\textit{GeoPackage})}\\
+Aus OSM extrahierte POI für KDE\\
+\texttt{\small input/zo\_POI.gpkg}
+\edef\appendixlabelkey{app:A\arabic{enumi}-\arabic{enumii}}
+\expandafter\label\expandafter{\appendixlabelkey}
+\begin{enumerate}[label=A\arabic{enumi}-\arabic{enumii}-\arabic*, ref=A\arabic{enumi}-\arabic{enumii}-\arabic*, leftmargin=*, itemsep=0.5em, topsep=0.3em]
+\item \textbf{poi\_flex\_opt\_tt\_15} \textnormal{(\textit{Layer})}\\
+Kategorisierte POI der erweiterten Funktionen inklusive Gehzeiten zu nächstem ZO-Kandidaten
+\edef\appendixlabelkey{app:A\arabic{enumi}-\arabic{enumii}-\arabic{enumiii}}
+\expandafter\label\expandafter{\appendixlabelkey}
+\item \textbf{poi\_flex\_tt\_15} \textnormal{(\textit{Layer})}\\
+Kategorisierte POI der Basisfunktionen inklusive Gehzeiten zu nächstem ZO-Kandidaten
+\edef\appendixlabelkey{app:A\arabic{enumi}-\arabic{enumii}-\arabic{enumiii}}
+\expandafter\label\expandafter{\appendixlabelkey}
+\item \textbf{areas\_flex\_catcount} \textnormal{(\textit{Layer})}\\
+kategorisierte Dichteflächen mit Zählung der POI-Kategorien
+\edef\appendixlabelkey{app:A\arabic{enumi}-\arabic{enumii}-\arabic{enumiii}}
+\expandafter\label\expandafter{\appendixlabelkey}
+\end{enumerate}
 \end{enumerate}
 \item \textbf{output\_examples} \textnormal{(\textit{Verzeichnis})}\\
-Intermediäre Outputs (exemplarisch)
+Intermediäre Outputs (exemplarisch)\\
+\texttt{\small output\_examples/}
 \edef\appendixlabelkey{app:A\arabic{enumi}}
 \expandafter\label\expandafter{\appendixlabelkey}
 \begin{enumerate}[label=A\arabic{enumi}-\arabic*, ref=A\arabic{enumi}-\arabic*, leftmargin=*, itemsep=0.5em, topsep=0.3em]
-\item \textbf{daily\_eq} \textnormal{(\textit{Verzeichnis})}
+\item \textbf{daily\_eq} \textnormal{(\textit{Verzeichnis})}\\
+\texttt{\small output\_examples/daily\_eq/}
 \edef\appendixlabelkey{app:A\arabic{enumi}-\arabic{enumii}}
 \expandafter\label\expandafter{\appendixlabelkey}
 \begin{enumerate}[label=A\arabic{enumi}-\arabic{enumii}-\arabic*, ref=A\arabic{enumi}-\arabic{enumii}-\arabic*, leftmargin=*, itemsep=0.5em, topsep=0.3em]
@@ -71,7 +93,8 @@ Tagesmittel der Erschließungsqualität\\
 \edef\appendixlabelkey{app:A\arabic{enumi}-\arabic{enumii}-\arabic{enumiii}}
 \expandafter\label\expandafter{\appendixlabelkey}
 \end{enumerate}
-\item \textbf{hourly\_eq} \textnormal{(\textit{Verzeichnis})}
+\item \textbf{hourly\_eq} \textnormal{(\textit{Verzeichnis})}\\
+\texttt{\small output\_examples/hourly\_eq/}
 \edef\appendixlabelkey{app:A\arabic{enumi}-\arabic{enumii}}
 \expandafter\label\expandafter{\appendixlabelkey}
 \begin{enumerate}[label=A\arabic{enumi}-\arabic{enumii}-\arabic*, ref=A\arabic{enumi}-\arabic{enumii}-\arabic*, leftmargin=*, itemsep=0.5em, topsep=0.3em]
@@ -81,7 +104,8 @@ Stündliche Erschließungsqualität\\
 \edef\appendixlabelkey{app:A\arabic{enumi}-\arabic{enumii}-\arabic{enumiii}}
 \expandafter\label\expandafter{\appendixlabelkey}
 \end{enumerate}
-\item \textbf{hourmean\_eq} \textnormal{(\textit{Verzeichnis})}
+\item \textbf{hourmean\_eq} \textnormal{(\textit{Verzeichnis})}\\
+\texttt{\small output\_examples/hourmean\_eq/}
 \edef\appendixlabelkey{app:A\arabic{enumi}-\arabic{enumii}}
 \expandafter\label\expandafter{\appendixlabelkey}
 \begin{enumerate}[label=A\arabic{enumi}-\arabic{enumii}-\arabic*, ref=A\arabic{enumi}-\arabic{enumii}-\arabic*, leftmargin=*, itemsep=0.5em, topsep=0.3em]
@@ -91,7 +115,8 @@ Stundenmittel der Erschließungsqualität\\
 \edef\appendixlabelkey{app:A\arabic{enumi}-\arabic{enumii}-\arabic{enumiii}}
 \expandafter\label\expandafter{\appendixlabelkey}
 \end{enumerate}
-\item \textbf{i3\_shortest\_hourly} \textnormal{(\textit{Verzeichnis})}
+\item \textbf{i3\_shortest\_hourly} \textnormal{(\textit{Verzeichnis})}\\
+\texttt{\small output\_examples/i3\_shortest\_hourly/}
 \edef\appendixlabelkey{app:A\arabic{enumi}-\arabic{enumii}}
 \expandafter\label\expandafter{\appendixlabelkey}
 \begin{enumerate}[label=A\arabic{enumi}-\arabic{enumii}-\arabic*, ref=A\arabic{enumi}-\arabic{enumii}-\arabic*, leftmargin=*, itemsep=0.5em, topsep=0.3em]
@@ -103,12 +128,14 @@ Zusammengefasste kürzeste Reisezeiten zu zentralen Orten (Output von 15\_i3\_sh
 \end{enumerate}
 \item \textbf{i3\_ttm\_hourly} \textnormal{(\textit{Verzeichnis})}\\
 10 ÖPNV-Reisezeitmatrizen für untersuchte Stunden, exemplarisch für insgesamt 360 Dateien. Der gesamte Datensatz kann bei Bedarf zur Verfügung gestellt werden (Output von 14\_i3\_traveltimes).
-Benannt als i3\_ttm\_yyyy-MM-dd\_HH.fst
+Benannt als i3\_ttm\_yyyy-MM-dd\_HH.fst\\
+\texttt{\small output\_examples/i3\_ttm\_hourly/}
 \edef\appendixlabelkey{app:A\arabic{enumi}-\arabic{enumii}}
 \expandafter\label\expandafter{\appendixlabelkey}
 \item \textbf{kderasters} \textnormal{(\textit{Verzeichnis})}\\
 10 KDE-Raster, exemplarisch für Raster von insgesamt 177 untersuchten Gemeinden. Der gesamte Datensatz kann bei Bedarf zur Verfügung gestellt werden (Output von 08\_cpt\_KDE).
-Benannt als kde\_\{Gemeindeschlüssel\}\_flex.tif.
+Benannt als kde\_\{Gemeindeschlüssel\}\_flex.tif.\\
+\texttt{\small output\_examples/kderasters/}
 \edef\appendixlabelkey{app:A\arabic{enumi}-\arabic{enumii}}
 \expandafter\label\expandafter{\appendixlabelkey}
 \item \textbf{daily\_20260518\_weekday\_2026-05-04\_2026-06-26\_.fst} \textnormal{(\textit{FST})}\\
@@ -142,12 +169,14 @@ Fußweg-Reisezeitmatrix zu Haltestellen (Output von 10\_i2\_traveltimes)\\
 \edef\appendixlabelkey{app:A\arabic{enumi}-\arabic{enumii}}
 \expandafter\label\expandafter{\appendixlabelkey}
 \end{enumerate}
-\item \textbf{r5r\_networks} \textnormal{(\textit{Verzeichnis})}
+\item \textbf{r5r\_networks} \textnormal{(\textit{Verzeichnis})}\\
+\texttt{\small r5r\_networks/}
 \edef\appendixlabelkey{app:A\arabic{enumi}}
 \expandafter\label\expandafter{\appendixlabelkey}
 \begin{enumerate}[label=A\arabic{enumi}-\arabic*, ref=A\arabic{enumi}-\arabic*, leftmargin=*, itemsep=0.5em, topsep=0.3em]
 \item \textbf{r5core\_2026-05-18} \textnormal{(\textit{Verzeichnis})}\\
-Dateien zur Erstellung eines r5r-Netzwerkgraphen für das Untersuchungsgebiet (Zugeschnittener OSM-Datensatz, vorverarbeiteter GTFS-Feed)
+Dateien zur Erstellung eines r5r-Netzwerkgraphen für das Untersuchungsgebiet (Zugeschnittener OSM-Datensatz, vorverarbeiteter GTFS-Feed)\\
+\texttt{\small r5r\_networks/r5core\_2026-05-18/}
 \edef\appendixlabelkey{app:A\arabic{enumi}-\arabic{enumii}}
 \expandafter\label\expandafter{\appendixlabelkey}
 \begin{enumerate}[label=A\arabic{enumi}-\arabic{enumii}-\arabic*, ref=A\arabic{enumi}-\arabic{enumii}-\arabic*, leftmargin=*, itemsep=0.5em, topsep=0.3em]
@@ -161,7 +190,8 @@ Dateien zur Erstellung eines r5r-Netzwerkgraphen für das Untersuchungsgebiet (Z
 \expandafter\label\expandafter{\appendixlabelkey}
 \end{enumerate}
 \item \textbf{r5core\_2026-05-18\_large} \textnormal{(\textit{Verzeichnis})}\\
-Dateien zur Erstellung eines r5r-Netzwerkgraphen für das Untersuchungsgebiet + 25 km für Anbindungsindikator (Zugeschnittener OSM-Datensatz, vorverarbeiteter GTFS-Feed)
+Dateien zur Erstellung eines r5r-Netzwerkgraphen für das Untersuchungsgebiet + 25 km für Anbindungsindikator (Zugeschnittener OSM-Datensatz, vorverarbeiteter GTFS-Feed)\\
+\texttt{\small r5r\_networks/r5core\_2026-05-18\_large/}
 \edef\appendixlabelkey{app:A\arabic{enumi}-\arabic{enumii}}
 \expandafter\label\expandafter{\appendixlabelkey}
 \begin{enumerate}[label=A\arabic{enumi}-\arabic{enumii}-\arabic*, ref=A\arabic{enumi}-\arabic{enumii}-\arabic*, leftmargin=*, itemsep=0.5em, topsep=0.3em]
@@ -175,7 +205,8 @@ Dateien zur Erstellung eines r5r-Netzwerkgraphen für das Untersuchungsgebiet + 
 \expandafter\label\expandafter{\appendixlabelkey}
 \end{enumerate}
 \item \textbf{r5core\_2026-05-21\_osmonly\_nrw} \textnormal{(\textit{Verzeichnis})}\\
-Dateien zur Erstellung eines r5r-Netzwerkgraphen für das Untersuchungsgebiet + 25 km für die Bewertung zentralörtlicher Cluster (Nur Fußwege, zugeschnittener OSM-Datensatz)
+Dateien zur Erstellung eines r5r-Netzwerkgraphen für das Untersuchungsgebiet + 25 km für die Bewertung zentralörtlicher Cluster (Nur Fußwege, zugeschnittener OSM-Datensatz)\\
+\texttt{\small r5r\_networks/r5core\_2026-05-21\_osmonly\_nrw/}
 \edef\appendixlabelkey{app:A\arabic{enumi}-\arabic{enumii}}
 \expandafter\label\expandafter{\appendixlabelkey}
 \begin{enumerate}[label=A\arabic{enumi}-\arabic{enumii}-\arabic*, ref=A\arabic{enumi}-\arabic{enumii}-\arabic*, leftmargin=*, itemsep=0.5em, topsep=0.3em]
@@ -186,26 +217,31 @@ Dateien zur Erstellung eines r5r-Netzwerkgraphen für das Untersuchungsgebiet + 
 \end{enumerate}
 \end{enumerate}
 \item \textbf{results} \textnormal{(\textit{Verzeichnis})}\\
-Aggregierte Ergebnisse
+Aggregierte Ergebnisse\\
+\texttt{\small results/}
 \edef\appendixlabelkey{app:A\arabic{enumi}}
 \expandafter\label\expandafter{\appendixlabelkey}
 \begin{enumerate}[label=A\arabic{enumi}-\arabic*, ref=A\arabic{enumi}-\arabic*, leftmargin=*, itemsep=0.5em, topsep=0.3em]
 \item \textbf{figures} \textnormal{(\textit{Verzeichnis})}\\
-Plots
+Plots\\
+\texttt{\small results/figures/}
 \edef\appendixlabelkey{app:A\arabic{enumi}-\arabic{enumii}}
 \expandafter\label\expandafter{\appendixlabelkey}
 \begin{enumerate}[label=A\arabic{enumi}-\arabic{enumii}-\arabic*, ref=A\arabic{enumi}-\arabic{enumii}-\arabic*, leftmargin=*, itemsep=0.5em, topsep=0.3em]
 \item \textbf{percbq} \textnormal{(\textit{Verzeichnis})}\\
-Bedienungsqualität
+Bedienungsqualität\\
+\texttt{\small results/figures/percbq/}
 \edef\appendixlabelkey{app:A\arabic{enumi}-\arabic{enumii}-\arabic{enumiii}}
 \expandafter\label\expandafter{\appendixlabelkey}
 \begin{enumerate}[label=A\arabic{enumi}-\arabic{enumii}-\arabic{enumiii}-\arabic*, ref=A\arabic{enumi}-\arabic{enumii}-\arabic{enumiii}-\arabic*, leftmargin=*, itemsep=0.5em, topsep=0.3em]
 \item \textbf{dately\_gem} \textnormal{(\textit{Verzeichnis})}\\
-99 Vektorgrafiken zur Entwicklung des Tages-50\%-Quantils der Bedienungsqualität im Untersuchungszeitraum je Gemeinde
+99 Vektorgrafiken zur Entwicklung des Tages-50\%-Quantils der Bedienungsqualität im Untersuchungszeitraum je Gemeinde\\
+\texttt{\small results/figures/percbq/dately\_gem/}
 \edef\appendixlabelkey{app:A\arabic{enumi}-\arabic{enumii}-\arabic{enumiii}-\arabic{enumiv}}
 \expandafter\label\expandafter{\appendixlabelkey}
 \item \textbf{hourly\_gem} \textnormal{(\textit{Verzeichnis})}\\
-99 Vektorgrafiken zur Entwicklung des Stunden-50\%-Quantils der Bedienungsqualität im Untersuchungszeitraum je Gemeinde
+99 Vektorgrafiken zur Entwicklung des Stunden-50\%-Quantils der Bedienungsqualität im Untersuchungszeitraum je Gemeinde\\
+\texttt{\small results/figures/percbq/hourly\_gem/}
 \edef\appendixlabelkey{app:A\arabic{enumi}-\arabic{enumii}-\arabic{enumiii}-\arabic{enumiv}}
 \expandafter\label\expandafter{\appendixlabelkey}
 \item \textbf{Gemeinde\_bq\_per\_date.svg} \textnormal{(\textit{SVG})}\\
@@ -240,12 +276,14 @@ Bedienungsqualität
 \expandafter\label\expandafter{\appendixlabelkey}
 \end{enumerate}
 \item \textbf{perceq} \textnormal{(\textit{Verzeichnis})}\\
-Erschließungsqualität
+Erschließungsqualität\\
+\texttt{\small results/figures/perceq/}
 \edef\appendixlabelkey{app:A\arabic{enumi}-\arabic{enumii}-\arabic{enumiii}}
 \expandafter\label\expandafter{\appendixlabelkey}
 \begin{enumerate}[label=A\arabic{enumi}-\arabic{enumii}-\arabic{enumiii}-\arabic*, ref=A\arabic{enumi}-\arabic{enumii}-\arabic{enumiii}-\arabic*, leftmargin=*, itemsep=0.5em, topsep=0.3em]
 \item \textbf{hourly} \textnormal{(\textit{Verzeichnis})}\\
-99 Vektorgrafiken zur Entwicklung des Stunden-50\%-Quantils der Erschließungsqualität im Untersuchungszeitraum je Gemeinde
+99 Vektorgrafiken zur Entwicklung des Stunden-50\%-Quantils der Erschließungsqualität im Untersuchungszeitraum je Gemeinde\\
+\texttt{\small results/figures/perceq/hourly/}
 \edef\appendixlabelkey{app:A\arabic{enumi}-\arabic{enumii}-\arabic{enumiii}-\arabic{enumiv}}
 \expandafter\label\expandafter{\appendixlabelkey}
 \item \textbf{Gemeinde\_eq\_per\_hour.svg} \textnormal{(\textit{SVG})}\\
@@ -255,16 +293,19 @@ Erschließungsqualität
 \expandafter\label\expandafter{\appendixlabelkey}
 \end{enumerate}
 \item \textbf{perci3} \textnormal{(\textit{Verzeichnis})}\\
-Anbindungsindikator
+Anbindungsindikator\\
+\texttt{\small results/figures/perci3/}
 \edef\appendixlabelkey{app:A\arabic{enumi}-\arabic{enumii}-\arabic{enumiii}}
 \expandafter\label\expandafter{\appendixlabelkey}
 \begin{enumerate}[label=A\arabic{enumi}-\arabic{enumii}-\arabic{enumiii}-\arabic*, ref=A\arabic{enumi}-\arabic{enumii}-\arabic{enumiii}-\arabic*, leftmargin=*, itemsep=0.5em, topsep=0.3em]
 \item \textbf{hourly\_capt} \textnormal{(\textit{Verzeichnis})}\\
-99 Vektorgrafiken zur stündlichen Entwicklung des Anbindugsindikators je Gemeinde
+99 Vektorgrafiken zur stündlichen Entwicklung des Anbindugsindikators je Gemeinde\\
+\texttt{\small results/figures/perci3/hourly\_capt/}
 \edef\appendixlabelkey{app:A\arabic{enumi}-\arabic{enumii}-\arabic{enumiii}-\arabic{enumiv}}
 \expandafter\label\expandafter{\appendixlabelkey}
 \item \textbf{hourly\_tt} \textnormal{(\textit{Verzeichnis})}\\
-99 Vektorgrafiken zur stündlichen Entwicklung der Reisezeit in zentrale Orte je Gemeinde
+99 Vektorgrafiken zur stündlichen Entwicklung der Reisezeit in zentrale Orte je Gemeinde\\
+\texttt{\small results/figures/perci3/hourly\_tt/}
 \edef\appendixlabelkey{app:A\arabic{enumi}-\arabic{enumii}-\arabic{enumiii}-\arabic{enumiv}}
 \expandafter\label\expandafter{\appendixlabelkey}
 \item \textbf{Gemeinde\_i3-gz\_per\_hour.svg} \textnormal{(\textit{SVG})}\\
@@ -300,7 +341,8 @@ Anbindungsindikator
 \end{enumerate}
 \end{enumerate}
 \item \textbf{reports} \textnormal{(\textit{Verzeichnis})}\\
-Detailkarten der Indikatoren
+Detailkarten der Indikatoren\\
+\texttt{\small results/reports/}
 \edef\appendixlabelkey{app:A\arabic{enumi}-\arabic{enumii}}
 \expandafter\label\expandafter{\appendixlabelkey}
 \begin{enumerate}[label=A\arabic{enumi}-\arabic{enumii}-\arabic*, ref=A\arabic{enumi}-\arabic{enumii}-\arabic*, leftmargin=*, itemsep=0.5em, topsep=0.3em]
@@ -315,7 +357,7 @@ Darstellung der Zensuszellen je Gemeinde mit Erschließungsqualität und Variabi
 \edef\appendixlabelkey{app:A\arabic{enumi}-\arabic{enumii}-\arabic{enumiii}}
 \expandafter\label\expandafter{\appendixlabelkey}
 \item \textbf{Erschließungsqualität.pdf} \textnormal{(\textit{PDF})}\\
-Größerformatige Darstellung nur der Erschhlließungsqualität. 1 Seite je Gemeinde.\\
+Größerformatige Darstellung nur der Erschließungsqualität. 1 Seite je Gemeinde.\\
 \texttt{\small results/reports/Erschließungsqualität.pdf}
 \edef\appendixlabelkey{app:A\arabic{enumi}-\arabic{enumii}-\arabic{enumiii}}
 \expandafter\label\expandafter{\appendixlabelkey}
@@ -325,11 +367,6 @@ Darstelllung der Erreichbarkeit zentraler Orte je Gemeinde mit Variabilitätsma�
 \edef\appendixlabelkey{app:A\arabic{enumi}-\arabic{enumii}-\arabic{enumiii}}
 \expandafter\label\expandafter{\appendixlabelkey}
 \end{enumerate}
-\item \textbf{Bedienungsqualität.gpkg} \textnormal{(\textit{GeoPackage})}\\
-Haltestellen mit Variabilitätswerten der BQ im und um das Untersuchungsgebiet, Grundlage für 10\_i2\_traveltimes\\
-\texttt{\small results/Bedienungsqualität.gpkg}
-\edef\appendixlabelkey{app:A\arabic{enumi}-\arabic{enumii}}
-\expandafter\label\expandafter{\appendixlabelkey}
 \item \textbf{Bedienungsqualität.gpkg} \textnormal{(\textit{GeoPackage})}\\
 Zuschnitt der Ergebnisse der Bedienungsqualität auf das Untersuchungsgebiet\\
 \texttt{\small results/Bedienungsqualität.gpkg}
