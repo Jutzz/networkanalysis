@@ -10,7 +10,6 @@ source("code/dataenv.R")
 buffer_size  <- 25
 area_name <- paste0("regbez",buffer_size,"kmbuffer")
 
-#TODO: generalize for any spatial filter
 #Uncomment to process new fahrplaene_gesamtdeutschland. Downloaded feed into raw.
 gtfs_feed <- tidytransit::read_gtfs(paste0("feeds/raw/", feed_date, "_fahrplaene_gesamtdeutschland_gtfs.zip"))
 unzip(paste0("feeds/raw/", feed_date, "_fahrplaene_gesamtdeutschland_gtfs.zip"), files = c("routes.txt", "stops.txt"), exdir = paste0("feeds/extract/", feed_date, "_fahrplaene_gesamtdeutschland_gtfs"))

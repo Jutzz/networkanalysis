@@ -90,7 +90,6 @@ nonholiday_weekdays <- weekdays[!weekdays %in% c(holidays,school_holidays$date)]
 nonholiday_normdays <- normdays[!normdays %in% c(holidays,school_holidays$date)]
 
 #Analysis of transit availability to check for feed inconsistencies, representative stretches.
-##Find stats and/or function to find representative dates, to check for large jumps in availability (holidays, partial feeds ending) and for variability across hours.
 trip_calendar <- gtfs_feed$.$dates_services %>%
   inner_join(gtfs_feed$trips %>%
                select(service_id, trip_id, route_id),
@@ -100,6 +99,7 @@ trip_calendar <- gtfs_feed$.$dates_services %>%
              by = "route_id") %>%
   filter(!route_type %in% c(102,101,201))
 
+#Do parts of the feed "drop out" after some date?   
 dropouts <- check_gtfs_discont(gtfs_feed, weekdays, trip_calendar)
 
 cutoff  <- min(dropouts %>%
