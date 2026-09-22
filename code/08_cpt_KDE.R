@@ -381,13 +381,13 @@ central_union_list <- core_stat %>%
   }) %>%
   bind_rows()
 
-#Create lookup table for presence of all categories of primary (best scored) cores.
 central_union_lookup <- setNames(
   central_union_list$central_union,
   central_union_list$KN
 )
 
-#This checks if there are any functions reachable from a core that are not given in the primary core(s) and returns the amount if so.
+#Check if there are any functions reachable from a core
+#that are not given in the primary core.
 secondary_gain <- function(id, mat, central_union) {
   if (!(id %in% rownames(mat))) return(0)
   
@@ -395,7 +395,7 @@ secondary_gain <- function(id, mat, central_union) {
   sum(new)
 }
 
-#Calculate functional gain for cores that dont pass the 10%-Rule and keep them if they provide functional gain and dont fall below the 20%-mark.
+#Calculate functional gain for cores that are not within 10% and keep if functional gain and not over 20% worse.
 core_stat_results <- core_stat %>%
   rowwise() %>%
   mutate(

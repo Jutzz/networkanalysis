@@ -97,6 +97,7 @@ zensus_grid <- st_read(here("geodata/zensus.gpkg"), "regbez_zensus_populated") %
   st_as_sf() %>%
   dplyr::select(id, ags, Einwohner)
 gemeinden <- st_read(dsn = here("geodata/dvg1nw.gpkg"), layer = "gemeinden_regbez_vg250")
+
 zentraleOrte_nrw <- st_transform(st_read(here("geodata/poi.gpkg"), "zentrale_orte_oz_manual"), crs = st_crs(zensus_grid))  %>%
   filter(str_detect(KN,  "^053") | add_outside) %>%
   filter(!(str_detect(KN,  "^053") & zentralitaet == "Oberzentrum" & oz_manual == FALSE)) %>%

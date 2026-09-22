@@ -77,7 +77,6 @@ st_write(vg_250_krs, "geodata/dvg1nw.gpkg", "kreise_regbez_vg250", append = FALS
 
 
 dldate <- format(Sys.Date(), format = "%Y%m%d")
-dldate_zhv <- format(Sys.Date(), format = "%Y-%m-%d")
 #Download latest OSM-extract for NRW.
 osm_req <- request("https://download.geofabrik.de/europe/germany/nordrhein-westfalen-latest.osm.pbf")
 osmresp <- req_perform(osm_req, path = paste0("osmdata/nordrhein-westfalen-", dldate, ".osm.pbf"))

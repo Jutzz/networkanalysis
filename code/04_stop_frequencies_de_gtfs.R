@@ -70,8 +70,7 @@ quality_lookup <- tribble(
 #Inputs----
 #Change feed date and area name to used feed version. (filename set in de_gtfs_cleaning).
 #Select "weekday" or "normday".
-feed_date <- "20260518"
-zhv_date <- "20260521"
+source("code/dataenv.R")
 area_name <- "regbez"
 method <- "weekday"
 
